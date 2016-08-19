@@ -75,7 +75,7 @@
   </mailingLists>
 
   <modules>
-
+    <module>flink-connector-redis</module>
   </modules>
 
   <properties>
@@ -84,7 +84,6 @@
 
     <!-- General project dependencies version -->
     <java.version>1.7</java.version>
-    <scala.version>2.11.8</scala.version>
     <scala.binary.version>2.11</scala.binary.version>
 
     <maven.version>3.3.9</maven.version>
@@ -126,63 +125,9 @@
     </pluginRepository>
   </pluginRepositories>
   
-  <dependencies>
-    <!--
-         This is needed by the scalatest plugin, and so is declared here to be available in
-         all child modules, just as scalatest is run in all children
-    -->
-    <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.binary.version}</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
 
   <dependencyManagement>
     <dependencies>
-      <!-- Scala Related Dependencies -->
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-compiler</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-reflect</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-actors</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scalap</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scalatest</groupId>
-        <artifactId>scalatest_${scala.binary.version}</artifactId>
-        <version>2.2.6</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.scalacheck</groupId>
-        <artifactId>scalacheck_${scala.binary.version}</artifactId>
-        <version>1.12.5</version> <!-- 1.13.0 appears incompatible with scalatest 2.2.6 -->
-        <scope>test</scope>
-      </dependency>
 
       <!-- Test Dependencies -->
       <dependency>
@@ -219,15 +164,6 @@
   </dependencyManagement>
 
   <build>
-    <resources>
-      <resource>
-        <directory>${basedir}/python</directory>
-        <includes>
-          <include>**/*.py</include>
-        </includes>
-      </resource>
-    </resources>
-
     <pluginManagement>
       <plugins>
         <plugin>
@@ -292,7 +228,6 @@
               <exclude>**/dependency-reduced-pom.xml</exclude>
               <exclude>**/target/**</exclude>
               <exclude>**/README.md</exclude>
-              <exclude>**/examples/data/*.txt</exclude>
             </excludes>
           </configuration>
         </plugin>
@@ -301,69 +236,7 @@
           <artifactId>build-helper-maven-plugin</artifactId>
           <version>1.10</version>
         </plugin>
-        <plugin>
-          <groupId>net.alchim31.maven</groupId>
-          <artifactId>scala-maven-plugin</artifactId>
-          <version>3.2.2</version>
-          <executions>
-            <execution>
-              <id>eclipse-add-source</id>
-              <goals>
-                <goal>add-source</goal>
-              </goals>
-            </execution>
-            <execution>
-              <id>scala-compile-first</id>
-              <phase>process-resources</phase>
-              <goals>
-                <goal>compile</goal>
-              </goals>
-            </execution>
-            <execution>
-              <id>scala-test-compile-first</id>
-              <phase>process-test-resources</phase>
-              <goals>
-                <goal>testCompile</goal>
-              </goals>
-              <configuration>
-                <source>${java.version}</source>
-                <target>${java.version}</target>
-                <encoding>UTF-8</encoding>
-              </configuration>
-            </execution>
-            <execution>
-              <id>attach-scaladocs</id>
-              <phase>verify</phase>
-              <goals>
-                <goal>doc-jar</goal>
-              </goals>
-            </execution>
-          </executions>
-          <configuration>
-            <scalaVersion>${scala.version}</scalaVersion>
-            <recompileMode>incremental</recompileMode>
-            <useZincServer>true</useZincServer>
-            <args>
-              <arg>-unchecked</arg>
-              <arg>-deprecation</arg>
-              <arg>-feature</arg>
-            </args>
-            <jvmArgs>
-              <jvmArg>-Xms1024m</jvmArg>
-              <jvmArg>-Xmx1024m</jvmArg>
-              <jvmArg>-XX:PermSize=${PermGen}</jvmArg>
-              <jvmArg>-XX:MaxPermSize=${MaxPermGen}</jvmArg>
-              <jvmArg>-XX:ReservedCodeCacheSize=${CodeCacheSize}</jvmArg>
-            </jvmArgs>
-            <javacArgs>
-              <javacArg>-source</javacArg>
-              <javacArg>${java.version}</javacArg>
-              <javacArg>-target</javacArg>
-              <javacArg>${java.version}</javacArg>
-              <javacArg>-Xlint:all,-serial,-path</javacArg>
-            </javacArgs>
-          </configuration>
-        </plugin>
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
@@ -414,36 +287,7 @@
             </execution>
           </executions>
         </plugin>
-        <!-- Scalatest runs all Scala tests -->
-        <plugin>
-          <groupId>org.scalatest</groupId>
-          <artifactId>scalatest-maven-plugin</artifactId>
-          <version>1.0</version>
-          <!-- Note config is repeated in surefire config -->
-          <configuration>
-            <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-            <junitxml>.</junitxml>
-            <filereports>SparkTestSuite.txt</filereports>
-            <argLine>-ea -Xmx3g -XX:MaxPermSize=${MaxPermGen} -XX:ReservedCodeCacheSize=${CodeCacheSize}</argLine>
-            <stderr />
-            <systemProperties>
-              <log4j.configuration>file:src/test/resources/log4j.properties</log4j.configuration>
-              <derby.system.durability>test</derby.system.durability>
-              <java.awt.headless>true</java.awt.headless>
-              <java.io.tmpdir>${project.build.directory}/tmp</java.io.tmpdir>
-              <!-- Needed by sql/hive tests. -->
-              <test.src.tables>__not_used__</test.src.tables>
-            </systemProperties>
-          </configuration>
-          <executions>
-            <execution>
-              <id>test</id>
-              <goals>
-                <goal>test</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
+  
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
@@ -475,19 +319,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.0.0</version>
-          <configuration>
-            <filesets>
-              <fileset>
-                <directory>work</directory>
-              </fileset>
-              <fileset>
-                <directory>checkpoint</directory>
-              </fileset>
-              <fileset>
-                <directory>lib_managed</directory>
-              </fileset>
-            </filesets>
-          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -640,30 +471,6 @@
         <artifactId>maven-source-plugin</artifactId>
       </plugin>
       <plugin>
-        <groupId>org.scalastyle</groupId>
-        <artifactId>scalastyle-maven-plugin</artifactId>
-        <version>0.8.0</version>
-        <configuration>
-          <verbose>false</verbose>
-          <failOnViolation>true</failOnViolation>
-          <includeTestSourceDirectory>true</includeTestSourceDirectory>
-          <failOnWarning>false</failOnWarning>
-          <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
-          <testSourceDirectories>${basedir}/src/test/scala</testSourceDirectories>
-          <configLocation>scalastyle-config.xml</configLocation>
-          <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
-          <inputEncoding>${project.build.sourceEncoding}</inputEncoding>
-          <outputEncoding>${project.reporting.outputEncoding}</outputEncoding>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <version>2.17</version>
@@ -687,33 +494,10 @@
         </executions>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>create-tmp-dir</id>
-            <phase>generate-test-resources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <mkdir dir="${project.build.directory}/tmp" />
-              </target>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
       <!-- Enable surefire and scalatest in all children, in one place: -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.scalatest</groupId>
-        <artifactId>scalatest-maven-plugin</artifactId>
       </plugin>
       <!-- Build test-jar's for all projects, since some projects depend on tests from others -->
       <plugin>
@@ -784,20 +568,8 @@
         <property><name>scala-2.10</name></property>
       </activation>
       <properties>
-        <scala.version>2.10.6</scala.version>
         <scala.binary.version>2.10</scala.binary.version>
-        <jline.version>${scala.version}</jline.version>
-        <jline.groupid>org.scala-lang</jline.groupid>
       </properties>
-      <dependencyManagement>
-        <dependencies>
-          <dependency>
-            <groupId>${jline.groupid}</groupId>
-            <artifactId>jline</artifactId>
-            <version>${jline.version}</version>
-          </dependency>
-        </dependencies>
-      </dependencyManagement>
       <build>
         <plugins>
           <plugin>
@@ -831,7 +603,6 @@
         <property><name>!scala-2.10</name></property>
       </activation>
       <properties>
-        <scala.version>2.11.8</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
       </properties>
       <build>
