@@ -262,11 +262,6 @@
             <argLine>-Xmx3g -Xss4096k -XX:MaxPermSize=${MaxPermGen} -XX:ReservedCodeCacheSize=512m</argLine>
             <systemProperties>
               <log4j.configuration>file:src/test/resources/log4j.properties</log4j.configuration>
-              <derby.system.durability>test</derby.system.durability>
-              <java.awt.headless>true</java.awt.headless>
-              <java.io.tmpdir>${project.build.directory}/tmp</java.io.tmpdir>
-              <!-- Needed by sql/hive tests. -->
-              <test.src.tables>src</test.src.tables>
             </systemProperties>
             <failIfNoTests>false</failIfNoTests>
           </configuration>
@@ -455,10 +450,6 @@
         <version>0.11</version>
       </plugin>
       <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
       </plugin>
@@ -471,8 +462,6 @@
           <failOnViolation>true</failOnViolation>
           <includeTestSourceDirectory>true</includeTestSourceDirectory>
           <failsOnError>false</failsOnError>
-          <sourceDirectories>${basedir}/src/main/java,${basedir}/src/main/scala</sourceDirectories>
-          <testSourceDirectories>${basedir}/src/test/java,${basedir}/examples/src/main/java</testSourceDirectories>
           <configLocation>dev/checkstyle.xml</configLocation>
           <outputFile>${basedir}/target/checkstyle-output.xml</outputFile>
           <encoding>${project.build.sourceEncoding}</encoding>
