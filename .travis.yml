@@ -26,6 +26,6 @@ jdk:
   - oraclejdk7
   - openjdk7
 
-
+install: true
 
 script: mvn clean verify -Dflink.version=$FLINK_VERSION
