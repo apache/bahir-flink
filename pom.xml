@@ -73,6 +73,7 @@
   <modules>
     <module>flink-connector-redis</module>
     <module>flink-connector-flume</module>
+    <module>flink-connector-activemq</module>
   </modules>
 
   <properties>
