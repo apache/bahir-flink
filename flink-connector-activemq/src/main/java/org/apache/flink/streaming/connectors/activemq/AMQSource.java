@@ -92,7 +92,7 @@ public class AMQSource<OUT> extends MessageAcknowledgingSourceBase<OUT, String>
      *
      * @param config AMQSource configuration
      */
-    AMQSource(AMQSourceConfig<OUT> config) {
+    public AMQSource(AMQSourceConfig<OUT> config) {
         super(String.class);
         this.connectionFactory = config.getConnectionFactory();
         this.destinationName = config.getDestinationName();
@@ -218,7 +218,7 @@ public class AMQSource<OUT> extends MessageAcknowledgingSourceBase<OUT, String>
 
             Message message = consumer.receive(1000);
             if (! (message instanceof BytesMessage)) {
-                LOG.warn("Active MQ source received non bytes message: {}");
+                LOG.warn("Active MQ source received non bytes message: {}", message);
                 return;
             }
             BytesMessage bytesMessage = (BytesMessage) message;

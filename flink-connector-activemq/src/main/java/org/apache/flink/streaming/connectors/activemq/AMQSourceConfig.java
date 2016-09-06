@@ -37,11 +37,11 @@ public class AMQSourceConfig<OUT> {
     AMQSourceConfig(ActiveMQConnectionFactory connectionFactory, String destinationName,
                     DeserializationSchema<OUT> deserializationSchema, RunningChecker runningChecker,
                     DestinationType destinationType) {
-        this.connectionFactory = Preconditions.checkNotNull(connectionFactory, "connectionFactory");
-        this.destinationName = Preconditions.checkNotNull(destinationName, "destinationName");
-        this.deserializationSchema = Preconditions.checkNotNull(deserializationSchema, "deserializationSchema");
-        this.runningChecker = Preconditions.checkNotNull(runningChecker, "runningChecker");
-        this.destinationType = Preconditions.checkNotNull(destinationType, "destinationType");
+        this.connectionFactory = Preconditions.checkNotNull(connectionFactory, "connectionFactory not set");
+        this.destinationName = Preconditions.checkNotNull(destinationName, "destinationName not set");
+        this.deserializationSchema = Preconditions.checkNotNull(deserializationSchema, "deserializationSchema not set");
+        this.runningChecker = Preconditions.checkNotNull(runningChecker, "runningChecker not set");
+        this.destinationType = Preconditions.checkNotNull(destinationType, "destinationType not set");
     }
 
     public ActiveMQConnectionFactory getConnectionFactory() {
