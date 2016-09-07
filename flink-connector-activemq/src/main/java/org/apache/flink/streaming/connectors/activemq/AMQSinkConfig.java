@@ -34,9 +34,9 @@ public class AMQSinkConfig<IN> {
     public AMQSinkConfig(ActiveMQConnectionFactory connectionFactory, String queueName,
                         SerializationSchema<IN> serializationSchema, boolean persistentDelivery,
                         DestinationType destinationType) {
-        this.connectionFactory = Preconditions.checkNotNull(connectionFactory, "connectionFactory");
-        this.queueName = Preconditions.checkNotNull(queueName, "destinationName");
-        this.serializationSchema = Preconditions.checkNotNull(serializationSchema, "serializationSchema");
+        this.connectionFactory = Preconditions.checkNotNull(connectionFactory, "connectionFactory not set");
+        this.queueName = Preconditions.checkNotNull(queueName, "destinationName not set");
+        this.serializationSchema = Preconditions.checkNotNull(serializationSchema, "serializationSchema not set");
         this.persistentDelivery = persistentDelivery;
         this.destinationType = Preconditions.checkNotNull(destinationType, "destinationType");
     }
