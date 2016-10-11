@@ -1,8 +1,23 @@
-# Apache Bahir
+# Apache Bahir (Flink)
 
-Apache Bahir provides extensions to distributed analytics platforms such as Apache Spark and Apache Flink.
+Apache Bahir provides extensions to distributed analytics platforms such as Apache Spark™ and Apache Flink®.
 
 <http://bahir.apache.org/>
+
+
+This repository is for Apache Flink extensions.
+
+## Contributing a Flink Connector
+
+The Bahir community is very open to new connector contributions for Apache Flink.
+
+We ask contributors to first open a [JIRA issue](issues.apache.org/jira/browse/BAHIR) describing the planned changes. Please make sure to put "Flink Streaming Connector" in the "Component/s" field.
+
+Once the community has agreed that the planned changes are suitable, you can open a pull request at the "bahir-flink" repository.
+Please follow the same directory structure as the existing code.
+
+The community will review your changes, giving suggestions how to improve the code until we can merge it to the main repository.
+
 
 
 ## Building Bahir
