@@ -11,7 +11,7 @@ This repository is for Apache Flink extensions.
 
 The Bahir community is very open to new connector contributions for Apache Flink.
 
-We ask contributors to first open a [JIRA issue](issues.apache.org/jira/browse/BAHIR) describing the planned changes. Please make sure to put "Flink Streaming Connector" in the "Component/s" field.
+We ask contributors to first open a [JIRA issue](http://issues.apache.org/jira/browse/BAHIR) describing the planned changes. Please make sure to put "Flink Streaming Connector" in the "Component/s" field.
 
 Once the community has agreed that the planned changes are suitable, you can open a pull request at the "bahir-flink" repository.
 Please follow the same directory structure as the existing code.
