@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory
 
 /**
  * Netty Server bootstrap with user-provided tcp port.
- *
  * - Receiving streaming data
  * - add to Flink [[org.apache.flink.hadoop.shaded.org.jboss.netty.channel.ChannelHandlerContext]]
  *

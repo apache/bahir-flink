@@ -60,21 +60,6 @@ class MonitorHandler(list: LinkedBlockingQueue[JSONObject]) extends ChannelInbou
 
   override def channelReadComplete(ctx: ChannelHandlerContext): Unit = ctx.flush
 
-  private def parseCallback(line: String): JSONObject = {
-    val obj = new JSONObject()
-    line.startsWith("/cb?") match {
-      case true =>
-        val map = line.substring(4).split("&")
-        map.foreach(f => {
-          val tp = f.split("=")
-          obj.put(tp.head, URLDecoder.decode(tp(1), "UTF-8"))
-        })
-      case false =>
-        logger.info("")
-    }
-    obj
-  }
-
   override def channelRead(ctx: ChannelHandlerContext, msg: Any): Unit = {
     msg match {
       case req: HttpRequest =>
@@ -96,6 +81,21 @@ class MonitorHandler(list: LinkedBlockingQueue[JSONObject]) extends ChannelInbou
         ctx.write(response).addListener(ChannelFutureListener.CLOSE)
       case _ =>
     }
+  }
+
+  private def parseCallback(line: String): JSONObject = {
+    val obj = new JSONObject()
+    line.startsWith("/cb?") match {
+      case true =>
+        val map = line.substring(4).split("&")
+        map.foreach(f => {
+          val tp = f.split("=")
+          obj.put(tp.head, URLDecoder.decode(tp(1), "UTF-8"))
+        })
+      case false =>
+        logger.info("")
+    }
+    obj
   }
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {

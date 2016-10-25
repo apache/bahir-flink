@@ -20,10 +20,23 @@ import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunctio
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
 
 /**
+ * Http receiver source is used for receiving pushed http request.
+ * It work for two step:
+ * 1. start netty server with an un-used port when Flink get start
+ * 2. after started netty, call back [[callbackUrl]] for register current connector to
+ * message service, user can push http message to this address.
+ * {{{
+ *   // for example:
+ *   val env = StreamExecutionEnvironment.getExecutionEnvironment
+ *   env.addSource(new TcpReceiverSource(7070, Some("http://localhost:9090/cb")))
+ * }}}
  *
- * Created by shijinkui on 9/24/16.
+ * @param paramKey    the http query param key
+ * @param tryPort     try to use this point, if this point is used then try a new port
+ * @param callbackUrl register connector's ip and port to a third service
  */
 final class HttpReceiverSource(
+  paramKey: String,
   tryPort: Int,
   callbackUrl: Option[String] = None
 ) extends RichParallelSourceFunction[String] {
@@ -32,7 +45,7 @@ final class HttpReceiverSource(
   override def cancel(): Unit = server.close()
 
   override def run(ctx: SourceContext[String]): Unit = {
-    server = new HttpServer(ctx, tryPort)
+    server = new HttpServer(ctx, paramKey)
     server.start(tryPort, callbackUrl)
   }
 }

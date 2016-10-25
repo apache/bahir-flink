@@ -115,18 +115,6 @@ object NettyUtil {
     throw new Exception(s"Failed to start service$serviceString on port $startPort")
   }
 
-  /** Return whether the exception is caused by an address-port collision when binding. */
-  private def isBindCollision(exception: Throwable): Boolean = {
-    exception match {
-      case e: BindException if e.getMessage != null => true
-      case e: BindException => isBindCollision(e.getCause)
-      case e: MultiException =>
-        e.getThrowables.asScala.toList.map(_.asInstanceOf[Throwable]).exists(isBindCollision)
-      case e: Exception => isBindCollision(e.getCause)
-      case _ => false
-    }
-  }
-
   /** send GET request to this url */
   def sendGetRequest(url: String): String = {
     val obj: URL = new URL(url)
@@ -154,6 +142,18 @@ object NettyUtil {
         }
         response.toString
       case x => throw new Exception("GET request not worked of url: " + url)
+    }
+  }
+
+  /** Return whether the exception is caused by an address-port collision when binding. */
+  private def isBindCollision(exception: Throwable): Boolean = {
+    exception match {
+      case e: BindException if e.getMessage != null => true
+      case e: BindException => isBindCollision(e.getCause)
+      case e: MultiException =>
+        e.getThrowables.asScala.toList.map(_.asInstanceOf[Throwable]).exists(isBindCollision)
+      case e: Exception => isBindCollision(e.getCause)
+      case _ => false
     }
   }
 

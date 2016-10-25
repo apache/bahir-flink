@@ -20,7 +20,6 @@ import java.net.URLEncoder
 import java.util.concurrent.{LinkedBlockingQueue, TimeUnit}
 
 import com.alibaba.fastjson.JSONObject
-import org.slf4j.LoggerFactory
 
 import scala.util.Random
 

@@ -20,15 +20,13 @@ import java.io.Closeable
 import java.net.{InetSocketAddress, URLEncoder}
 
 /**
- * server trait
+ * Server trait for define server behave.
+ * Port and callback url is required.
  */
 trait ServerTrait extends Closeable {
 
   def start(tryPort: Int, callbackUrl: Option[String]): InetSocketAddress = {
-    val addr = NettyUtil.startServiceOnPort(tryPort, (p: Int) => startNettyServer(p, callbackUrl))
-    //  register to monitor system
-    //    register(addr, callbackUrl)
-    addr
+    NettyUtil.startServiceOnPort(tryPort, (p: Int) => startNettyServer(p, callbackUrl))
   }
 
   def startNettyServer(portNotInUse: Int, callbackUrl: Option[String]): InetSocketAddress
@@ -45,7 +43,6 @@ trait ServerTrait extends Closeable {
         val port = address.getPort
         val param = s"ip=${URLEncoder.encode(newIp, "UTF-8")}&port=$port"
         val callUrl = if (url.endsWith("?")) param else "?" + param
-        println("register callback url:" + callUrl)
         NettyUtil.sendGetRequest(url + callUrl)
       case _ =>
     }

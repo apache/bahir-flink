@@ -18,18 +18,23 @@ package org.apache.flink.streaming.connectors.netty.example
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.{ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
-import io.netty.handler.codec.http._
 import io.netty.handler.codec.http.HttpResponseStatus._
 import io.netty.handler.codec.http.HttpVersion._
+import io.netty.handler.codec.http._
 import io.netty.util.AsciiString
 import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext
 import org.slf4j.LoggerFactory
 
 /**
  * http server handler, process http request
- * Created by shijinkui on 9/24/16.
+ *
+ * @param sc       Flink source context for collect received message
+ * @param paramKey the http query param key
  */
-class HttpHandler(sc: SourceContext[String]) extends ChannelInboundHandlerAdapter {
+class HttpHandler(
+  sc: SourceContext[String],
+  paramKey: String
+) extends ChannelInboundHandlerAdapter {
 
   private lazy val logger = LoggerFactory.getLogger(getClass)
   private lazy val CONTENT_TYPE = new AsciiString("Content-Type")
@@ -50,8 +55,8 @@ class HttpHandler(sc: SourceContext[String]) extends ChannelInboundHandlerAdapte
         } else {
           val decoder = new QueryStringDecoder(req.uri)
           val param: java.util.Map[String, java.util.List[String]] = decoder.parameters()
-          if (param.containsKey("msg")) {
-            sc.collect(param.get("msg").get(0))
+          if (param.containsKey(paramKey)) {
+            sc.collect(param.get(paramKey).get(0))
           }
           ctx.writeAndFlush(buildResponse())
         }
@@ -62,9 +67,7 @@ class HttpHandler(sc: SourceContext[String]) extends ChannelInboundHandlerAdapte
 
   private def buildResponse(content: Array[Byte] = Array.empty[Byte]): FullHttpResponse = {
     val response: FullHttpResponse = new DefaultFullHttpResponse(
-      HTTP_1_1,
-      OK,
-      Unpooled.wrappedBuffer(content)
+      HTTP_1_1, OK, Unpooled.wrappedBuffer(content)
     )
     response.headers.set(CONTENT_TYPE, "text/plain")
     response.headers.setInt(CONTENT_LENGTH, response.content.readableBytes)

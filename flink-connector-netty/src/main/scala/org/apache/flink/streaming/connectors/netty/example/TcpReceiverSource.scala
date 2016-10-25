@@ -26,7 +26,11 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction.SourceCont
  *
  * When this source stream get start, listen a provided tcp port, receive stream data sent from
  * the place where origin data generated.
- *
+ * {{{
+ *   // for example:
+ *   val env = StreamExecutionEnvironment.getExecutionEnvironment
+ *   env.addSource(new TcpReceiverSource("msg", 7070, Some("http://localhost:9090/cb")))
+ * }}}
  * The features provide by this source:
  * 1. source run as a netty tcp server
  * 2. listen provided tcp port, if the port is in used,

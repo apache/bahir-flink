@@ -47,7 +47,7 @@ object StreamSqlExample {
     val spec = if (param.get("tcp") == "true") {
       new TcpReceiverSource(7070, Some("http://localhost:9090/cb"))
     } else {
-      new HttpReceiverSource(7070, Some("http://localhost:9090/cb"))
+      new HttpReceiverSource("msg", 7070, Some("http://localhost:9090/cb"))
     }
 
     val orderA: DataStream[Order] = env
