@@ -69,7 +69,11 @@ object NettyUtil {
     }
   }
 
-  /** start service, if port is collision, retry 128 times */
+  /**
+   * start service, if port is collision, retry 128 times
+   * Tip: this function is copy from spark: org.apache.spark.util.Utils.scala#L2172
+   * Its better way to retry unused port
+   */
   def startServiceOnPort[T](
     startPort: Int,
     startService: Int => T,
