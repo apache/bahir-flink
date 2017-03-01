@@ -22,6 +22,8 @@ import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.minicluster.LocalFlinkMiniCluster;
+import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
@@ -29,7 +31,6 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
-import org.apache.flink.test.util.ForkableFlinkMiniCluster;
 import org.apache.flink.test.util.SuccessException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -51,7 +52,7 @@ public class ActiveMQConnectorITCase {
     public static final int MESSAGES_NUM = 10000;
     public static final String QUEUE_NAME = "queue";
     public static final String TOPIC_NAME = "topic";
-    private static ForkableFlinkMiniCluster flink;
+    private static LocalFlinkMiniCluster flink;
     private static int flinkPort;
 
     @BeforeClass
@@ -63,7 +64,7 @@ public class ActiveMQConnectorITCase {
         flinkConfig.setInteger(ConfigConstants.TASK_MANAGER_MEMORY_SIZE_KEY, 16);
         flinkConfig.setString(ConfigConstants.RESTART_STRATEGY_FIXED_DELAY_DELAY, "0 s");
 
-        flink = new ForkableFlinkMiniCluster(flinkConfig, false);
+        flink = new LocalFlinkMiniCluster(flinkConfig, false);
         flink.start();
 
         flinkPort = flink.getLeaderRPCPort();
@@ -211,9 +212,19 @@ public class ActiveMQConnectorITCase {
         while (deadline.hasTimeLeft() && sourceContext.getIdsNum() < MESSAGES_NUM) {
             Thread.sleep(100);
             Random random = new Random();
-            long checkpointId = random.nextLong();
+            final long checkpointId = random.nextLong();
             synchronized (sourceContext.getCheckpointLock()) {
-                source.snapshotState(checkpointId, System.currentTimeMillis());
+                source.snapshotState(new FunctionSnapshotContext() {
+                    @Override
+                    public long getCheckpointId() {
+                        return checkpointId;
+                    }
+
+                    @Override
+                    public long getCheckpointTimestamp() {
+                        return System.currentTimeMillis();
+                    }
+                });
                 source.notifyCheckpointComplete(checkpointId);
             }
         }
