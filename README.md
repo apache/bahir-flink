@@ -22,7 +22,7 @@ The community will review your changes, giving suggestions how to improve the co
 
 ## Building Bahir
 
-Bahir is built using [Apache Maven](http://maven.apache.org/).
+Bahir is built using [Apache Maven](http://maven.apache.org/)™.
 To build Bahir and its example programs, run:
 
     mvn -DskipTests clean install

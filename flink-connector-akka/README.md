@@ -1,8 +1,7 @@
-# Flink Akka connector
+# Flink Akka Connector
 
 This connector provides a sink to [Akka](http://akka.io/) source actors in an ActorSystem.
 To use this connector, add the following dependency to your project:
-
 
     <dependency>
       <groupId>org.apache.bahir</groupId>
@@ -11,6 +10,9 @@ To use this connector, add the following dependency to your project:
     </dependency>
     
 *Version Compatibility*: This module is compatible with Akka 2.0+.
+
+Note that the streaming connectors are not part of the binary distribution of Flink. You need to link them into your job jar for cluster execution.
+See how to link with them for cluster execution [here](https://ci.apache.org/projects/flink/flink-docs-release-1.2/dev/linking.html).
     
 ## Configuration
     
@@ -28,10 +30,10 @@ A sample configuration can be defined as follows:
     
 ## Message Types
     
-There are 3 different kind of message types which the receiver Actor in flink akka connector can receive.
+There are 3 different kind of message types which the receiver Actor in Flink Akka connector can receive.
     
 - message containing `Iterable<Object>` data
    
 - message containing generic `Object` data
    
-- message containing generic `Object` data and a `Timestamp` value passed as `Tuple2<Object, Long>`.   
+- message containing generic `Object` data and a `Timestamp` value passed as `Tuple2<Object, Long>`.

@@ -1,9 +1,7 @@
-# Flink Flume connector
+# Flink Flume Connector
 
-
-This connector provides a Sink that can send data to [Apache Flume](https://flume.apache.org/)™. To use this connector, add the
+This connector provides a sink that can send data to [Apache Flume](https://flume.apache.org/)™. To use this connector, add the
 following dependency to your project:
-
 
     <dependency>
       <groupId>org.apache.bahir</groupId>
@@ -14,7 +12,7 @@ following dependency to your project:
 *Version Compatibility*: This module is compatible with Flume 1.5.0.
 
 Note that the streaming connectors are not part of the binary distribution of Flink. You need to link them into your job jar for cluster execution.
-
+See how to link with them for cluster execution [here](https://ci.apache.org/projects/flink/flink-docs-release-1.2/dev/linking.html).
 
 To create a `FlumeSink` instantiate the following constructor:
 
