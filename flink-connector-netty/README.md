@@ -1,8 +1,11 @@
-#   Flink Netty Connector
+# Flink Netty Connector
 
-This connector provide tcp source and http source for receiving push data, implemented by [Netty](http://netty.io). 
+This connector provides tcp source and http source for receiving push data, implemented by [Netty](http://netty.io). 
 
-##  Data Flow
+Note that the streaming connectors are not part of the binary distribution of Flink. You need to link them into your job jar for cluster execution.
+See how to link with them for cluster execution [here](https://ci.apache.org/projects/flink/flink-docs-release-1.2/dev/linking.html).
+
+## Data Flow
 
 ```
 +-------------+      (2)    +------------------------+
@@ -17,14 +20,14 @@ This connector provide tcp source and http source for receiving push data, imple
 +--------------------+         (1)
 ```
 
-There are three component:
+There are three components:
 
-*   User System - where the data streaming come from
-*   Third Register Service - receive `Flink Netty Source`'s register request(ip and port)
+*   User System - where the data stream is coming from
+*   Third Register Service - receive `Flink Netty Source`'s register request (ip and port)
 *   Flink Netty Source - Netty Server for receiving pushed streaming data from `User System`
 
 
-##   Maven Dependency
+## Maven Dependency
 To use this connector, add the following dependency to your project:
 
 ```
@@ -35,7 +38,7 @@ To use this connector, add the following dependency to your project:
 </dependency>
 ```
 
-##  Usage
+## Usage
 
 *Tcp Source:*
 
@@ -43,7 +46,7 @@ To use this connector, add the following dependency to your project:
 val env = StreamExecutionEnvironment.getExecutionEnvironment
 env.addSource(new TcpReceiverSource("msg", 7070, Some("http://localhost:9090/cb")))
 ```
->paramKey:  the http query param key    
+>paramKey:  the http query param key
 >tryPort:   try to use this point, if this point is used then try a new port
 >callbackUrl:   register connector's ip and port to a `Third Register Service`
 
@@ -53,13 +56,12 @@ env.addSource(new TcpReceiverSource("msg", 7070, Some("http://localhost:9090/cb"
 val env = StreamExecutionEnvironment.getExecutionEnvironment
 env.addSource(new TcpReceiverSource(7070, Some("http://localhost:9090/cb")))
 ```
->tryPort:   try to use this point, if this point is used then try a new port
+>tryPort:   try to use this port, if this point is used then try a new port
 >callbackUrl:   register connector's ip and port to a `Third Register Service`
 
-##  full example 
+## Full Example 
 
-There are two example for get start:
+There are two example to get started:
 
 *   [StreamSqlExample](https://github.com/apache/bahir-flink/blob/master/flink-connector-netty/src/test/scala/org/apache/flink/streaming/connectors/netty/example/StreamSqlExample.scala)
 *   [TcpSourceExample](https://github.com/apache/bahir-flink/blob/master/flink-connector-netty/src/test/scala/org/apache/flink/streaming/connectors/netty/example/TcpSourceExample.scala)
-
