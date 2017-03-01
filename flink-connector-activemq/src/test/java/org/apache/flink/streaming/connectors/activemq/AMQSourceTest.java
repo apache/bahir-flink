@@ -19,7 +19,10 @@ package org.apache.flink.streaming.connectors.activemq;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.flink.api.common.functions.RuntimeContext;
+import org.apache.flink.api.common.state.KeyedStateStore;
+import org.apache.flink.api.common.state.OperatorStateStore;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.connectors.activemq.internal.AMQExceptionListener;
@@ -97,6 +100,22 @@ public class AMQSourceTest {
         amqSource = new AMQSource<>(config);
         amqSource.setRuntimeContext(createRuntimeContext());
         amqSource.open(new Configuration());
+        amqSource.initializeState(new FunctionInitializationContext() {
+            @Override
+            public boolean isRestored() {
+                return false;
+            }
+
+            @Override
+            public OperatorStateStore getOperatorStateStore() {
+                return mock(OperatorStateStore.class);
+            }
+
+            @Override
+            public KeyedStateStore getKeyedStateStore() {
+                return mock(KeyedStateStore.class);
+            }
+        });
     }
 
     private RuntimeContext createRuntimeContext() {
