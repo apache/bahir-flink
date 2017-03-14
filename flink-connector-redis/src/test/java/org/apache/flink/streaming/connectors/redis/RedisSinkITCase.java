@@ -35,6 +35,7 @@ public class RedisSinkITCase extends RedisITCaseBase {
 
     private FlinkJedisPoolConfig jedisPoolConfig;
     private static final Long NUM_ELEMENTS = 20L;
+    private static final Long ZERO = 0L;
     private static final String REDIS_KEY = "TEST_KEY";
     private static final String REDIS_ADDITIONAL_KEY = "TEST_ADDITIONAL_KEY";
 
@@ -97,13 +98,21 @@ public class RedisSinkITCase extends RedisITCaseBase {
     @Test
     public void testRedisSortedSetDataType() throws Exception {
         DataStreamSource<Tuple2<String, String>> source = env.addSource(new TestSourceFunctionSortedSet());
-        RedisSink<Tuple2<String, String>> redisSink = new RedisSink<>(jedisPoolConfig,
+        RedisSink<Tuple2<String, String>> redisZaddSink = new RedisSink<>(jedisPoolConfig,
             new RedisAdditionalDataMapper(RedisCommand.ZADD));
 
-        source.addSink(redisSink);
-        env.execute("Test Redis Sorted Set Data Type");
+        source.addSink(redisZaddSink);
+        env.execute("Test ZADD");
 
         assertEquals(NUM_ELEMENTS, jedis.zcard(REDIS_ADDITIONAL_KEY));
+
+        RedisSink<Tuple2<String, String>> redisZremSink = new RedisSink<>(jedisPoolConfig,
+                new RedisAdditionalDataMapper(RedisCommand.ZREM));
+
+        source.addSink(redisZremSink);
+        env.execute("Test ZREM");
+
+        assertEquals(ZERO, jedis.zcard(REDIS_ADDITIONAL_KEY));
 
         jedis.del(REDIS_ADDITIONAL_KEY);
     }

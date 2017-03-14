@@ -160,6 +160,18 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
         }
     }
 
+    @Override
+    public void zrem(final String key, final String element) {
+        try {
+            jedisCluster.zrem(key, element);
+        } catch (Exception e) {
+            if (LOG.isDebugEnabled()) {
+                LOG.error("Cannot send Redis message with command ZREM to set {} error message {}",
+                    key, e.getMessage());
+            }
+        }
+    }
+
     /**
      * Closes the {@link JedisCluster}.
      */

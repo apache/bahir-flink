@@ -141,6 +141,9 @@ This section gives a description of all the available data types and what Redis 
         </tr>
         <tr>
             <td>SORTED_SET</td><td><a href="http://redis.io/commands/zadd">ZADD</a></td>
-        </tr>                
+        </tr>
+        <tr>
+            <td>SORTED_SET</td><td><a href="http://redis.io/commands/zrem">ZREM</a></td>
+        </tr>
       </tbody>
 </table>

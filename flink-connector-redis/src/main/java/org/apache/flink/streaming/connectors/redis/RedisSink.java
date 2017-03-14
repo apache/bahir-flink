@@ -151,6 +151,9 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
             case ZADD:
                 this.redisCommandsContainer.zadd(this.additionalKey, value, key);
                 break;
+            case ZREM:
+                this.redisCommandsContainer.zrem(this.additionalKey, key);
+                break;
             case HSET:
                 this.redisCommandsContainer.hset(this.additionalKey, key, value);
                 break;
