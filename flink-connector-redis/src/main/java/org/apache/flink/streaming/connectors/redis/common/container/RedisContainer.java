@@ -221,6 +221,23 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
         }
     }
 
+    @Override
+    public void zrem(final String key, final String element) {
+        Jedis jedis = null;
+        try {
+            jedis = getInstance();
+            jedis.zrem(key, element);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command ZREM to set {} error message {}",
+                        key, e.getMessage());
+            }
+            throw e;
+        } finally {
+            releaseInstance(jedis);
+        }
+    }
+
     /**
      * Returns Jedis instance from the pool.
      *

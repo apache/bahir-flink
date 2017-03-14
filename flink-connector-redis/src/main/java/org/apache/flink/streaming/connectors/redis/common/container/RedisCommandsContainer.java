@@ -107,6 +107,14 @@ public interface RedisCommandsContainer extends Serializable {
     void zadd(String key, String score, String element);
 
     /**
+     * Removes the specified member from the sorted set stored at key.
+     *
+     * @param key The name of the Sorted Set
+     * @param element  element to be removed
+     */
+    void zrem(String key, String element);
+
+    /**
      * Close the Jedis container.
      *
      * @throws IOException if the instance can not be closed properly
