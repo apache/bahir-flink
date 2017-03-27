@@ -29,7 +29,7 @@ usage: release-build.sh [--release-prepare | --release-publish | --release-snaps
 DESCRIPTION
 
 Use maven infrastructure to create a project release package and publish
-to staging release location (https://dist.apache.org/repos/dist/dev/bahir-flink)
+to staging release location (https://dist.apache.org/repos/dist/dev/bahir/bahir-flink)
 and maven staging release repository.
 
 --release-prepare --releaseVersion="1.0" --developmentVersion="1.1-SNAPSHOT" [--releaseRc="rc1"] [--tag="v1.0"] [--gitCommitHash="a874b73"]
@@ -200,7 +200,7 @@ if [ -z "$RELEASE_TAG" ]; then
   RELEASE_TAG="v$RELEASE_VERSION-$RELEASE_RC"
 fi
 
-RELEASE_STAGING_LOCATION="https://dist.apache.org/repos/dist/dev/bahir-flink/"
+RELEASE_STAGING_LOCATION="https://dist.apache.org/repos/dist/dev/bahir/bahir-flink/"
 
 
 echo "  "
