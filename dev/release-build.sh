@@ -264,7 +264,7 @@ if [[ "$RELEASE_PREPARE" == "true" ]]; then
         cd .. #exit $RELEASE_VERSION-$RELEASE_RC/
 
         svn add $RELEASE_VERSION-$RELEASE_RC/
-        svn ci -m"Apache Bahir Flink Extensions $RELEASE_VERSION-$RELEASE_RC"
+        svn ci -m"Apache Bahir extensions for Apache Flink $RELEASE_VERSION-$RELEASE_RC"
     fi
 
 
