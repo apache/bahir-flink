@@ -29,7 +29,7 @@
 
   <artifactId>flink-connector-netty_2.11</artifactId>
   <name>flink-connector-netty</name>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <dependencies>
