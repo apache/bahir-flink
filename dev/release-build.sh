@@ -317,11 +317,11 @@ if [[ "$RELEASE_SNAPSHOT" == "true" ]]; then
     fi
 
     #Deploy default scala 2.11
-    $MVN $PUBLISH_PROFILES -DaltDeploymentRepository=apache.snapshots.https::default::https://repository.apache.org/content/repositories/snapshots clean package gpg:sign install:install deploy:deploy -DskipTests -Darguments="-DskipTests" -Dgpg.passphrase=$GPG_PASSPHRASE
+    $MVN $PUBLISH_PROFILES -DaltDeploymentRepository=apache.snapshots.https::default::https://repository.apache.org/content/repositories/snapshots clean package gpg:sign install:install deploy:deploy -DskipTests -Darguments="-DskipTests" -Pscala-2.11 -Dgpg.passphrase=$GPG_PASSPHRASE
 
     #Deploy scala 2.10
     ./dev/change-scala-version.sh 2.10
-    $MVN $PUBLISH_PROFILES -DaltDeploymentRepository=apache.snapshots.https::default::https://repository.apache.org/content/repositories/snapshots clean package gpg:sign install:install deploy:deploy -DskipTests -Darguments="-DskipTests" -Dscala-2.10 -Dgpg.passphrase=$GPG_PASSPHRASE
+    $MVN $PUBLISH_PROFILES -DaltDeploymentRepository=apache.snapshots.https::default::https://repository.apache.org/content/repositories/snapshots clean package gpg:sign install:install deploy:deploy -DskipTests -Darguments="-DskipTests" -Pscala-2.10 -Dgpg.passphrase=$GPG_PASSPHRASE
 
     cd "$BASE_DIR" #exit target
     exit 0
