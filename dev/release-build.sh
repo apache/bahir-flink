@@ -254,8 +254,8 @@ if [[ "$RELEASE_PREPARE" == "true" ]]; then
     if [ -z "$DRY_RUN" ]; then
         svn co $RELEASE_STAGING_LOCATION svn-bahir-flink
         mkdir -p svn-bahir-flink/$RELEASE_VERSION-$RELEASE_RC
-        cp bahir-flink/distribution/target/*.tar.gz svn-bahir-flink/$RELEASE_VERSION-$RELEASE_RC/
-        cp bahir-flink/distribution/target/*.zip    svn-bahir-flink/$RELEASE_VERSION-$RELEASE_RC/
+        cp bahir-flink/distribution/target/*.tgz svn-bahir-flink/$RELEASE_VERSION-$RELEASE_RC/
+        cp bahir-flink/distribution/target/*.zip svn-bahir-flink/$RELEASE_VERSION-$RELEASE_RC/
 
         cd svn-bahir-flink/$RELEASE_VERSION-$RELEASE_RC/
         rm -f *.asc
