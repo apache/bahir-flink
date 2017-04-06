@@ -84,6 +84,7 @@
 
     <!-- General project dependencies version -->
     <java.version>1.7</java.version>
+    <scala.version>2.11.8</scala.version>
     <scala.binary.version>2.11</scala.binary.version>
 
     <slf4j.version>1.7.16</slf4j.version>
@@ -123,7 +124,7 @@
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
-  
+
 
   <dependencyManagement>
     <dependencies>
@@ -283,7 +284,7 @@
             </execution>
           </executions>
         </plugin>
-  
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
@@ -548,7 +549,7 @@
       <id>distribution</id>
 
       <modules>
-
+        <module>distribution</module>
       </modules>
     </profile>
 
