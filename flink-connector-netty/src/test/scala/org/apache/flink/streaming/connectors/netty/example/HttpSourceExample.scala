@@ -25,7 +25,6 @@ import scala.util.Random
 
 /**
  * http client
- * Created by shijinkui on 2016/9/26.
  */
 object HttpSourceExample extends BaseTest {
 
