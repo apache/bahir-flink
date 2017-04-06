@@ -42,7 +42,7 @@ under the License.
     <dependencies>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-streaming-java_2.11</artifactId>
+            <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
         </dependency>
 
@@ -61,7 +61,7 @@ under the License.
 
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-streaming-java_2.11</artifactId>
+            <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
             <scope>test</scope>
             <type>test-jar</type>
@@ -69,7 +69,7 @@ under the License.
 
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-test-utils_2.11</artifactId>
+            <artifactId>flink-test-utils_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
             <scope>test</scope>
         </dependency>
