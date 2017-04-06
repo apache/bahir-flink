@@ -258,8 +258,12 @@ if [[ "$RELEASE_PREPARE" == "true" ]]; then
         cp bahir-flink/distribution/target/*.zip    svn-bahir-flink/$RELEASE_VERSION-$RELEASE_RC/
 
         cd svn-bahir-flink/$RELEASE_VERSION-$RELEASE_RC/
-        for i in *.zip *.gz; do gpg --output $i.asc --detach-sig --armor $i; done
-        for i in *.zip *.gz; do openssl md5 -hex $i | sed 's/MD5(\([^)]*\))= \([0-9a-f]*\)/\2 *\1/' > $i.md5; done
+        rm -f *.asc
+        for i in *.zip *.tgz; do gpg --output $i.asc --detach-sig --armor $i; done
+        rm -f *.md5
+        for i in *.zip *.tgz; do openssl md5 -hex $i | sed 's/MD5(\([^)]*\))= \([0-9a-f]*\)/\2 *\1/' > $i.md5; done
+        rm -f *.sha
+        for i in *.zip *.tgz; do shasum $i > $i.sha; done
 
         cd .. #exit $RELEASE_VERSION-$RELEASE_RC/
 
