@@ -28,7 +28,7 @@
     <groupId>org.apache.bahir</groupId>
     <artifactId>bahir-flink-assembly_2.11</artifactId>
     <packaging>pom</packaging>
-    <name>Apache Bahir for Flink - Release Distributions</name>
+    <name>Apache Bahir - Flink Extensions Distribution</name>
     <url>http://bahir.apache.org/</url>
 
     <dependencies>
