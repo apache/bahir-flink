@@ -111,9 +111,6 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
         this.flinkJedisConfigBase = flinkJedisConfigBase;
 
         this.redisSinkMapper = redisSinkMapper;
-        RedisCommandDescription redisCommandDescription = redisSinkMapper.getCommandDescription();
-        this.redisCommand = redisCommandDescription.getCommand();
-        this.additionalKey = redisCommandDescription.getAdditionalKey();
     }
 
     /**
@@ -126,6 +123,10 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
      */
     @Override
     public void invoke(IN input) throws Exception {
+        RedisCommandDescription redisCommandDescription = redisSinkMapper.getCommandDescription();
+        this.redisCommand = redisCommandDescription.getCommand();
+        this.additionalKey = redisCommandDescription.getAdditionalKey();
+
         String key = redisSinkMapper.getKeyFromData(input);
         String value = redisSinkMapper.getValueFromData(input);
 
