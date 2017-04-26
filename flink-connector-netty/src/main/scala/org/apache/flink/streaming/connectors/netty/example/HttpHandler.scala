@@ -61,7 +61,7 @@ class HttpHandler(
           ctx.writeAndFlush(buildResponse())
         }
       case x =>
-        logger.info("unsupport request format " + x)
+        logger.info("unsupported request format " + x)
     }
   }
 

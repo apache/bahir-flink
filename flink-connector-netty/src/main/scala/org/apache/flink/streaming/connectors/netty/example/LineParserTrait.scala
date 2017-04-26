@@ -16,6 +16,8 @@
  */
 package org.apache.flink.streaming.connectors.netty.example
 
+import scala.language.higherKinds
+
 /**
  * parse data line
  */

@@ -26,13 +26,12 @@ import org.apache.http.client.methods.{HttpGet, HttpPost}
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 
 /** base test util */
 class BaseTest {
-  lazy val logger = LoggerFactory.getLogger(getClass)
+  lazy val logger: Logger = LoggerFactory.getLogger(getClass)
   private lazy val httpclient = HttpClients.createDefault()
-  private lazy val queue = new LinkedBlockingQueue[JSONObject]()
   private lazy val schedule = Executors.newScheduledThreadPool(20)
   private lazy val pool = Executors.newCachedThreadPool()
 
