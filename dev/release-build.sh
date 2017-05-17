@@ -291,7 +291,7 @@ if [[ "$RELEASE_PUBLISH" == "true" ]]; then
 
     #Deploy scala 2.10
     ./dev/change-scala-version.sh 2.10
-    mvn $PUBLISH_PROFILES -DaltDeploymentRepository=apache.releases.https::default::https://repository.apache.org/service/local/staging/deploy/maven2 clean package gpg:sign install:install deploy:deploy -DskipTests -Darguments="-DskipTests" -Dscala-2.10 -Dgpg.passphrase=$GPG_PASSPHRASE
+    mvn $PUBLISH_PROFILES -DaltDeploymentRepository=apache.releases.https::default::https://repository.apache.org/service/local/staging/deploy/maven2 clean package gpg:sign install:install deploy:deploy -DskipTests -Darguments="-DskipTests" -Pscala-2.10 -Dgpg.passphrase=$GPG_PASSPHRASE
 
     cd "$BASE_DIR" #exit target
 
