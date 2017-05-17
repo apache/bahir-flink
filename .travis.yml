@@ -17,14 +17,29 @@
 
 language: java
 
-env:
-  - FLINK_VERSION="1.2.0"
+matrix:
+  include:
+    - jdk: oraclejdk8
+      env: FLINK_VERSION="1.2.0" SCALA_VER="2.11"
 
-jdk:
-  - oraclejdk8
-  - oraclejdk7
-  - openjdk7
+    - jdk: oraclejdk8
+      env: FLINK_VERSION="1.2.0" SCALA_VER="2.10"
+
+    - jdk: oraclejdk7
+      env: FLINK_VERSION="1.2.0" SCALA_VER="2.11"
+
+    - jdk: oraclejdk7
+      env: FLINK_VERSION="1.2.0" SCALA_VER="2.10"
+
+    - jdk: openjdk7
+      env: FLINK_VERSION="1.2.0" SCALA_VER="2.11"
+
+    - jdk: openjdk7
+      env: FLINK_VERSION="1.2.0" SCALA_VER="2.10"
+
+before_install:
+  - ./dev/change-scala-version.sh $SCALA_VER
 
 install: true
 
-script: mvn clean verify -Dflink.version=$FLINK_VERSION
+script: mvn clean verify -Pscala-$SCALA_VER -Dflink.version=$FLINK_VERSION
