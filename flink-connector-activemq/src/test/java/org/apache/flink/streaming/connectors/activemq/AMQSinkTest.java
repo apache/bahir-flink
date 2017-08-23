@@ -115,6 +115,7 @@ public class AMQSinkTest {
         verify(session).createTopic(DESTINATION_NAME);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void exceptionOnSendAreNotThrown() throws Exception {
         when(session.createBytesMessage()).thenThrow(JMSException.class);
@@ -123,6 +124,7 @@ public class AMQSinkTest {
         amqSink.invoke("msg");
     }
 
+    @SuppressWarnings("unchecked")
     @Test(expected = RuntimeException.class)
     public void exceptionOnSendAreThrownByDefault() throws Exception {
         when(session.createBytesMessage()).thenThrow(JMSException.class);
