@@ -15,31 +15,49 @@
 # limitations under the License.
 #
 
+sudo: required
+dist: trusty
+
+cache:
+  directories:
+  - $HOME/.m2
+
+# do not cache our own artifacts
+before_cache:
+  - rm -rf $HOME/.m2/repository/org/apache/flink/
+
 language: java
 
 matrix:
   include:
     - jdk: oraclejdk8
-      env: FLINK_VERSION="1.2.0" SCALA_VER="2.11"
-
+      env:
+        - FLINK_VERSION="1.3.0" SCALA_VERSION="2.11"
+        - CACHE_NAME=JDK8_F130_A
     - jdk: oraclejdk8
-      env: FLINK_VERSION="1.2.0" SCALA_VER="2.10"
-
-    - jdk: oraclejdk7
-      env: FLINK_VERSION="1.2.0" SCALA_VER="2.11"
-
-    - jdk: oraclejdk7
-      env: FLINK_VERSION="1.2.0" SCALA_VER="2.10"
-
+      env:
+        - FLINK_VERSION="1.3.0" SCALA_VERSION="2.10"
+        - CACHE_NAME=JDK8_F130_B
+    - jdk: openjdk8
+      env:
+        - FLINK_VERSION="1.3.0" SCALA_VERSION="2.11"
+        - CACHE_NAME=JDK8_F130_C
+    - jdk: openjdk8
+      env:
+        - FLINK_VERSION="1.3.0" SCALA_VERSION="2.10"
+        - CACHE_NAME=JDK8_F130_D
     - jdk: openjdk7
-      env: FLINK_VERSION="1.2.0" SCALA_VER="2.11"
-
+      env:
+        - FLINK_VERSION="1.3.0" SCALA_VERSION="2.11"
+        - CACHE_NAME=JDK7_F130_A
     - jdk: openjdk7
-      env: FLINK_VERSION="1.2.0" SCALA_VER="2.10"
+      env:
+        - FLINK_VERSION="1.3.0" SCALA_VERSION="2.10"
+        - CACHE_NAME=JDK7_F130_B
 
 before_install:
-  - ./dev/change-scala-version.sh $SCALA_VER
+  - ./dev/change-scala-version.sh $SCALA_VERSION
 
 install: true
 
-script: mvn clean verify -Pscala-$SCALA_VER -Dflink.version=$FLINK_VERSION
+script: mvn clean verify -Pscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION
