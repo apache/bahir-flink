@@ -72,6 +72,7 @@ public class AMQSourceTest {
     private SimpleStringSchema deserializationSchema;
     SourceFunction.SourceContext<String> context;
 
+    @SuppressWarnings("unchecked")
     @Before
     public void before() throws Exception {
         connectionFactory = mock(ActiveMQConnectionFactory.class);
