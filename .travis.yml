@@ -46,22 +46,14 @@ matrix:
       env:
         - FLINK_VERSION="1.3.0" SCALA_VERSION="2.10"
         - CACHE_NAME=JDK8_F130_D
-    - jdk: oraclejdk7
+    - jdk: openjdk7
       env:
         - FLINK_VERSION="1.3.0" SCALA_VERSION="2.11"
         - CACHE_NAME=JDK7_F130_A
-    - jdk: oraclejdk7
+    - jdk: openjdk7
       env:
         - FLINK_VERSION="1.3.0" SCALA_VERSION="2.10"
         - CACHE_NAME=JDK7_F130_B
-    - jdk: openjdk7
-      env:
-        - FLINK_VERSION="1.3.0" SCALA_VERSION="2.11"
-        - CACHE_NAME=JDK7_F130_C
-    - jdk: openjdk7
-      env:
-        - FLINK_VERSION="1.3.0" SCALA_VERSION="2.10"
-        - CACHE_NAME=JDK7_F130_D
 
 before_install:
   - ./dev/change-scala-version.sh $SCALA_VERSION
