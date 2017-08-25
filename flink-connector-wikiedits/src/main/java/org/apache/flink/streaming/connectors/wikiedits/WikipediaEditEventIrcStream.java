@@ -61,12 +61,16 @@ class WikipediaEditEventIrcStream {
         }
     }
 
-    void stop() throws InterruptedException {
-        if (conn.isConnected()) {
+    void stop() {
+        if (conn != null) {
+            try {
+                conn.interrupt();
+                conn.join(5 * 1000);
+            } catch (Throwable t) {
+                // ignore
+            }
+            conn = null;
         }
-
-        conn.interrupt();
-        conn.join(5 * 1000);
     }
 
     BlockingQueue<WikipediaEditEvent> getEdits() {
@@ -89,7 +93,7 @@ class WikipediaEditEventIrcStream {
 
         private final BlockingQueue<WikipediaEditEvent> edits;
 
-        public WikipediaIrcChannelListener(BlockingQueue<WikipediaEditEvent> edits) {
+        WikipediaIrcChannelListener(BlockingQueue<WikipediaEditEvent> edits) {
             if (edits == null) {
                 throw new NullPointerException();
             }
