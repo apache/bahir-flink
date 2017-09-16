@@ -23,7 +23,8 @@ Follow the instructions from the [InfluxDB download page](https://portal.influxd
 ### JAVA API
 
     DataStream<InfluxDBPoint> dataStream = ...
-    dataStream.addSink(new InfluxDBSink(String host, String username, String password, String dbName));
+    InfluxDBConfig influxDBConfig = InfluxDBConfig.builder(String host, String username, String password, String dbName)
+    dataStream.addSink(new InfluxDBSink(influxDBConfig));
 
 
 See end-to-end examples at [InfluxDB Examples](https://github.com/apache/bahir-flink/tree/master/flink-connector-influxdb/examples)
