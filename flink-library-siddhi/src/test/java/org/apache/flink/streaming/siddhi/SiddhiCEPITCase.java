@@ -99,7 +99,6 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
         String path = tempFolder.newFile().toURI().toString();
         output.print();
         env.execute();
-        // Assert.assertEquals(6, getLineCount(path));
     }
 
     @Test
