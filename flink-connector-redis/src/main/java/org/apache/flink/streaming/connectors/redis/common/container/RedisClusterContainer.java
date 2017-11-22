@@ -137,7 +137,7 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
     @Override
     public void pfadd(final String key, final String element) {
         try {
-            jedisCluster.set(key, element);
+            jedisCluster.pfadd(key, element);
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
                 LOG.error("Cannot send Redis message with command PFADD to key {} error message {}",
