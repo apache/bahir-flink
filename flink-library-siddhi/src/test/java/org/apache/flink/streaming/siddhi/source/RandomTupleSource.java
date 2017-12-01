@@ -21,6 +21,7 @@ import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RandomTupleSource implements SourceFunction<Tuple4<Integer, String, Double, Long>> {
     private final int count;
@@ -28,7 +29,7 @@ public class RandomTupleSource implements SourceFunction<Tuple4<Integer, String,
     private final long initialTimestamp;
 
     private volatile boolean isRunning = true;
-    private volatile int number = 0;
+    private volatile AtomicInteger number = new AtomicInteger(0);
     private long closeDelayTimestamp;
 
     public RandomTupleSource(int count, long initialTimestamp) {
@@ -54,9 +55,9 @@ public class RandomTupleSource implements SourceFunction<Tuple4<Integer, String,
     @Override
     public void run(SourceContext<Tuple4<Integer, String, Double, Long>> ctx) throws Exception {
         while (isRunning) {
-            ctx.collect(Tuple4.of(number, "test_tuple", random.nextDouble(), initialTimestamp + 1000 * number));
-            number++;
-            if (number >= this.count) {
+            long timestamp = initialTimestamp + 1000 * number.get();
+            ctx.collectWithTimestamp(Tuple4.of(number.get(), "test_tuple", random.nextDouble(), timestamp), timestamp);
+            if (number.incrementAndGet() >= this.count) {
                 cancel();
             }
         }
