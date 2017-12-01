@@ -20,6 +20,7 @@ package org.apache.flink.streaming.siddhi.source;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RandomWordSource implements SourceFunction<String> {
     private static final String[] WORDS = new String[] {
@@ -65,7 +66,7 @@ public class RandomWordSource implements SourceFunction<String> {
     private final long initialTimestamp;
 
     private volatile boolean isRunning = true;
-    private volatile int number = 0;
+    private volatile AtomicInteger number = new AtomicInteger(0);
     private long closeDelayTimestamp;
 
     public RandomWordSource(int count, long initialTimestamp) {
@@ -91,9 +92,9 @@ public class RandomWordSource implements SourceFunction<String> {
     @Override
     public void run(SourceContext<String> ctx) throws Exception {
         while (isRunning) {
-            ctx.collectWithTimestamp(WORDS[random.nextInt(WORDS.length)], initialTimestamp + 1000 * number);
-            number++;
-            if (number >= this.count) {
+            long timestamp = initialTimestamp + 1000 * number.get();
+            ctx.collectWithTimestamp(WORDS[random.nextInt(WORDS.length)], timestamp);
+            if (number.incrementAndGet() >= this.count) {
                 cancel();
             }
         }
