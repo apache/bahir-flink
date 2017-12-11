@@ -33,7 +33,8 @@ public class SiddhiExecutionPlanSchemaTest {
         TypeInformation<Event> typeInfo = TypeExtractor.createTypeInfo(Event.class);
         assertTrue("Type information should be PojoTypeInfo", typeInfo instanceof PojoTypeInfo);
 
-        SiddhiStreamSchema<Event> schema = new SiddhiStreamSchema<>(typeInfo, "id", "timestamp", "name", "price");
+        SiddhiStreamSchema<Event> schema = new SiddhiStreamSchema<>(typeInfo,
+            new String[]{"id", "timestamp", "name", "price"});
         assertEquals(4, schema.getFieldIndexes().length);
 
         StreamDefinition streamDefinition = schema.getStreamDefinition("test_stream");

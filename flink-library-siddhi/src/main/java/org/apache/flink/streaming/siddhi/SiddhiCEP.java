@@ -27,7 +27,9 @@ import org.apache.flink.streaming.siddhi.operator.SiddhiStreamOperator;
 import org.apache.flink.streaming.siddhi.schema.StreamSchema;
 import org.apache.flink.util.Preconditions;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -117,6 +119,21 @@ public class SiddhiCEP {
      * @see #from(String)
      */
     public static <T> SiddhiStream.SingleSiddhiStream<T> define(String streamId, DataStream<T> dataStream, String... fieldNames) {
+        return define(streamId, dataStream, Arrays.asList(fieldNames));
+    }
+
+    /**
+     * Define siddhi stream with streamId, source <code>DataStream</code> and stream schema,
+     * and select as initial source stream to connect to siddhi operator.
+     *
+     * @param streamId Unique siddhi streamId
+     * @param dataStream DataStream to bind to the siddhi stream.
+     * @param fieldNames Siddhi stream schema field names
+     *
+     * @see #registerStream(String, DataStream, String...)
+     * @see #from(String)
+     */
+    public static <T> SiddhiStream.SingleSiddhiStream<T> define(String streamId, DataStream<T> dataStream, List<String> fieldNames) {
         Preconditions.checkNotNull(streamId,"streamId");
         Preconditions.checkNotNull(dataStream,"dataStream");
         Preconditions.checkNotNull(fieldNames,"fieldNames");
@@ -132,6 +149,17 @@ public class SiddhiCEP {
      * @see #from(String)
      */
     public <T> SiddhiStream.SingleSiddhiStream<T> from(String streamId, DataStream<T> dataStream, String... fieldNames) {
+        return from(streamId, dataStream, Arrays.asList(fieldNames));
+    }
+
+    /**
+     * Register stream with unique <code>streaId</code>, source <code>dataStream</code> and schema fields,
+     * and select the registered stream as initial stream to connect to Siddhi Runtime.
+     *
+     * @see #registerStream(String, DataStream, String...)
+     * @see #from(String)
+     */
+    public <T> SiddhiStream.SingleSiddhiStream<T> from(String streamId, DataStream<T> dataStream, List<String> fieldNames) {
         Preconditions.checkNotNull(streamId,"streamId");
         Preconditions.checkNotNull(dataStream,"dataStream");
         Preconditions.checkNotNull(fieldNames,"fieldNames");
@@ -172,6 +200,17 @@ public class SiddhiCEP {
      * @param fieldNames Siddhi stream schema field names
      */
     public <T> void registerStream(final String streamId, DataStream<T> dataStream, String... fieldNames) {
+        registerStream(streamId, dataStream, Arrays.asList(fieldNames));
+    }
+
+    /**
+     * Define siddhi stream with streamId, source <code>DataStream</code> and stream schema.
+     *
+     * @param streamId Unique siddhi streamId
+     * @param dataStream DataStream to bind to the siddhi stream.
+     * @param fieldNames Siddhi stream schema field names
+     */
+    public <T> void registerStream(final String streamId, DataStream<T> dataStream, List<String> fieldNames) {
         Preconditions.checkNotNull(streamId,"streamId");
         Preconditions.checkNotNull(dataStream,"dataStream");
         Preconditions.checkNotNull(fieldNames,"fieldNames");
@@ -179,7 +218,7 @@ public class SiddhiCEP {
             throw new DuplicatedStreamException("Input stream: " + streamId + " already exists");
         }
         dataStreams.put(streamId, dataStream);
-        SiddhiStreamSchema<T> schema = new SiddhiStreamSchema<>(dataStream.getType(), fieldNames);
+        SiddhiStreamSchema<T> schema = new SiddhiStreamSchema<>(dataStream.getType(), fieldNames.toArray(new String[]{}));
         schema.setTypeSerializer(schema.getTypeInfo().createSerializer(dataStream.getExecutionConfig()));
         dataStreamSchemas.put(streamId, schema);
     }

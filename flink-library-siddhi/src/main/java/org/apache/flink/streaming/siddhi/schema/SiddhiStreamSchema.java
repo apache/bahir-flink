@@ -35,7 +35,7 @@ import java.util.List;
 public class SiddhiStreamSchema<T> extends StreamSchema<T> {
     private static final String DEFINE_STREAM_TEMPLATE = "define stream %s (%s);";
 
-    public SiddhiStreamSchema(TypeInformation<T> typeInfo, String... fieldNames) {
+    public SiddhiStreamSchema(TypeInformation<T> typeInfo, String[] fieldNames) {
         super(typeInfo, fieldNames);
     }
 

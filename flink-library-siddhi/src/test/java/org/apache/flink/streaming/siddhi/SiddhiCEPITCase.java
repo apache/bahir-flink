@@ -350,6 +350,7 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
         assertEquals(5, getLineCount(resultPath));
     }
 
+    @SuppressWarnings("all")
     @Test
     public void testRegisterStreamAndExtensionWithSiddhiCEPEnvironment() throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -379,6 +380,7 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
         assertEquals(5, getLineCount(resultPath));
     }
 
+    @SuppressWarnings("all")
     @Test(expected = UndefinedStreamException.class)
     public void testTriggerUndefinedStreamException() throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();

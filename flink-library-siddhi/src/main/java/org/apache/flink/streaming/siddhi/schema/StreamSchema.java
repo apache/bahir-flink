@@ -44,7 +44,7 @@ public class StreamSchema<T> implements Serializable {
     private final StreamSerializer<T> streamSerializer;
     private TypeSerializer<T> typeSerializer;
 
-    public StreamSchema(TypeInformation<T> typeInfo, String... fieldNames) {
+    public StreamSchema(TypeInformation<T> typeInfo, String[] fieldNames) {
         Preconditions.checkNotNull(fieldNames, "Field name is required");
         this.typeInfo = typeInfo;
         this.fieldNames = fieldNames;
