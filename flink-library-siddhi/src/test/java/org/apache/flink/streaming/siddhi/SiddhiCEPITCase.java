@@ -277,6 +277,8 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
     @Test
     public void testUnboundedPojoStreamSimplePatternMatch() throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+
         DataStream<Event> input1 = env.addSource(new RandomEventSource(5).closeDelay(1500), "input1");
         DataStream<Event> input2 = env.addSource(new RandomEventSource(5).closeDelay(1500), "input2");
 
