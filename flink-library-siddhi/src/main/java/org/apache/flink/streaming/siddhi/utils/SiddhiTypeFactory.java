@@ -108,18 +108,17 @@ public class SiddhiTypeFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private static final TypeInformation<?> MAP_TYPE_INFORMATION = TypeExtractor.createTypeInfo(new HashMap<String, Object>().getClass());
+    private static final TypeInformation<SiddhiRecord> MAP_PROXY_TYPE_INFORMATION = TypeExtractor.createTypeInfo(SiddhiRecord.class);
 
-    public static TypeInformation<Map<String, Object>> getMapTypeInformation() {
-        return (TypeInformation<Map<String, Object>>) MAP_TYPE_INFORMATION;
+    public static TypeInformation<SiddhiRecord> getMapTypeInformation() {
+        return MAP_PROXY_TYPE_INFORMATION;
     }
 
     public static <F> Attribute.Type getAttributeType(TypeInformation<F> fieldType) {
         if (JAVA_TO_SIDDHI_TYPE.containsKey(fieldType.getTypeClass())) {
             return JAVA_TO_SIDDHI_TYPE.get(fieldType.getTypeClass());
         } else {
-            return Attribute.Type.OBJECT
-                ;
+            return Attribute.Type.OBJECT;
         }
     }
 

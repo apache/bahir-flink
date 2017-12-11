@@ -25,6 +25,7 @@ import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.apache.flink.streaming.siddhi.operator.SiddhiOperatorContext;
+import org.apache.flink.streaming.siddhi.utils.SiddhiRecord;
 import org.apache.flink.streaming.siddhi.utils.SiddhiStreamFactory;
 import org.apache.flink.streaming.siddhi.utils.SiddhiTypeFactory;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -246,7 +247,13 @@ public abstract class SiddhiStream {
          * @see java.util.LinkedHashMap
          */
         public DataStream<Map<String, Object>> returnAsMap(String outStreamId) {
-            return this.returnsInternal(outStreamId, SiddhiTypeFactory.getMapTypeInformation());
+            return this.returnsInternal(outStreamId, SiddhiTypeFactory.getMapTypeInformation())
+                .map(new MapFunction<SiddhiRecord, Map<String, Object>>() {
+                @Override
+                public Map<String, Object> map(SiddhiRecord value) throws Exception {
+                    return value.getMap();
+                }
+            });
         }
 
         /**
