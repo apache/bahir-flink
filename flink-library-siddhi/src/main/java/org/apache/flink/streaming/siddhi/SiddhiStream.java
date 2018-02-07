@@ -24,6 +24,7 @@ import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
+import org.apache.flink.streaming.siddhi.event.InternalEvent;
 import org.apache.flink.streaming.siddhi.operator.SiddhiOperatorContext;
 import org.apache.flink.streaming.siddhi.utils.SiddhiRecord;
 import org.apache.flink.streaming.siddhi.utils.SiddhiStreamFactory;
@@ -107,6 +108,21 @@ public abstract class SiddhiStream {
         public ExecutionSiddhiStream cql(String executionPlan) {
             Preconditions.checkNotNull(executionPlan,"executionPlan");
             return new ExecutionSiddhiStream(this.toDataStream(), executionPlan, getCepEnvironment());
+        }
+
+        /**
+         * Siddhi Continuous Query Language (CQL)
+         *
+         * @return ExecutionSiddhiStream context
+         */
+        public ExecutionSiddhiStream cql(DataStream<InternalEvent> eventDataStream) {
+            return new ExecutionSiddhiStream(this.toDataStream().union(eventDataStream
+                .map(new MapFunction<InternalEvent, Tuple2<String, Object>>() {
+                    @Override
+                    public Tuple2<String, Object> map(InternalEvent internalEvent) throws Exception {
+                        return Tuple2.of(InternalEvent.DEFAULT_INTERNAL_EVENT_STREAM, (Object) internalEvent);
+                    }
+                })), "from inputStream1 insert into outputStream", getCepEnvironment());
         }
     }
 
@@ -235,7 +251,7 @@ public abstract class SiddhiStream {
             siddhiContext.setExtensions(environment.getExtensions());
             siddhiContext.setExecutionConfig(environment.getExecutionEnvironment().getConfig());
             TypeInformation<T> typeInformation =
-                SiddhiTypeFactory.getTupleTypeInformation(siddhiContext.getFinalExecutionPlan(), outStreamId);
+                SiddhiTypeFactory.getTupleTypeInformation(siddhiContext.getComposedExecutionPlan(), outStreamId);
             siddhiContext.setOutputStreamType(typeInformation);
             return returnsInternal(siddhiContext);
         }

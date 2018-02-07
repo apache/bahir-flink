@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * SiddhiCEP Operator Context Metadata including input/output stream (streamId, TypeInformation) as well execution plan query,
@@ -44,7 +46,11 @@ public class SiddhiOperatorContext implements Serializable {
     private TypeInformation outputStreamType;
     private TimeCharacteristic timeCharacteristic;
     private String name;
-    private String executionPlan;
+
+    /**
+     * UUID -- Execution Plan.
+     */
+    private final Map<String, String> executionPlanMap = new ConcurrentHashMap<>();
 
     public SiddhiOperatorContext() {
         inputStreamSchemas = new HashMap<>();
@@ -71,11 +77,12 @@ public class SiddhiOperatorContext implements Serializable {
      */
     public String getName() {
         if (this.name == null) {
-            if (executionPlan.length() > 100) {
-                return String.format("Siddhi: %s ... (%s)", executionPlan.substring(0, 100), executionPlan.length() - 100);
-            } else {
-                return String.format("Siddhi: %s", executionPlan);
-            }
+//            if (executionPlan.length() > 100) {
+//                return String.format("Siddhi: %s ... (%s)", executionPlan.substring(0, 100), executionPlan.length() - 100);
+//            } else {
+//                return String.format("Siddhi: %s", executionPlan);
+//            }
+            return "Siddhi Query: " + executionPlanMap.size();
         } else {
             return this.name;
         }
@@ -96,20 +103,22 @@ public class SiddhiOperatorContext implements Serializable {
     /**
      * @return Siddhi CEP cql-like execution plan
      */
-    public String getExecutionPlan() {
-        return executionPlan;
+    public Map<String, String> getExecutionPlan() {
+        return executionPlanMap;
     }
 
     /**
      * Stream definition + execution expression
      */
-    public String getFinalExecutionPlan() {
-        Preconditions.checkNotNull(executionPlan, "Execution plan is not set");
+    public String getComposedExecutionPlan() {
+        Preconditions.checkNotNull(executionPlanMap, "Execution plan is not set");
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, SiddhiStreamSchema<?>> entry : inputStreamSchemas.entrySet()) {
             sb.append(entry.getValue().getStreamDefinitionExpression(entry.getKey()));
         }
-        sb.append(this.getExecutionPlan());
+        for (Map.Entry<String, String> entry : this.getExecutionPlan().entrySet()) {
+            sb.append(entry.getValue());
+        }
         return sb.toString();
     }
 
@@ -174,9 +183,15 @@ public class SiddhiOperatorContext implements Serializable {
     /**
      * @param executionPlan Siddhi SQL-Like exeuction plan query
      */
-    public void setExecutionPlan(String executionPlan) {
+    public String setExecutionPlan(String executionPlan) {
         Preconditions.checkNotNull(executionPlan,"executionPlan");
-        this.executionPlan = executionPlan;
+        String id = UUID.randomUUID().toString();
+        addExecutionPlan(id, executionPlan);
+        return id;
+    }
+
+    public void addExecutionPlan(String id, String executionPlan) {
+        this.executionPlanMap.put(id, executionPlan);
     }
 
     /**

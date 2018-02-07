@@ -29,6 +29,7 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.api.java.tuple.Tuple5;
+import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.siddhi.exception.UndefinedStreamException;
 import org.apache.flink.streaming.siddhi.extension.CustomPlusFunctionExtension;
 import org.apache.flink.streaming.siddhi.source.Event;
@@ -41,6 +42,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
 import org.apache.flink.streaming.api.operators.StreamMap;
+import org.apache.flink.streaming.siddhi.event.InternalEvent;
 import org.apache.flink.streaming.util.StreamingMultipleProgramsTestBase;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -401,5 +403,39 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
         String resultPath = tempFolder.newFile().toURI().toString();
         output.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
         env.execute();
+    }
+
+    @Test
+    public void testDynamicalStreamSimplePatternMatch() throws Exception {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+
+        DataStream<Event> input1 = env.addSource(new RandomEventSource(5).closeDelay(1500), "input1");
+        DataStream<Event> input2 = env.addSource(new RandomEventSource(5).closeDelay(1500), "input2");
+        DataStream<InternalEvent> input3 = env.addSource(new SourceFunction<InternalEvent>() {
+            @Override
+            public void run(SourceContext<InternalEvent> sourceContext) throws Exception {
+                sourceContext.collect(InternalEvent.of(InternalEvent.EventType.ExecutionPlanAdded, ""));
+                sourceContext.collect(InternalEvent.of(InternalEvent.EventType.ExecutionPlanUpdated, ""));
+                sourceContext.collect(InternalEvent.of(InternalEvent.EventType.ExecutionPlanDeleted, ""));
+            }
+
+            @Override
+            public void cancel() {
+
+            }
+        });
+
+        DataStream<Map<String, Object>> output = SiddhiCEP
+            .define("inputStream1", input1.keyBy("name"), "id", "name", "price", "timestamp")
+            .union("inputStream2", input2.keyBy("name"), "id", "name", "price", "timestamp")
+            .cql(input3)
+            .returnAsMap("outputStream");
+
+        String resultPath = tempFolder.newFile().toURI().toString();
+        output.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
+        env.execute();
+        assertEquals(1, getLineCount(resultPath));
+        compareResultsByLinesInMemory("{id_1=2, name_1=test_event, id_2=3, name_2=test_event}", resultPath);
     }
 }
