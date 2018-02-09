@@ -21,14 +21,14 @@ import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class SiddhiRecord implements Serializable {
+public class GenericRecord implements Serializable {
     private final Map<String, Object> map;
 
-    public SiddhiRecord() {
+    public GenericRecord() {
         this.map = new LinkedHashMap<>();
     }
 
-    public SiddhiRecord(Map<String, Object> map) {
+    public GenericRecord(Map<String, Object> map) {
         this.map = new LinkedHashMap<>(map);
     }
 
@@ -46,5 +46,10 @@ public class SiddhiRecord implements Serializable {
 
     public void put(String field, Object value) {
         this.map.put(field, value);
+    }
+
+    @Override
+    public String toString() {
+        return this.getMap().toString();
     }
 }

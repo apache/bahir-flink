@@ -18,15 +18,16 @@
 package org.apache.flink.streaming.siddhi;
 
 import org.apache.flink.annotation.PublicEvolving;
+import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
-import org.apache.flink.streaming.siddhi.event.InternalEvent;
+import org.apache.flink.streaming.siddhi.control.ControlEvent;
 import org.apache.flink.streaming.siddhi.operator.SiddhiOperatorContext;
-import org.apache.flink.streaming.siddhi.utils.SiddhiRecord;
+import org.apache.flink.streaming.siddhi.utils.GenericRecord;
 import org.apache.flink.streaming.siddhi.utils.SiddhiStreamFactory;
 import org.apache.flink.streaming.siddhi.utils.SiddhiTypeFactory;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -115,14 +116,14 @@ public abstract class SiddhiStream {
          *
          * @return ExecutionSiddhiStream context
          */
-        public ExecutionSiddhiStream cql(DataStream<InternalEvent> eventDataStream) {
+        public ExecutionSiddhiStream cql(DataStream<ControlEvent> eventDataStream) {
             return new ExecutionSiddhiStream(this.toDataStream().union(eventDataStream
-                .map(new MapFunction<InternalEvent, Tuple2<String, Object>>() {
+                .map(new MapFunction<ControlEvent, Tuple2<String, Object>>() {
                     @Override
-                    public Tuple2<String, Object> map(InternalEvent internalEvent) throws Exception {
-                        return Tuple2.of(InternalEvent.DEFAULT_INTERNAL_EVENT_STREAM, (Object) internalEvent);
+                    public Tuple2<String, Object> map(ControlEvent controlEvent) throws Exception {
+                        return Tuple2.of(ControlEvent.DEFAULT_INTERNAL_CONTROL_STREAM, (Object) controlEvent);
                     }
-                })), "from inputStream1 insert into outputStream", getCepEnvironment());
+                })), null, getCepEnvironment());
         }
     }
 
@@ -244,14 +245,16 @@ public abstract class SiddhiStream {
          */
         public <T extends Tuple> DataStream<T> returns(String outStreamId) {
             SiddhiOperatorContext siddhiContext = new SiddhiOperatorContext();
-            siddhiContext.setExecutionPlan(executionPlan);
+            if (executionPlan != null) {
+                siddhiContext.addExecutionPlan(executionPlan);
+            }
             siddhiContext.setInputStreamSchemas(environment.getDataStreamSchemas());
             siddhiContext.setTimeCharacteristic(environment.getExecutionEnvironment().getStreamTimeCharacteristic());
             siddhiContext.setOutputStreamId(outStreamId);
             siddhiContext.setExtensions(environment.getExtensions());
             siddhiContext.setExecutionConfig(environment.getExecutionEnvironment().getConfig());
             TypeInformation<T> typeInformation =
-                SiddhiTypeFactory.getTupleTypeInformation(siddhiContext.getComposedExecutionPlan(), outStreamId);
+                SiddhiTypeFactory.getTupleTypeInformation(siddhiContext.getAllEnrichedExecutionPlan(), outStreamId);
             siddhiContext.setOutputStreamType(typeInformation);
             return returnsInternal(siddhiContext);
         }
@@ -264,9 +267,9 @@ public abstract class SiddhiStream {
          */
         public DataStream<Map<String, Object>> returnAsMap(String outStreamId) {
             return this.returnsInternal(outStreamId, SiddhiTypeFactory.getMapTypeInformation())
-                .map(new MapFunction<SiddhiRecord, Map<String, Object>>() {
+                .map(new MapFunction<GenericRecord, Map<String, Object>>() {
                 @Override
-                public Map<String, Object> map(SiddhiRecord value) throws Exception {
+                public Map<String, Object> map(GenericRecord value) throws Exception {
                     return value.getMap();
                 }
             });
@@ -283,9 +286,12 @@ public abstract class SiddhiStream {
             return returnsInternal(outStreamId, typeInformation);
         }
 
-        private <T> DataStream<T> returnsInternal(String outStreamId, TypeInformation<T> typeInformation) {
+        @VisibleForTesting
+        <T> DataStream<T> returnsInternal(String outStreamId, TypeInformation<T> typeInformation) {
             SiddhiOperatorContext siddhiContext = new SiddhiOperatorContext();
-            siddhiContext.setExecutionPlan(executionPlan);
+            if (executionPlan != null) {
+                siddhiContext.addExecutionPlan(executionPlan);
+            }
             siddhiContext.setInputStreamSchemas(environment.getDataStreamSchemas());
             siddhiContext.setTimeCharacteristic(environment.getExecutionEnvironment().getStreamTimeCharacteristic());
             siddhiContext.setOutputStreamId(outStreamId);

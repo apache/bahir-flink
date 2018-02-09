@@ -24,15 +24,19 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.typeutils.base.array.BytePrimitiveArraySerializer;
-import org.apache.flink.streaming.siddhi.event.ExecutionPlan;
+import org.apache.flink.streaming.siddhi.control.MetadataControlEvent;
+import org.apache.flink.streaming.siddhi.control.OperationControlEvent;
 import org.apache.flink.streaming.siddhi.exception.UndefinedStreamException;
-import org.apache.flink.streaming.siddhi.event.InternalEventListener;
-import org.apache.flink.streaming.siddhi.event.InternalEvent;
+import org.apache.flink.streaming.siddhi.control.ControlEventListener;
+import org.apache.flink.streaming.siddhi.control.ControlEvent;
 import org.apache.flink.streaming.siddhi.schema.StreamSchema;
 import org.apache.flink.core.memory.DataInputView;
 import org.apache.flink.core.memory.DataInputViewStreamWrapper;
@@ -87,7 +91,7 @@ import org.wso2.siddhi.query.api.definition.AbstractDefinition;
  * @param <OUT> Output Element Type
  */
 public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOperator<OUT>
-    implements OneInputStreamOperator<IN, OUT>, InternalEventListener {
+    implements OneInputStreamOperator<IN, OUT>, ControlEventListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSiddhiOperator.class);
     private static final int INITIAL_PRIORITY_QUEUE_CAPACITY = 11;
@@ -99,14 +103,70 @@ public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOper
     private final Map<String, StreamElementSerializer<IN>> streamRecordSerializers;
 
     private transient SiddhiManager siddhiManager;
-    private transient SiddhiAppRuntime siddhiRuntime;
-    private transient Map<String, InputHandler> inputStreamHandlers;
 
     // queue to buffer out of order stream records
     private transient PriorityQueue<StreamRecord<IN>> priorityQueue;
 
     private transient ListState<byte[]> siddhiRuntimeState;
     private transient ListState<byte[]> queuedRecordsState;
+
+    private transient ConcurrentHashMap<String, QueryRuntimeHandler> siddhiRuntimeHandlers;
+
+    private class QueryRuntimeHandler {
+        private final SiddhiAppRuntime siddhiRuntime;
+        private final Map<String, InputHandler> inputStreamHandlers = new HashMap<>();
+        private AtomicLong count = new AtomicLong(0);
+        private AtomicBoolean enabled = new AtomicBoolean(false);
+
+        QueryRuntimeHandler(String executionPlan) {
+            this.siddhiRuntime = siddhiManager.createSiddhiAppRuntime(executionPlan);
+        }
+
+        /**
+         * Send input data to siddhi runtime
+         */
+        void send(String streamId, Object[] data, long timestamp) throws InterruptedException {
+            if (this.enabled.get()) {
+                count.incrementAndGet();
+                inputStreamHandlers.get(streamId).send(timestamp, data);
+            }
+        }
+
+        /**
+         * Create and start execution runtime
+         */
+        private void start() {
+            this.enable();
+            this.siddhiRuntime.start();
+            registerInputAndOutput();
+            LOGGER.info("Siddhi {} started", siddhiRuntime.getName());
+        }
+
+        private void shutdown() {
+            this.siddhiRuntime.shutdown();
+            this.disable();
+            LOGGER.info("Siddhi {} shutdown, processed {} events", this.siddhiRuntime.getName(), count.get());
+        }
+
+        public void enable() {
+            this.enabled.set(true);
+        }
+
+        public void disable() {
+            this.enabled.set(false);
+        }
+
+        @SuppressWarnings("unchecked")
+        private void registerInputAndOutput() {
+            AbstractDefinition definition = this.siddhiRuntime.getStreamDefinitionMap()
+                .get(siddhiPlan.getOutputStreamId());
+            siddhiRuntime.addCallback(siddhiPlan.getOutputStreamId(),
+                new StreamOutputHandler<>(siddhiPlan.getOutputStreamType(), definition, output));
+            for (String inputStreamId : siddhiPlan.getInputStreams()) {
+                inputStreamHandlers.put(inputStreamId, siddhiRuntime.getInputHandler(inputStreamId));
+            }
+        }
+    }
 
     /**
      * @param siddhiPlan Siddhi CEP  Execution Plan
@@ -141,8 +201,8 @@ public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOper
 
     @Override
     public void processElement(StreamRecord<IN> element) throws Exception {
-        if (isInternalStream(element.getValue())) {
-            this.onInternalEvent(getInternalEvent(element.getValue()));
+        if (isControlStream(element.getValue())) {
+            this.onEventReceived(getControlEvent(element.getValue()));
             return;
         }
         String streamId = getStreamId(element.getValue());
@@ -181,20 +241,12 @@ public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOper
 
     public abstract String getStreamId(IN record);
 
-    public abstract boolean isInternalStream(IN record);
+    public abstract boolean isControlStream(IN record);
 
-    public abstract InternalEvent getInternalEvent(IN record);
+    public abstract ControlEvent getControlEvent(IN record);
 
     public PriorityQueue<StreamRecord<IN>> getPriorityQueue() {
         return priorityQueue;
-    }
-
-    protected SiddhiAppRuntime getSiddhiRuntime() {
-        return this.siddhiRuntime;
-    }
-
-    public InputHandler getSiddhiInputHandler(String streamId) {
-        return inputStreamHandlers.get(streamId);
     }
 
     protected SiddhiOperatorContext getSiddhiPlan() {
@@ -207,14 +259,24 @@ public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOper
         if (priorityQueue == null) {
             priorityQueue = new PriorityQueue<>(INITIAL_PRIORITY_QUEUE_CAPACITY, new StreamRecordComparator<IN>());
         }
-        startSiddhiRuntime();
+        if (siddhiRuntimeHandlers == null) {
+            siddhiRuntimeHandlers = new ConcurrentHashMap<>();
+        }
+    }
+
+    @Override
+    public void open() throws Exception {
+        super.open();
+        startSiddhiManager();
     }
 
     /**
      * Send input data to siddhi runtime
      */
-    protected void send(String streamId, Object[] data, long timestamp) throws InterruptedException {
-        this.getSiddhiInputHandler(streamId).send(timestamp, data);
+    void send(String streamId, Object[] data, long timestamp) throws InterruptedException {
+        for(QueryRuntimeHandler handler : this.siddhiRuntimeHandlers.values()) {
+            handler.send(streamId, data, timestamp);
+        }
     }
 
     /**
@@ -223,56 +285,37 @@ public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOper
     private static void validate(final SiddhiOperatorContext siddhiPlan) {
         SiddhiManager siddhiManager = siddhiPlan.createSiddhiManager();
         try {
-            siddhiManager.validateSiddhiApp(siddhiPlan.getComposedExecutionPlan());
+            siddhiManager.validateSiddhiApp(siddhiPlan.getAllEnrichedExecutionPlan());
         } finally {
             siddhiManager.shutdown();
         }
     }
 
-    /**
-     * Create and start execution runtime
-     */
-    private void startSiddhiRuntime() {
-        if (this.siddhiRuntime == null) {
-            this.siddhiManager = this.siddhiPlan.createSiddhiManager();
-            for (Map.Entry<String, Class<?>> entry : this.siddhiPlan.getExtensions().entrySet()) {
-                this.siddhiManager.setExtension(entry.getKey(), entry.getValue());
-            }
-            this.siddhiRuntime = siddhiManager.createSiddhiAppRuntime(siddhiPlan.getComposedExecutionPlan());
-            this.siddhiRuntime.start();
-            registerInputAndOutput(this.siddhiRuntime);
-            LOGGER.info("Siddhi {} started", siddhiRuntime.getName());
-        } else {
-            throw new IllegalStateException("Siddhi has already been initialized");
-        }
-    }
+    private void startSiddhiManager() {
+        this.siddhiManager = this.siddhiPlan.createSiddhiManager();
 
-    private void shutdownSiddhiRuntime() {
-        if (this.siddhiRuntime != null) {
-            this.siddhiRuntime.shutdown();
-            LOGGER.info("Siddhi {} shutdown", this.siddhiRuntime.getName());
-            this.siddhiRuntime = null;
-            this.siddhiManager.shutdown();
-            this.siddhiManager = null;
-            this.inputStreamHandlers = null;
-        } else {
-            throw new IllegalStateException("Siddhi has already shutdown");
+        for (Map.Entry<String, Class<?>> entry : this.siddhiPlan.getExtensions().entrySet()) {
+            this.siddhiManager.setExtension(entry.getKey(), entry.getValue());
         }
-    }
 
-    @SuppressWarnings("unchecked")
-    private void registerInputAndOutput(SiddhiAppRuntime runtime) {
-        AbstractDefinition definition = this.siddhiRuntime.getStreamDefinitionMap().get(this.siddhiPlan.getOutputStreamId());
-        runtime.addCallback(this.siddhiPlan.getOutputStreamId(), new StreamOutputHandler<>(this.siddhiPlan.getOutputStreamType(), definition, this.output));
-        inputStreamHandlers = new HashMap<>();
-        for (String inputStreamId : this.siddhiPlan.getInputStreams()) {
-            inputStreamHandlers.put(inputStreamId, runtime.getInputHandler(inputStreamId));
+        for (String id: this.siddhiPlan.getExecutionPlanMap().keySet()) {
+            QueryRuntimeHandler handler = new QueryRuntimeHandler(this.siddhiPlan.getEnrichedExecutionPlan(id));
+            handler.start();
+            this.siddhiRuntimeHandlers.put(id, handler);
         }
     }
 
     @Override
+    public void close() throws Exception {
+        for (QueryRuntimeHandler executor: this.siddhiRuntimeHandlers.values()) {
+            executor.shutdown();
+        }
+        this.siddhiRuntimeHandlers.clear();
+        super.close();
+    }
+
+    @Override
     public void dispose() throws Exception {
-        shutdownSiddhiRuntime();
         this.siddhiRuntimeState.clear();
         super.dispose();
     }
@@ -288,7 +331,7 @@ public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOper
         LOGGER.info("Restore siddhi state");
         final Iterator<byte[]> siddhiState = siddhiRuntimeState.get().iterator();
         if (siddhiState.hasNext()) {
-            this.siddhiRuntime.restore(siddhiState.next());
+            // TODO this.siddhiRuntime.restore(siddhiState.next());
         }
 
         LOGGER.info("Restore queued records state");
@@ -321,10 +364,11 @@ public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOper
         }
     }
 
-
     private void checkpointSiddhiRuntimeState() throws Exception {
         this.siddhiRuntimeState.clear();
-        this.siddhiRuntimeState.add(this.siddhiRuntime.snapshot());
+        for (Map.Entry<String, QueryRuntimeHandler> entry : this.siddhiRuntimeHandlers.entrySet()) {
+            this.siddhiRuntimeState.add(entry.getValue().siddhiRuntime.snapshot());
+        }
         this.queuedRecordsState.clear();
     }
 
@@ -341,24 +385,77 @@ public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOper
         }
     }
 
-    @Override
-    public void onInternalEvent(InternalEvent event) {
-        switch (event.getType()) {
-            case ExecutionPlanAdded:
-                ExecutionPlan executionPlan = event.getPayload(ExecutionPlan.class);
-                break;
-            case ExecutionPlanDeleted:
-                executionPlan = event.getPayload(ExecutionPlan.class);
-                break;
-            case ExecutionPlanUpdated:
-                executionPlan = event.getPayload(ExecutionPlan.class);
-                break;
-            default:
-                throw new IllegalArgumentException("Illegal event type " + event);
-        }
-    }
-
     protected abstract void snapshotQueueState(PriorityQueue<StreamRecord<IN>> queue, DataOutputView dataOutputView) throws IOException;
 
     protected abstract PriorityQueue<StreamRecord<IN>> restoreQueuerState(DataInputView dataInputView) throws IOException;
+
+    @Override
+    public void onEventReceived(ControlEvent event) {
+        if (event == null) {
+            LOGGER.warn("Null control event received and ignored");
+        }
+        if (event instanceof MetadataControlEvent) {
+            final MetadataControlEvent metadataControlEvent = (MetadataControlEvent) event;
+            if (metadataControlEvent.getDeletedExecutionPlanId() != null) {
+                for (String planId : metadataControlEvent.getDeletedExecutionPlanId()) {
+                    this.siddhiPlan.removeExecutionPlan(planId);
+                    final QueryRuntimeHandler handler = siddhiRuntimeHandlers.remove(planId);
+                    if (handler != null) {
+                        handler.shutdown();
+                    }
+                }
+            }
+
+            if (metadataControlEvent.getAddedExecutionPlanMap() != null) {
+                for (Map.Entry<String, String> entry : metadataControlEvent.getAddedExecutionPlanMap().entrySet()) {
+                    this.siddhiPlan.addExecutionPlan(entry.getKey(), entry.getValue());
+                    final QueryRuntimeHandler handler =
+                        new QueryRuntimeHandler(this.siddhiPlan.getEnrichedExecutionPlan(entry.getKey()));
+                    handler.start();
+                    siddhiRuntimeHandlers.put(entry.getKey(), handler);
+                }
+            }
+
+            if (metadataControlEvent.getUpdatedExecutionPlanMap() != null) {
+                for (Map.Entry<String, String> entry : metadataControlEvent.getUpdatedExecutionPlanMap().entrySet()) {
+                    this.siddhiPlan.updateExecutionPlan(entry.getKey(), entry.getValue());
+                    QueryRuntimeHandler oldHandler = siddhiRuntimeHandlers.get(entry.getKey());
+                    final QueryRuntimeHandler handler =
+                        new QueryRuntimeHandler(this.siddhiPlan.getEnrichedExecutionPlan(entry.getKey()));
+                    handler.start();
+                    siddhiRuntimeHandlers.put(entry.getKey(), handler);
+                    if (oldHandler != null) {
+                        oldHandler.shutdown();
+                    }
+                }
+            }
+        } else if (event instanceof OperationControlEvent) {
+            final OperationControlEvent.Action action = ((OperationControlEvent) event).getAction();
+            if (action == null) {
+                LOGGER.warn("OperationControlEvent.Action is null");
+                return;
+            }
+            switch (action) {
+                case ENABLE_QUERY:
+                    // Pause query
+                    QueryRuntimeHandler handler = siddhiRuntimeHandlers
+                        .get(((OperationControlEvent) event).getQueryId());
+                    if (handler != null) {
+                        handler.enable();
+                    }
+                    break;
+                case DISABLE_QUERY:
+                    // Resume query
+                    handler = siddhiRuntimeHandlers.get(((OperationControlEvent) event).getQueryId());
+                    if (handler != null) {
+                        handler.disable();
+                    }
+                    break;
+                default:
+                    throw new IllegalStateException("Illegal action type " + action + ": " + event);
+            }
+        } else {
+            throw new IllegalStateException("Illegal event type " + event);
+        }
+    }
 }

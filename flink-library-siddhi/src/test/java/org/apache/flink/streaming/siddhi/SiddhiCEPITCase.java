@@ -30,6 +30,8 @@ import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.api.java.tuple.Tuple5;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
+import org.apache.flink.streaming.siddhi.control.MetadataControlEvent;
+import org.apache.flink.streaming.siddhi.control.OperationControlEvent;
 import org.apache.flink.streaming.siddhi.exception.UndefinedStreamException;
 import org.apache.flink.streaming.siddhi.extension.CustomPlusFunctionExtension;
 import org.apache.flink.streaming.siddhi.source.Event;
@@ -42,7 +44,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
 import org.apache.flink.streaming.api.operators.StreamMap;
-import org.apache.flink.streaming.siddhi.event.InternalEvent;
+import org.apache.flink.streaming.siddhi.control.ControlEvent;
 import org.apache.flink.streaming.util.StreamingMultipleProgramsTestBase;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -98,9 +100,10 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
             .define("inputStream", input, "id", "name", "price")
             .cql("from inputStream insert into  outputStream")
             .returns("outputStream", Event.class);
-        String path = tempFolder.newFile().toURI().toString();
-        output.print();
+        String resultPath = tempFolder.newFile().toURI().toString();
+        output.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
         env.execute();
+        assertEquals(6, getLineCount(resultPath));
     }
 
     @Test
@@ -189,7 +192,7 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
         env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
         DataStream<Event> input = env.addSource(new RandomEventSource(5));
 
-        DataStream<Map<String, Object>> output = SiddhiCEP
+        DataStream<Map<String,Object>> output = SiddhiCEP
             .define("inputStream", input, "id", "name", "price", "timestamp")
             .cql("from inputStream select timestamp, id, name, price insert into  outputStream")
             .returnAsMap("outputStream");
@@ -226,9 +229,9 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
     @Test
     public void testMultipleUnboundedPojoStreamSimpleUnion() throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        DataStream<Event> input1 = env.addSource(new RandomEventSource(2), "input1");
-        DataStream<Event> input2 = env.addSource(new RandomEventSource(2), "input2");
-        DataStream<Event> input3 = env.addSource(new RandomEventSource(2), "input2");
+        DataStream<Event> input1 = env.addSource(new RandomEventSource(10), "input1");
+        DataStream<Event> input2 = env.addSource(new RandomEventSource(10), "input2");
+        DataStream<Event> input3 = env.addSource(new RandomEventSource(10), "input2");
         DataStream<Event> output = SiddhiCEP
             .define("inputStream1", input1, "id", "name", "price", "timestamp")
             .union("inputStream2", input2, "id", "name", "price", "timestamp")
@@ -240,10 +243,10 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
             )
             .returns("outputStream", Event.class);
 
-        String resultPath = tempFolder.newFile().toURI().toString();
+        final String resultPath = tempFolder.newFile().toURI().toString();
         output.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
         env.execute();
-        assertEquals(6, getLineCount(resultPath));
+        assertEquals(30, getLineCount(resultPath));
     }
 
     /**
@@ -281,8 +284,8 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        DataStream<Event> input1 = env.addSource(new RandomEventSource(5).closeDelay(1500), "input1");
-        DataStream<Event> input2 = env.addSource(new RandomEventSource(5).closeDelay(1500), "input2");
+        DataStream<Event> input1 = env.addSource(new RandomEventSource(50).closeDelay(1500), "input1");
+        DataStream<Event> input2 = env.addSource(new RandomEventSource(50).closeDelay(1500), "input2");
 
         DataStream<Map<String, Object>> output = SiddhiCEP
             .define("inputStream1", input1.keyBy("name"), "id", "name", "price", "timestamp")
@@ -299,7 +302,8 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
         output.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
         env.execute();
         assertEquals(1, getLineCount(resultPath));
-        compareResultsByLinesInMemory("{id_1=2, name_1=test_event, id_2=3, name_2=test_event}", resultPath);
+        compareResultsByLinesInMemory(
+            "{id_1=2, id_2=3, name_1=test_event, name_2=test_event}", resultPath);
     }
 
     /**
@@ -410,14 +414,32 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        DataStream<Event> input1 = env.addSource(new RandomEventSource(5).closeDelay(1500), "input1");
-        DataStream<Event> input2 = env.addSource(new RandomEventSource(5).closeDelay(1500), "input2");
-        DataStream<InternalEvent> input3 = env.addSource(new SourceFunction<InternalEvent>() {
+        DataStream<Event> input1 = env.addSource(new RandomEventSource(10).setName("test_event_1"),
+            "input1");
+        DataStream<Event> input2 = env.addSource(new RandomEventSource(10).setName("test_event_2"),
+            "input2");
+        DataStream<Event> input3 = env.addSource(new RandomEventSource(10).setName("test_event_3"),
+            "input3");
+
+        DataStream<ControlEvent> controlStream = env.addSource(new SourceFunction<ControlEvent>() {
             @Override
-            public void run(SourceContext<InternalEvent> sourceContext) throws Exception {
-                sourceContext.collect(InternalEvent.of(InternalEvent.EventType.ExecutionPlanAdded, ""));
-                sourceContext.collect(InternalEvent.of(InternalEvent.EventType.ExecutionPlanUpdated, ""));
-                sourceContext.collect(InternalEvent.of(InternalEvent.EventType.ExecutionPlanDeleted, ""));
+            public void run(SourceContext<ControlEvent> sourceContext) throws Exception {
+                String id1 = MetadataControlEvent.Builder.nextExecutionPlanId();
+
+                sourceContext.collect(MetadataControlEvent.builder()
+                    .addExecutionPlan(id1, "from inputStream1 select timestamp, id, name, price insert into outputStream;").build());
+
+                String id2 = MetadataControlEvent.Builder.nextExecutionPlanId();
+                sourceContext.collect(MetadataControlEvent.builder()
+                    .addExecutionPlan(id2,"from inputStream2 select timestamp, id, name, price insert into outputStream;").build());
+
+                String id3 = MetadataControlEvent.Builder.nextExecutionPlanId();
+                sourceContext.collect(MetadataControlEvent.builder()
+                    .addExecutionPlan(id3, "from inputStream3 select timestamp, id, name, price insert into outputStream;").build());
+
+                sourceContext.collect(OperationControlEvent.enableQuery(id1));
+                sourceContext.collect(OperationControlEvent.enableQuery(id2));
+                sourceContext.collect(OperationControlEvent.disableQuery(id3));
             }
 
             @Override
@@ -426,16 +448,16 @@ public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implement
             }
         });
 
-        DataStream<Map<String, Object>> output = SiddhiCEP
-            .define("inputStream1", input1.keyBy("name"), "id", "name", "price", "timestamp")
-            .union("inputStream2", input2.keyBy("name"), "id", "name", "price", "timestamp")
-            .cql(input3)
-            .returnAsMap("outputStream");
+        DataStream<Event> output = SiddhiCEP
+            .define("inputStream1", input1, "id", "name", "price", "timestamp")
+            .union("inputStream2", input2, "id", "name", "price", "timestamp")
+            .union("inputStream3", input3, "id", "name", "price", "timestamp")
+            .cql(controlStream)
+            .returns("outputStream", Event.class);
 
         String resultPath = tempFolder.newFile().toURI().toString();
         output.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
         env.execute();
-        assertEquals(1, getLineCount(resultPath));
-        compareResultsByLinesInMemory("{id_1=2, name_1=test_event, id_2=3, name_2=test_event}", resultPath);
+        assertEquals(8, getLineCount(resultPath));
     }
 }

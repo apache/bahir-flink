@@ -108,9 +108,9 @@ public class SiddhiTypeFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private static final TypeInformation<SiddhiRecord> MAP_PROXY_TYPE_INFORMATION = TypeExtractor.createTypeInfo(SiddhiRecord.class);
+    private static final TypeInformation<GenericRecord> MAP_PROXY_TYPE_INFORMATION = TypeExtractor.createTypeInfo(GenericRecord.class);
 
-    public static TypeInformation<SiddhiRecord> getMapTypeInformation() {
+    public static TypeInformation<GenericRecord> getMapTypeInformation() {
         return MAP_PROXY_TYPE_INFORMATION;
     }
 

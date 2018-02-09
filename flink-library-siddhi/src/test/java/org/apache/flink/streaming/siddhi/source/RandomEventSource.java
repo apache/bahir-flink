@@ -23,6 +23,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RandomEventSource implements SourceFunction<Event> {
+    private String name;
     private final int count;
     private final Random random;
     private final long initialTimestamp;
@@ -32,6 +33,7 @@ public class RandomEventSource implements SourceFunction<Event> {
     private volatile long closeDelayTimestamp = 1000;
 
     public RandomEventSource(int count, long initialTimestamp) {
+        this.name = null;
         this.count = count;
         this.random = new Random();
         this.initialTimestamp = initialTimestamp;
@@ -54,7 +56,8 @@ public class RandomEventSource implements SourceFunction<Event> {
     public void run(SourceContext<Event> ctx) throws Exception {
         while (isRunning) {
             long timestamp = initialTimestamp + 1000 * number.get();
-            ctx.collectWithTimestamp(Event.of(number.get(), "test_event", random.nextDouble(), timestamp), timestamp);
+            ctx.collectWithTimestamp(Event.of(number.get(),
+                this.name == null ? "test_event" : this.name, random.nextDouble(), timestamp), timestamp);
             if (number.incrementAndGet() >= this.count) {
                 cancel();
             }
@@ -69,5 +72,10 @@ public class RandomEventSource implements SourceFunction<Event> {
         } catch (InterruptedException e) {
             // ignored
         }
+    }
+
+    public RandomEventSource setName(String name) {
+        this.name = name;
+        return this;
     }
 }

@@ -23,7 +23,7 @@ import java.util.PriorityQueue;
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.streaming.siddhi.event.InternalEvent;
+import org.apache.flink.streaming.siddhi.control.ControlEvent;
 import org.apache.flink.streaming.siddhi.schema.StreamSchema;
 import org.apache.flink.streaming.siddhi.utils.SiddhiTypeFactory;
 import org.apache.flink.core.memory.DataInputView;
@@ -58,13 +58,13 @@ public class SiddhiStreamOperator<IN, OUT> extends AbstractSiddhiOperator<Tuple2
     }
 
     @Override
-    public boolean isInternalStream(Tuple2<String, IN> record) {
-        return InternalEvent.DEFAULT_INTERNAL_EVENT_STREAM.equals(record.f0);
+    public boolean isControlStream(Tuple2<String, IN> record) {
+        return ControlEvent.DEFAULT_INTERNAL_CONTROL_STREAM.equals(record.f0);
     }
 
     @Override
-    public InternalEvent getInternalEvent(Tuple2<String, IN> record) {
-        return (InternalEvent) record.f1;
+    public ControlEvent getControlEvent(Tuple2<String, IN> record) {
+        return (ControlEvent) record.f1;
     }
 
     @Override
