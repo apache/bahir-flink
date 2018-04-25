@@ -260,8 +260,6 @@ if [[ "$RELEASE_PREPARE" == "true" ]]; then
         cd svn-bahir-flink/$RELEASE_VERSION-$RELEASE_RC/
         rm -f *.asc
         for i in *.zip *.tgz; do gpg --output $i.asc --detach-sig --armor $i; done
-        rm -f *.md5
-        for i in *.zip *.tgz; do openssl md5 -hex $i | sed 's/MD5(\([^)]*\))= \([0-9a-f]*\)/\2 *\1/' > $i.md5; done
         rm -f *.sha
         for i in *.zip *.tgz; do shasum $i > $i.sha; done
 
