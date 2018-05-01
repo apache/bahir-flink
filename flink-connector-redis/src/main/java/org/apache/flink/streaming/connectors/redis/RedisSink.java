@@ -18,6 +18,9 @@
 package org.apache.flink.streaming.connectors.redis;
 
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.state.FunctionInitializationContext;
+import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisClusterConfig;
 import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisConfigBase;
@@ -34,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -75,7 +80,8 @@ import java.util.Objects;
  *
  * @param <IN> Type of the elements emitted by this sink
  */
-public class RedisSink<IN> extends RichSinkFunction<IN> {
+public class RedisSink<IN> extends RichSinkFunction<IN>
+        implements CheckpointedFunction {
 
     private static final long serialVersionUID = 1L;
 
@@ -96,6 +102,13 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
 
     private FlinkJedisConfigBase flinkJedisConfigBase;
     private RedisCommandsContainer redisCommandsContainer;
+
+    private boolean flushOnCheckpoint = false;
+    private List<IN> inputList = new ArrayList<>();
+
+    public void setFlushOnCheckpoint(boolean flushOnCheckpoint) {
+        this.flushOnCheckpoint = flushOnCheckpoint;
+    }
 
     /**
      * Creates a new {@link RedisSink} that connects to the Redis server.
@@ -126,39 +139,42 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
      */
     @Override
     public void invoke(IN input) throws Exception {
-        String key = redisSinkMapper.getKeyFromData(input);
-        String value = redisSinkMapper.getValueFromData(input);
-
-        switch (redisCommand) {
-            case RPUSH:
-                this.redisCommandsContainer.rpush(key, value);
-                break;
-            case LPUSH:
-                this.redisCommandsContainer.lpush(key, value);
-                break;
-            case SADD:
-                this.redisCommandsContainer.sadd(key, value);
-                break;
-            case SET:
-                this.redisCommandsContainer.set(key, value);
-                break;
-            case PFADD:
-                this.redisCommandsContainer.pfadd(key, value);
-                break;
-            case PUBLISH:
-                this.redisCommandsContainer.publish(key, value);
-                break;
-            case ZADD:
-                this.redisCommandsContainer.zadd(this.additionalKey, value, key);
-                break;
-            case ZREM:
-                this.redisCommandsContainer.zrem(this.additionalKey, key);
-                break;
-            case HSET:
-                this.redisCommandsContainer.hset(this.additionalKey, key, value);
-                break;
-            default:
-                throw new IllegalArgumentException("Cannot process such data type: " + redisCommand);
+        if (flushOnCheckpoint) {
+            inputList.add(input);
+        } else {
+            String key = redisSinkMapper.getKeyFromData(input);
+            String value = redisSinkMapper.getValueFromData(input);
+            switch (redisCommand) {
+                case RPUSH:
+                    this.redisCommandsContainer.rpush(key, value);
+                    break;
+                case LPUSH:
+                    this.redisCommandsContainer.lpush(key, value);
+                    break;
+                case SADD:
+                    this.redisCommandsContainer.sadd(key, value);
+                    break;
+                case SET:
+                    this.redisCommandsContainer.set(key, value);
+                    break;
+                case PFADD:
+                    this.redisCommandsContainer.pfadd(key, value);
+                    break;
+                case PUBLISH:
+                    this.redisCommandsContainer.publish(key, value);
+                    break;
+                case ZADD:
+                    this.redisCommandsContainer.zadd(this.additionalKey, value, key);
+                    break;
+                case ZREM:
+                    this.redisCommandsContainer.zrem(this.additionalKey, key);
+                    break;
+                case HSET:
+                    this.redisCommandsContainer.hset(this.additionalKey, key, value);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Cannot process such data type: " + redisCommand);
+            }
         }
     }
 
@@ -187,5 +203,51 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
         if (redisCommandsContainer != null) {
             redisCommandsContainer.close();
         }
+    }
+
+    @Override
+    public void snapshotState(FunctionSnapshotContext functionSnapshotContext) throws Exception {
+        if (flushOnCheckpoint) {
+            for (IN input : inputList) {
+                String key = redisSinkMapper.getKeyFromData(input);
+                String value = redisSinkMapper.getValueFromData(input);
+                switch (redisCommand) {
+                    case RPUSH:
+                        this.redisCommandsContainer.rpush(key, value);
+                        break;
+                    case LPUSH:
+                        this.redisCommandsContainer.lpush(key, value);
+                        break;
+                    case SADD:
+                        this.redisCommandsContainer.sadd(key, value);
+                        break;
+                    case SET:
+                        this.redisCommandsContainer.set(key, value);
+                        break;
+                    case PFADD:
+                        this.redisCommandsContainer.pfadd(key, value);
+                        break;
+                    case PUBLISH:
+                        this.redisCommandsContainer.publish(key, value);
+                        break;
+                    case ZADD:
+                        this.redisCommandsContainer.zadd(this.additionalKey, value, key);
+                        break;
+                    case ZREM:
+                        this.redisCommandsContainer.zrem(this.additionalKey, key);
+                        break;
+                    case HSET:
+                        this.redisCommandsContainer.hset(this.additionalKey, key, value);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Cannot process such data type: " + redisCommand);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void initializeState(FunctionInitializationContext functionInitializationContext) throws Exception {
+
     }
 }
