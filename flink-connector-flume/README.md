@@ -6,7 +6,7 @@ following dependency to your project:
     <dependency>
       <groupId>org.apache.bahir</groupId>
       <artifactId>flink-connector-flume_2.11</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.1-SNAPSHOT</version>
     </dependency>
 
 *Version Compatibility*: This module is compatible with Flume 1.5.0.
@@ -17,4 +17,4 @@ See how to link with them for cluster execution [here](https://ci.apache.org/pro
 To create a `FlumeSink` instantiate the following constructor:
 
     FlumeSink(String host, int port, SerializationSchema<IN> schema)
-    
+

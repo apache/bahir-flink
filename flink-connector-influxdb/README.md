@@ -6,7 +6,7 @@ following dependency to your project:
     <dependency>
       <groupId>org.apache.bahir</groupId>
       <artifactId>flink-connector-influxdb_2.11</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.1-SNAPSHOT</version>
     </dependency>
 
 *Version Compatibility*: This module is compatible with InfluxDB 1.3.x   
@@ -29,4 +29,4 @@ Follow the instructions from the [InfluxDB download page](https://portal.influxd
 
 See end-to-end examples at [InfluxDB Examples](https://github.com/apache/bahir-flink/tree/master/flink-connector-influxdb/examples)
 
-    
+
