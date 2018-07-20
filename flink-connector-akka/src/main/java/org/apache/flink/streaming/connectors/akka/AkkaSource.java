@@ -30,6 +30,8 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.connectors.akka.utils.ReceiverActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
 import java.util.Collections;
 
@@ -95,7 +97,7 @@ public class AkkaSource extends RichSourceFunction<Object>
       Props.create(classForActor, ctx, urlOfPublisher, autoAck), actorName);
 
     LOG.info("Started the Receiver actor {} successfully", actorName);
-    receiverActorSystem.awaitTermination();
+    Await.result(receiverActorSystem.whenTerminated(), Duration.Inf());
   }
 
   @Override
@@ -103,7 +105,7 @@ public class AkkaSource extends RichSourceFunction<Object>
     LOG.info("Closing source");
     if (receiverActorSystem != null) {
       receiverActor.tell(PoisonPill.getInstance(), ActorRef.noSender());
-      receiverActorSystem.shutdown();
+      receiverActorSystem.terminate();
     }
   }
 

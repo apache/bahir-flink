@@ -17,8 +17,8 @@
 package org.apache.flink.streaming.connectors.activemq;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.streaming.connectors.activemq.internal.RunningChecker;
-import org.apache.flink.streaming.util.serialization.DeserializationSchema;
 import org.apache.flink.util.Preconditions;
 
 /**

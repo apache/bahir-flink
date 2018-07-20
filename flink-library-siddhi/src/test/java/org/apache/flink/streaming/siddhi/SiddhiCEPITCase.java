@@ -41,7 +41,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
 import org.apache.flink.streaming.api.operators.StreamMap;
-import org.apache.flink.streaming.util.StreamingMultipleProgramsTestBase;
+import org.apache.flink.test.util.AbstractTestBase;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,7 +52,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Flink-siddhi library integration test cases
  */
-public class SiddhiCEPITCase extends StreamingMultipleProgramsTestBase implements Serializable {
+public class SiddhiCEPITCase extends AbstractTestBase implements Serializable {
 
     @Rule
     public transient TemporaryFolder tempFolder = new TemporaryFolder();
