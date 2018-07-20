@@ -40,7 +40,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Set;
 
 /**
  * Source for reading messages from an ActiveMQ queue.
@@ -191,7 +191,7 @@ public class AMQSource<OUT> extends MessageAcknowledgingSourceBase<OUT, String>
     }
 
     @Override
-    protected void acknowledgeIDs(long checkpointId, List<String> UIds) {
+    protected void acknowledgeIDs(long l, Set<String> UIds) {
         try {
             for (String messageId : UIds) {
                 Message unacknowledgedMessage = unacknowledgedMessages.get(messageId);

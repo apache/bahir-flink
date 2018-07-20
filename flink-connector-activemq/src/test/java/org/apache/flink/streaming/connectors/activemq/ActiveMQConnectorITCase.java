@@ -74,7 +74,7 @@ public class ActiveMQConnectorITCase {
     public static void afterClass() {
         flinkPort = -1;
         if (flink != null) {
-            flink.shutdown();
+            flink.startInternalShutdown();
         }
     }
 

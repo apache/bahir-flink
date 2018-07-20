@@ -21,7 +21,6 @@ import java.io.{BufferedReader, InputStreamReader}
 import java.net._
 
 import org.apache.commons.lang3.SystemUtils
-import org.mortbay.util.MultiException
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -153,8 +152,6 @@ object NettyUtil {
     exception match {
       case e: BindException if e.getMessage != null => true
       case e: BindException => isBindCollision(e.getCause)
-      case e: MultiException =>
-        e.getThrowables.asScala.toList.map(_.asInstanceOf[Throwable]).exists(isBindCollision)
       case e: Exception => isBindCollision(e.getCause)
       case _ => false
     }

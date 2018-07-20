@@ -16,7 +16,7 @@
  */
 package org.apache.flink.streaming.connectors.redis;
 
-import org.apache.flink.streaming.util.StreamingMultipleProgramsTestBase;
+import org.apache.flink.test.util.AbstractTestBase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import redis.embedded.RedisServer;
@@ -25,7 +25,7 @@ import java.io.IOException;
 
 import static org.apache.flink.util.NetUtils.getAvailablePort;
 
-public abstract class RedisITCaseBase extends StreamingMultipleProgramsTestBase {
+public abstract class RedisITCaseBase extends AbstractTestBase {
 
     public static final int REDIS_PORT = getAvailablePort();
     public static final String REDIS_HOST = "127.0.0.1";
