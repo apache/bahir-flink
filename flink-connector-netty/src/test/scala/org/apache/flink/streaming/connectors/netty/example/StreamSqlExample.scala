@@ -60,9 +60,9 @@ object StreamSqlExample {
     tEnv.registerDataStream("OrderA", orderA, 'user, 'product, 'amount)
 
     // union the two tables
-    val result = tEnv.sql("SELECT STREAM * FROM OrderA WHERE amount > 2")
+    val result = tEnv.sqlQuery("SELECT STREAM * FROM OrderA WHERE amount > 2")
 
-    result.toDataStream[Order].print()
+    result.toAppendStream[Order].print()
 
     env.execute()
   }

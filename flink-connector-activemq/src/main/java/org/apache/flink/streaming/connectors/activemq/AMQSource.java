@@ -20,6 +20,7 @@ package org.apache.flink.streaming.connectors.activemq;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.flink.api.common.functions.RuntimeContext;
+import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.configuration.Configuration;
@@ -28,7 +29,6 @@ import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.connectors.activemq.internal.AMQExceptionListener;
 import org.apache.flink.streaming.connectors.activemq.internal.AMQUtil;
 import org.apache.flink.streaming.connectors.activemq.internal.RunningChecker;
-import org.apache.flink.streaming.util.serialization.DeserializationSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -191,7 +191,7 @@ public class AMQSource<OUT> extends MessageAcknowledgingSourceBase<OUT, String>
     }
 
     @Override
-    protected void acknowledgeIDs(long l, Set<String> UIds) {
+    protected void acknowledgeIDs(long checkpointId, Set<String> UIds) {
         try {
             for (String messageId : UIds) {
                 Message unacknowledgedMessage = unacknowledgedMessages.get(messageId);

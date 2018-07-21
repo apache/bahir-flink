@@ -76,7 +76,7 @@ public class InfluxDBSink extends RichSinkFunction<InfluxDBPoint> {
      * @param dataPoint {@link InfluxDBPoint}
      */
     @Override
-    public void invoke(InfluxDBPoint dataPoint) throws Exception {
+    public void invoke(InfluxDBPoint dataPoint, Context context) throws Exception {
         if (StringUtils.isNullOrWhitespaceOnly(dataPoint.getMeasurement())) {
             throw new RuntimeException("No measurement defined");
         }

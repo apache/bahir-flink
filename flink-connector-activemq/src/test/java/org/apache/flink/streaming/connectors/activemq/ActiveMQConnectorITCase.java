@@ -20,8 +20,10 @@ package org.apache.flink.streaming.connectors.activemq;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.runtime.minicluster.LocalFlinkMiniCluster;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
@@ -30,7 +32,6 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.api.watermark.Watermark;
-import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 import org.apache.flink.test.util.SuccessException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -60,8 +61,8 @@ public class ActiveMQConnectorITCase {
         // start also a re-usable Flink mini cluster
         Configuration flinkConfig = new Configuration();
         flinkConfig.setInteger(ConfigConstants.LOCAL_NUMBER_TASK_MANAGER, 1);
-        flinkConfig.setInteger(ConfigConstants.TASK_MANAGER_NUM_TASK_SLOTS, 8);
-        flinkConfig.setInteger(ConfigConstants.TASK_MANAGER_MEMORY_SIZE_KEY, 16);
+        flinkConfig.setInteger(TaskManagerOptions.NUM_TASK_SLOTS.key(), 8);
+        flinkConfig.setInteger(TaskManagerOptions.MANAGED_MEMORY_SIZE.key(), 16);
         flinkConfig.setString(ConfigConstants.RESTART_STRATEGY_FIXED_DELAY_DELAY, "0 s");
 
         flink = new LocalFlinkMiniCluster(flinkConfig, false);
@@ -158,7 +159,7 @@ public class ActiveMQConnectorITCase {
             .addSink(new SinkFunction<String>() {
                 final HashSet<Integer> set = new HashSet<>();
                 @Override
-                public void invoke(String value) throws Exception {
+                public void invoke(String value, Context context) throws Exception {
                     int val = Integer.parseInt(value.split("-")[1]);
                     set.add(val);
 
@@ -181,7 +182,7 @@ public class ActiveMQConnectorITCase {
         sink.open(new Configuration());
 
         for (int i = 0; i < MESSAGES_NUM; i++) {
-            sink.invoke("amq-" + i);
+            sink.invoke("amq-" + i, null);
         }
 
         AMQSourceConfig<String> sourceConfig = new AMQSourceConfig.AMQSourceConfigBuilder<String>()

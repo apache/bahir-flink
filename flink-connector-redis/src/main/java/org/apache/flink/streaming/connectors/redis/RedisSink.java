@@ -26,8 +26,8 @@ import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisSenti
 import org.apache.flink.streaming.connectors.redis.common.container.RedisCommandsContainer;
 import org.apache.flink.streaming.connectors.redis.common.container.RedisCommandsContainerBuilder;
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommand;
-import org.apache.flink.streaming.connectors.redis.common.mapper.RedisDataType;
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommandDescription;
+import org.apache.flink.streaming.connectors.redis.common.mapper.RedisDataType;
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisMapper;
 
 import org.slf4j.Logger;
@@ -125,7 +125,7 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
      * @param input The incoming data
      */
     @Override
-    public void invoke(IN input) throws Exception {
+    public void invoke(IN input, Context context) throws Exception {
         String key = redisSinkMapper.getKeyFromData(input);
         String value = redisSinkMapper.getValueFromData(input);
 

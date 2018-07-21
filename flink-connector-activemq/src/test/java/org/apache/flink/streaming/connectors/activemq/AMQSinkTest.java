@@ -19,9 +19,9 @@
 package org.apache.flink.streaming.connectors.activemq;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.flink.api.common.serialization.SerializationSchema;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.streaming.util.serialization.SerializationSchema;
-import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -83,7 +83,7 @@ public class AMQSinkTest {
     @Test
     public void messageSentToProducer() throws Exception {
         byte[] expectedMessage = serializationSchema.serialize("msg");
-        amqSink.invoke("msg");
+        amqSink.invoke("msg", null);
 
         verify(producer).send(message);
         verify(message).writeBytes(expectedMessage);
@@ -121,7 +121,7 @@ public class AMQSinkTest {
         when(session.createBytesMessage()).thenThrow(JMSException.class);
         amqSink.setLogFailuresOnly(true);
 
-        amqSink.invoke("msg");
+        amqSink.invoke("msg", null);
     }
 
     @SuppressWarnings("unchecked")
@@ -129,7 +129,7 @@ public class AMQSinkTest {
     public void exceptionOnSendAreThrownByDefault() throws Exception {
         when(session.createBytesMessage()).thenThrow(JMSException.class);
 
-        amqSink.invoke("msg");
+        amqSink.invoke("msg", null);
     }
 
     @Test

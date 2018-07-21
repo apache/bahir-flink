@@ -34,6 +34,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import scala.concurrent.Await;
+import scala.concurrent.duration.Duration;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -80,8 +82,8 @@ public class AkkaSourceTest {
 
   @After
   public void afterTest() throws Exception {
-    feederActorSystem.shutdown();
-    feederActorSystem.awaitTermination();
+    feederActorSystem.terminate();
+    Await.result(feederActorSystem.whenTerminated(), Duration.Inf());
 
     source.cancel();
     sourceThread.join();
