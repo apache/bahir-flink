@@ -17,10 +17,10 @@
 
 package org.apache.flink.streaming.connectors.flume;
 
+import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
-import org.apache.flink.streaming.util.serialization.SerializationSchema;
 import org.apache.flume.Event;
 import org.apache.flume.EventDeliveryException;
 import org.apache.flume.FlumeException;
@@ -55,8 +55,7 @@ public class FlumeSink<IN> extends RichSinkFunction<IN> {
      *            The tuple arriving from the datastream
      */
     @Override
-    public void invoke(IN value) {
-
+    public void invoke(IN value, Context context) throws Exception {
         byte[] data = schema.serialize(value);
         client.sendDataToFlume(data);
 

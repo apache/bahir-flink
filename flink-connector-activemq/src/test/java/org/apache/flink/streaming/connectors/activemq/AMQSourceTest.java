@@ -19,6 +19,7 @@ package org.apache.flink.streaming.connectors.activemq;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.flink.api.common.functions.RuntimeContext;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.state.KeyedStateStore;
 import org.apache.flink.api.common.state.OperatorStateStore;
 import org.apache.flink.configuration.Configuration;
@@ -27,7 +28,6 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.connectors.activemq.internal.AMQExceptionListener;
 import org.apache.flink.streaming.connectors.activemq.internal.RunningChecker;
-import org.apache.flink.streaming.util.serialization.SimpleStringSchema;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -161,7 +161,7 @@ public class AMQSourceTest {
     @Test
     public void acknowledgeReceivedMessage() throws Exception {
         amqSource.run(context);
-        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singletonList(MSG_ID));
+        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singleton(MSG_ID));
 
         verify(message).acknowledge();
     }
@@ -169,7 +169,7 @@ public class AMQSourceTest {
     @Test
     public void handleUnknownIds() throws Exception {
         amqSource.run(context);
-        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singletonList("unknown-id"));
+        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singleton("unknown-id"));
 
         verify(message, never()).acknowledge();
     }
@@ -177,8 +177,8 @@ public class AMQSourceTest {
     @Test
     public void doNotAcknowledgeMessageTwice() throws Exception {
         amqSource.run(context);
-        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singletonList(MSG_ID));
-        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singletonList(MSG_ID));
+        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singleton(MSG_ID));
+        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singleton(MSG_ID));
 
         verify(message, times(1)).acknowledge();
     }
@@ -196,7 +196,7 @@ public class AMQSourceTest {
         doThrow(JMSException.class).when(message).acknowledge();
 
         amqSource.run(context);
-        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singletonList(MSG_ID));
+        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singleton(MSG_ID));
     }
 
     @Test
@@ -206,7 +206,7 @@ public class AMQSourceTest {
         doThrow(JMSException.class).when(message).acknowledge();
 
         amqSource.run(context);
-        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singletonList(MSG_ID));
+        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singleton(MSG_ID));
     }
 
     @Test

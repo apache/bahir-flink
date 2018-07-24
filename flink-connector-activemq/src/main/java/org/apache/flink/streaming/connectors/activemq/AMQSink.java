@@ -18,10 +18,10 @@
 package org.apache.flink.streaming.connectors.activemq;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.connectors.activemq.internal.AMQUtil;
-import org.apache.flink.streaming.util.serialization.SerializationSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +128,7 @@ public class AMQSink<IN> extends RichSinkFunction<IN> {
      *            The incoming data
      */
     @Override
-    public void invoke(IN value) {
+    public void invoke(IN value, Context context) throws Exception {
         try {
             byte[] bytes = serializationSchema.serialize(value);
             BytesMessage message = session.createBytesMessage();
