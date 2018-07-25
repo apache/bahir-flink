@@ -1,0 +1,76 @@
+version: '2'
+
+services:
+
+  kudu-master:
+    image: eskabetxe:kudu
+    container_name: kudu-master
+    hostname: 172.25.0.6
+    ports:
+      - "8051:8051"
+    volumes:
+      - /var/lib/kudu/master
+    command: master
+    networks:
+      mynet:
+        ipv4_address: 172.25.0.6
+
+  kudu-server1:
+    image: eskabetxe:kudu
+    container_name: kudu-server1
+    hostname: 172.25.0.7
+    environment:
+      - KUDU_MASTER=172.25.0.6
+    ports:
+      - "8054:8050"
+    volumes:
+      - /var/lib/kudu/server
+    command: tserver
+    networks:
+      mynet:
+        ipv4_address: 172.25.0.7
+    links:
+      - kudu-master
+
+  kudu-server2:
+    image: eskabetxe:kudu
+    container_name: kudu-server2
+    hostname: 172.25.0.8
+    environment:
+      - KUDU_MASTER=172.25.0.6
+    ports:
+      - "8052:8050"
+    volumes:
+      - /var/lib/kudu/server
+    command: tserver
+    networks:
+      mynet:
+        ipv4_address: 172.25.0.8
+    links:
+      - kudu-master
+
+  kudu-server3:
+    image: eskabetxe:kudu
+    container_name: kudu-server3
+    hostname: 172.25.0.9
+    environment:
+      - KUDU_MASTER=172.25.0.6
+    ports:
+      - "8053:8050"
+    volumes:
+      - /var/lib/kudu/server
+    command: tserver
+    networks:
+      mynet:
+        ipv4_address: 172.25.0.9
+    links:
+      - kudu-master
+
+networks:
+  mynet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
+          IPRange: 172.25.0.2/24,
+          gateway: 172.25.0.1
