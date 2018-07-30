@@ -18,19 +18,21 @@
 package org.apache.flink.streaming.siddhi.utils;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple4;
-import org.apache.flink.api.java.typeutils.TypeInfoParser;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class SiddhiTypeFactoryTest {
     @Test
     public void testTypeInfoParser() {
-        TypeInformation<Tuple3<String, Long, Object>> type1 = TypeInfoParser.parse("Tuple3<String,Long,java.lang.Object>");
+        TypeInformation<Tuple3<String, Long, Object>> type1 =
+                Types.TUPLE(Types.STRING, Types.LONG, Types.GENERIC(Object.class));
         Assert.assertNotNull(type1);
-        TypeInformation<Tuple4<String, Long, Object, InnerPojo>> type2 = TypeInfoParser.parse("Tuple4<" + String.class.getName() + ", " + Long.class.getName() + ", " + java.lang.Object.class.getName() + "," + InnerPojo.class.getName() + ">");
+        TypeInformation<Tuple4<String, Long, Object, InnerPojo>> type2 =
+                Types.TUPLE(Types.STRING, Types.LONG, Types.GENERIC(Object.class), Types.GENERIC(InnerPojo.class));
         Assert.assertNotNull(type2);
     }
 
