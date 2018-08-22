@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.flink.streaming.connectors.kudu.connector;
 
 import org.apache.kudu.ColumnSchema;
@@ -24,29 +23,40 @@ import java.io.Serializable;
 
 public class KuduColumnInfo implements Serializable {
 
-    protected final String name;
-    protected final Type type;
-    protected final boolean key;
-    protected final boolean rangeKey;
-    protected final boolean nullable;
-    protected final Object defaultValue;
-    protected final int blockSize;
-    protected final Encoding encoding;
-    protected final Compression compression;
+    private String name;
+    private Type type;
+    private boolean key;
+    private boolean rangeKey;
+    private boolean hashKey;
+    private boolean nullable;
+    private Object defaultValue;
+    private int blockSize;
+    private Encoding encoding;
+    private Compression compression;
 
-    private KuduColumnInfo(String name, Type type,
-                           boolean key, boolean rangeKey, boolean nullable,
-                           Object defaultValue, int blockSize,
-                           Encoding encoding, Compression compression) {
+    private KuduColumnInfo(String name, Type type) {
         this.name = name;
         this.type = type;
-        this.key = key;
-        this.nullable = nullable;
-        this.defaultValue = defaultValue;
-        this.blockSize = blockSize;
-        this.encoding = encoding;
-        this.compression = compression;
-        this.rangeKey = rangeKey;
+        this.blockSize = 0;
+        this.key = false;
+        this.rangeKey = false;
+        this.hashKey = false;
+        this.nullable = false;
+        this.defaultValue = null;
+        this.encoding = Encoding.AUTO;
+        this.compression = Compression.DEFAULT;
+    }
+
+    protected String name() {
+        return name;
+    }
+
+    protected boolean isRangeKey() {
+        return rangeKey;
+    }
+
+    protected boolean isHashKey() {
+        return hashKey;
     }
 
     protected ColumnSchema columnSchema() {
@@ -61,19 +71,10 @@ public class KuduColumnInfo implements Serializable {
     }
 
     public static class Builder {
-        private final String name;
-        private final Type type;
-        private boolean key = false;
-        private boolean rangeKey = false;
-        private boolean nullable = false;
-        private Object defaultValue = null;
-        private int blockSize = 0;
-        private Encoding encoding = Encoding.AUTO;
-        private Compression compression = Compression.DEFAULT;
+        private KuduColumnInfo column;
 
         private Builder(String name, Type type) {
-            this.name = name;
-            this.type = type;
+            this.column = new KuduColumnInfo(name, type);
         }
 
         public static Builder create(String name, Type type) {
@@ -81,42 +82,47 @@ public class KuduColumnInfo implements Serializable {
         }
 
         public Builder key(boolean key) {
-            this.key = key;
+            this.column.key = key;
             return this;
         }
 
         public Builder rangeKey(boolean rangeKey) {
-            this.rangeKey = rangeKey;
+            this.column.rangeKey = rangeKey;
+            return this;
+        }
+
+        public Builder hashKey(boolean hashKey) {
+            this.column.hashKey = hashKey;
             return this;
         }
 
         public Builder nullable(boolean nullable) {
-            this.nullable = nullable;
+            this.column.nullable = nullable;
             return this;
         }
 
         public Builder defaultValue(Object defaultValue) {
-            this.defaultValue = defaultValue;
+            this.column.defaultValue = defaultValue;
             return this;
         }
 
         public Builder desiredBlockSize(int blockSize) {
-            this.blockSize = blockSize;
+            this.column.blockSize = blockSize;
             return this;
         }
 
         public Builder encoding(Encoding encoding) {
-            this.encoding = encoding;
+            this.column.encoding = encoding;
             return this;
         }
 
         public Builder compressionAlgorithm(Compression compression) {
-            this.compression = compression;
+            this.column.compression = compression;
             return this;
         }
 
         public KuduColumnInfo build() {
-            return new KuduColumnInfo(this.name, this.type, this.key, this.rangeKey, this.nullable, this.defaultValue, this.blockSize, this.encoding, this.compression);
+            return column;
         }
     }
 

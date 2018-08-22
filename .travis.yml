@@ -28,20 +28,38 @@ before_cache:
 
 language: java
 
+services:
+  - docker
+
 matrix:
   include:
     - jdk: oraclejdk8
       env:
         - FLINK_VERSION="1.5.1" SCALA_VERSION="2.11"
+        - MAVEN_PROFILE="default"
         - CACHE_NAME=JDK8_F130_A
     - jdk: openjdk8
       env:
         - FLINK_VERSION="1.5.1" SCALA_VERSION="2.11"
+        - MAVEN_PROFILE="default"
         - CACHE_NAME=JDK8_F130_B
+    - jdk: openjdk8
+      env:
+        - FLINK_VERSION="1.5.1" SCALA_VERSION="2.11"
+        - MAVEN_PROFILE="test-kudu"
+        - CACHE_NAME=JDK8_F130_KUDU
 
 before_install:
   - ./dev/change-scala-version.sh $SCALA_VERSION
 
 install: true
 
-script: mvn clean verify -Pscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION
+script:
+  - |
+    if [[ $MAVEN_PROFILE == "default" ]]; then
+      mvn clean verify -Pscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION
+    fi
+  - |
+    if [[ $MAVEN_PROFILE == "test-kudu" ]]; then
+      flink-connector-kudu/dockers/run_kudu_tests.sh
+    fi

@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.flink.streaming.connectors.kudu.connector;
 
 import org.apache.kudu.ColumnSchema;
@@ -27,50 +26,23 @@ import java.util.List;
 
 public class KuduTableInfo implements Serializable {
 
-    private static final Integer DEFAULT_REPLICAS = 3;
+    private static final Integer DEFAULT_REPLICAS = 1;
     private static final boolean DEFAULT_CREATE_IF_NOT_EXIST = false;
-    private static final Mode DEFAULT_MODE = Mode.UPSERT;
 
-    public enum Mode {INSERT,UPDATE,UPSERT}
-
-    private String master;
     private Integer replicas;
     private String name;
-    private Mode mode;
     private boolean createIfNotExist;
     private List<KuduColumnInfo> columns;
 
-    private KuduTableInfo(String master, String name){
-        this.master = master;
+    private KuduTableInfo(String name){
         this.name = name;
         this.replicas = DEFAULT_REPLICAS;
         this.createIfNotExist = DEFAULT_CREATE_IF_NOT_EXIST;
         this.columns = new ArrayList<>();
-        this.mode = DEFAULT_MODE;
     }
 
     public String getName() {
         return name;
-    }
-
-    public String getMaster() {
-        return master;
-    }
-
-    public Mode getMode() {
-        return mode;
-    }
-
-    public boolean isUpsertMode() {
-        return Mode.UPSERT.equals(getMode());
-    }
-
-    public boolean isInsertMode() {
-        return Mode.INSERT.equals(getMode());
-    }
-
-    public boolean isUpdateMode() {
-        return Mode.UPDATE.equals(getMode());
     }
 
     public Schema getSchema() {
@@ -93,13 +65,19 @@ public class KuduTableInfo implements Serializable {
         }
         if(hasColummns()) {
             List<String> rangeKeys = new ArrayList<>();
+            List<String> hashKeys = new ArrayList<>();
             for(KuduColumnInfo column : columns){
-                if(column.rangeKey){
-                    rangeKeys.add(column.name);
+                if(column.isRangeKey()){
+                    rangeKeys.add(column.name());
+                }
+                if(column.isHashKey()){
+                    hashKeys.add(column.name());
                 }
             }
             options.setRangePartitionColumns(rangeKeys);
+            options.addHashPartitions(hashKeys, replicas*2);
         }
+
         return options;
     }
 
@@ -107,22 +85,22 @@ public class KuduTableInfo implements Serializable {
         return !hasColummns();
     }
     public boolean hasColummns(){
-        return (columns!=null && !columns.isEmpty());
+        return (columns!=null && columns.size()>0);
     }
 
     public static class Builder {
         KuduTableInfo table;
 
-        private Builder(String master, String name) {
-            table = new KuduTableInfo(master, name);
+        private Builder(String name) {
+            table = new KuduTableInfo(name);
         }
 
-        public static Builder create(String master, String name) {
-            return new Builder(master, name);
+        public static Builder create(String name) {
+            return new Builder(name);
         }
 
-        public static Builder open(String master, String name) {
-            return new Builder(master, name);
+        public static Builder open(String name) {
+            return new Builder(name);
         }
 
         public Builder createIfNotExist(boolean createIfNotExist) {
@@ -133,12 +111,6 @@ public class KuduTableInfo implements Serializable {
         public Builder replicas(int replicas) {
             if (replicas == 0) return this;
             this.table.replicas = replicas;
-            return this;
-        }
-
-        public Builder mode(Mode tableMode) {
-            if(tableMode == null) return this;
-            this.table.mode = tableMode;
             return this;
         }
 

@@ -19,40 +19,32 @@ package org.apache.flink.streaming.connectors.kudu;
 import org.apache.flink.api.common.io.LocatableInputSplitAssigner;
 import org.apache.flink.api.common.io.RichInputFormat;
 import org.apache.flink.api.common.io.statistics.BaseStatistics;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.io.InputSplitAssigner;
-import org.apache.flink.streaming.connectors.kudu.connect.*;
-import org.apache.flink.types.Row;
+import org.apache.flink.core.io.LocatableInputSplit;
+import org.apache.flink.streaming.connectors.kudu.connector.*;
 import org.apache.flink.util.Preconditions;
-import org.apache.kudu.Schema;
-import org.apache.kudu.Type;
 import org.apache.kudu.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class KuduInputFormat extends RichInputFormat<Row, KuduInputSplit>
-        implements ResultTypeQueryable<Row> {
-
-    private transient KuduScanner scanner;
+public class KuduInputFormat extends RichInputFormat<KuduRow, KuduInputFormat.KuduInputSplit> {
 
     private String kuduMasters;
     private KuduTableInfo tableInfo;
-    private List<KuduFilter> tableFilters;
+    private List<KuduFilterInfo> tableFilters;
     private List<String> tableProjections;
+    private Long rowsLimit;
+    private boolean endReached;
 
-    private transient AsyncKuduClient kuduClient;
-    private transient KuduTable kuduTable;
-
+    private transient KuduConnector tableContext;
+    private transient KuduScanner scanner;
     private transient RowResultIterator resultIterator;
-
-    private boolean endReached = false;
-
 
     private static final Logger LOG = LoggerFactory.getLogger(KuduInputFormat.class);
 
@@ -62,40 +54,48 @@ public class KuduInputFormat extends RichInputFormat<Row, KuduInputSplit>
 
         Preconditions.checkNotNull(tableInfo,"tableInfo could not be null");
         this.tableInfo = tableInfo;
+
+        this.endReached = false;
+    }
+
+    public KuduInputFormat withTableFilters(KuduFilterInfo... tableFilters) {
+        return withTableFilters(Arrays.asList(tableFilters));
+    }
+
+    public KuduInputFormat withTableFilters(List<KuduFilterInfo> tableFilters) {
+        this.tableFilters = tableFilters;
+        return this;
+    }
+
+    public KuduInputFormat withTableProjections(String... tableProjections) {
+        return withTableProjections(Arrays.asList(tableProjections));
+    }
+    public KuduInputFormat withTableProjections(List<String> tableProjections) {
+        this.tableProjections = tableProjections;
+        return this;
+    }
+
+    public KuduInputFormat withRowsLimit(Long rowsLimit) {
+        this.rowsLimit = rowsLimit;
+        return this;
     }
 
     @Override
     public void configure(Configuration parameters) {
-        /*
-        this.kuduClient = new KuduClient.KuduClientBuilder(conf.masterAddress)
-                .build();
-        try {
-            this.kuduTable = this.kuduClient.openTable(conf.tableName);
-        } catch (KuduException e) {
-            e.printStackTrace();
-        }
-        this.predicates = toKuduPredicates(conf.predicates, this.kuduTable.getSchema());
-        */
+
     }
 
     @Override
     public void open(KuduInputSplit split) throws IOException {
-        kuduClient = KuduConnection.getAsyncClient(kuduMasters);
-        kuduTable = KuduTableContext.getKuduTable(kuduClient, tableInfo);
-
-        /**/
         endReached = false;
+        startTableContext();
 
-        scanner = KuduScanToken.deserializeIntoScanner(split.getScanToken(), kuduClient.syncClient());
-
+        scanner = tableContext.scanner(split.getScanToken());
         resultIterator = scanner.nextRows();
     }
 
     @Override
     public void close() {
-        KuduConnection.closeAsyncClient(kuduMasters);
-
-        /**/
         if (scanner != null) {
             try {
                 scanner.close();
@@ -115,16 +115,18 @@ public class KuduInputFormat extends RichInputFormat<Row, KuduInputSplit>
         return new LocatableInputSplitAssigner(inputSplits);
     }
 
+    private void startTableContext() throws IOException {
+        if (tableContext == null) {
+            tableContext = new KuduConnector(kuduMasters, tableInfo);
+        }
+    }
+
     @Override
     public KuduInputSplit[] createInputSplits(int minNumSplits) throws IOException {
-        Preconditions.checkNotNull(kuduClient,"kuduClient could not be null");
-        Preconditions.checkNotNull(kuduTable,"kuduTable could not be null");
+        startTableContext();
+        Preconditions.checkNotNull(tableContext,"tableContext should not be null");
 
-        /**/
-
-        KuduScanToken.KuduScanTokenBuilder tokenBuilder = getKuduScanTokenBuilder();
-
-        List<KuduScanToken> tokens = tokenBuilder.build();
+        List<KuduScanToken> tokens = tableContext.scanTokens(tableFilters, tableProjections, rowsLimit);
 
         KuduInputSplit[] splits = new KuduInputSplit[tokens.size()];
 
@@ -157,20 +159,17 @@ public class KuduInputFormat extends RichInputFormat<Row, KuduInputSplit>
         return splits;
     }
 
-
-
-
     @Override
     public boolean reachedEnd() throws IOException {
         return endReached;
     }
 
     @Override
-    public Row nextRecord(Row reuse) throws IOException {
+    public KuduRow nextRecord(KuduRow reuse) throws IOException {
         // check that current iterator has next rows
         if (this.resultIterator.hasNext()) {
             RowResult row = this.resultIterator.next();
-            return rowResultToTuple(row);
+            return KuduMapper.toKuduRow(row);
         }
         // if not, check that current scanner has more iterators
         else if (scanner.hasMoreRows()) {
@@ -182,53 +181,6 @@ public class KuduInputFormat extends RichInputFormat<Row, KuduInputSplit>
         }
         return null;
     }
-
-    public static Row rowResultToTuple(RowResult row) {
-        Schema columnProjection = row.getColumnProjection();
-        int columns = columnProjection.getColumnCount();
-
-        Row tuple = new Row(columns);
-
-        for (int i = 0; i < columns; i++) {
-            Type type = row.getColumnType(i);
-            switch (type) {
-                case BINARY:
-                    tuple.setField(i, row.getBinary(i));
-                    break;
-                case STRING:
-                    tuple.setField(i, row.getString(i));
-                    break;
-                case BOOL:
-                    tuple.setField(i, row.getBoolean(i));
-                    break;
-                case DOUBLE:
-                    tuple.setField(i, row.getDouble(i));
-                    break;
-                case FLOAT:
-                    tuple.setField(i, row.getFloat(i));
-                    break;
-                case INT8:
-                    tuple.setField(i, row.getByte(i));
-                    break;
-                case INT16:
-                    tuple.setField(i, row.getShort(i));
-                    break;
-                case INT32:
-                    tuple.setField(i, row.getInt(i));
-                    break;
-                case INT64:
-                case UNIXTIME_MICROS:
-                    tuple.setField(i, row.getLong(i));
-                    break;
-                default:
-                    throw new IllegalArgumentException("Illegal var type: " + type);
-            }
-        }
-        return tuple;
-    }
-
-
-
 
     /**
      * Returns a endpoint url in the following format: <host>:<ip>
@@ -243,33 +195,24 @@ public class KuduInputFormat extends RichInputFormat<Row, KuduInputSplit>
         return builder.toString();
     }
 
-    private KuduScanToken.KuduScanTokenBuilder getKuduScanTokenBuilder() {
-        KuduScanToken.KuduScanTokenBuilder tokenBuilder = kuduClient
-                .syncClient()
-                .newScanTokenBuilder(kuduTable);
 
-        if (tableProjections != null && tableProjections.size() > 0) {
-            tokenBuilder.setProjectedColumnNames(tableProjections);
+    public class KuduInputSplit extends LocatableInputSplit {
+
+        private byte[] scanToken;
+
+        /**
+         * Creates a new KuduInputSplit
+         * @param splitNumber the number of the input split
+         * @param hostnames The names of the hosts storing the data this input split refers to.
+         */
+        public KuduInputSplit(byte[] scanToken, final int splitNumber, final String[] hostnames) {
+            super(splitNumber, hostnames);
+
+            this.scanToken = scanToken;
         }
 
-        for (KuduFilter predicate : tableFilters) {
-            tokenBuilder.addPredicate(KuduUtils.predicate(predicate, kuduTable.getSchema()));
+        public byte[] getScanToken() {
+            return scanToken;
         }
-
-        /*
-        if (conf.limit > 0) {
-            tokenBuilder.limit(conf.limit);
-            // FIXME: https://issues.apache.org/jira/browse/KUDU-16
-            // Server side limit() operator for java-based scanners are not implemented yet
-
-        }
-*/
-        return tokenBuilder;
-    }
-
-
-    @Override
-    public TypeInformation<Row> getProducedType() {
-        return null;
     }
 }
