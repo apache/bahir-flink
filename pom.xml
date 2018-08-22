@@ -708,7 +708,6 @@
         </plugins>
       </build>
     </profile>
-
     <profile>
       <id>test-java-home</id>
       <activation>
