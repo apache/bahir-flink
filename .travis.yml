@@ -32,12 +32,12 @@ matrix:
   include:
     - jdk: oraclejdk8
       env:
-        - FLINK_VERSION="1.5.1" SCALA_VERSION="2.11"
-        - CACHE_NAME=JDK8_F130_A
+        - FLINK_VERSION="1.6.0" SCALA_VERSION="2.11"
+        - CACHE_NAME=ORA8_F160_S211
     - jdk: openjdk8
       env:
-        - FLINK_VERSION="1.5.1" SCALA_VERSION="2.11"
-        - CACHE_NAME=JDK8_F130_C
+        - FLINK_VERSION="1.6.0" SCALA_VERSION="2.11"
+        - CACHE_NAME=JDK8_F160_S211
 
 before_install:
   - ./dev/change-scala-version.sh $SCALA_VERSION
