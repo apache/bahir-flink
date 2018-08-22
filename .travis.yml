@@ -17,31 +17,41 @@
 
 sudo: required
 dist: trusty
-
-cache:
-  directories:
-  - $HOME/.m2
+language: java
 
 # do not cache our own artifacts
 before_cache:
   - rm -rf $HOME/.m2/repository/org/apache/flink/
 
-language: java
+cache:
+  directories:
+  - $HOME/.m2
 
-matrix:
-  include:
-    - jdk: oraclejdk8
-      env:
-        - FLINK_VERSION="1.5.1" SCALA_VERSION="2.11"
-        - CACHE_NAME=JDK8_F130_A
-    - jdk: openjdk8
-      env:
-        - FLINK_VERSION="1.5.1" SCALA_VERSION="2.11"
-        - CACHE_NAME=JDK8_F130_C
+jdk:
+  - oraclejdk8
+  - openjdk8
+
+env:
+  - |
+    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="false"
+    PROJECTS="flink-connector-activemq,flink-connector-akka,flink-connector-influxdb,flink-connector-netty,flink-connector-redis,flink-library-siddhi"
+  - |
+    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="true"
+    PROJECTS="flink-connector-flume"
 
 before_install:
   - ./dev/change-scala-version.sh $SCALA_VERSION
 
 install: true
 
-script: mvn clean verify -Pscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION
+before_script:
+  - if [[ $DOCKER == "true" ]]; then
+    docker-compose -f "$PROJECTS/dockers/docker-compose.yml" up -d;
+    fi
+
+script: mvn clean verify -pl $PROJECTS -Pscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION
+
+after_script:
+  - if [[ $DOCKER == "true" ]]; then
+    docker-compose -f "$PROJECTS/dockers/docker-compose.yml" down;
+    fi

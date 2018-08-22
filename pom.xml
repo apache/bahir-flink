@@ -85,7 +85,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <!-- General project dependencies version -->
-    <java.version>1.7</java.version>
+    <java.version>1.8</java.version>
     <scala.version>2.11.8</scala.version>
     <scala.binary.version>2.11</scala.binary.version>
 
@@ -696,10 +696,8 @@
   </build>
 
   <profiles>
-
     <profile>
       <id>distribution</id>
-
       <modules>
         <module>distribution</module>
       </modules>
@@ -739,7 +737,6 @@
         </plugins>
       </build>
     </profile>
-
     <profile>
       <id>test-java-home</id>
       <activation>
