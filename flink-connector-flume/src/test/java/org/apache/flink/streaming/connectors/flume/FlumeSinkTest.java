@@ -34,5 +34,4 @@ public class FlumeSinkTest {
         tryExecute(environment, "FlumeTest");
     }
 
-
 }
