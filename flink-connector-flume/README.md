@@ -17,4 +17,4 @@ See how to link with them for cluster execution [here](https://ci.apache.org/pro
 To create a `FlumeSink` instantiate the following constructor:
 
     FlumeSink(String host, int port, SerializationSchema<IN> schema)
-    
+

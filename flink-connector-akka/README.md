@@ -6,7 +6,7 @@ To use this connector, add the following dependency to your project:
     <dependency>
       <groupId>org.apache.bahir</groupId>
       <artifactId>flink-connector-akka_2.11</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.1-SNAPSHOT</version>
     </dependency>
     
 *Version Compatibility*: This module is compatible with Akka 2.0+.

@@ -27,6 +27,9 @@ cache:
   directories:
   - $HOME/.m2
 
+services:
+  - docker
+
 jdk:
   - oraclejdk8
   - openjdk8
@@ -38,11 +41,16 @@ env:
   - |
     FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="true"
     PROJECTS="flink-connector-flume"
+  - |
+    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="true"
+    PROJECTS="flink-connector-kudu"
+
 
 before_install:
   - ./dev/change-scala-version.sh $SCALA_VERSION
 
 install: true
+
 
 before_script:
   - if [[ $DOCKER == "true" ]]; then
