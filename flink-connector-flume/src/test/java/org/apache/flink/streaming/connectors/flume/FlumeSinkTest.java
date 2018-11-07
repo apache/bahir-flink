@@ -24,7 +24,6 @@ import static org.apache.flink.test.util.TestUtils.tryExecute;
 
 public class FlumeSinkTest {
 
-
     @Test
     public void testSink() throws Exception {
         StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment();
