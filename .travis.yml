@@ -17,6 +17,7 @@
 
 sudo: required
 dist: trusty
+
 language: java
 
 # do not cache our own artifacts
@@ -30,36 +31,31 @@ cache:
 services:
   - docker
 
-jdk:
-  - oraclejdk8
-  - openjdk8
-
-env:
-  - |
-    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="false"
-    PROJECTS="flink-connector-activemq,flink-connector-akka,flink-connector-influxdb,flink-connector-netty,flink-connector-redis,flink-library-siddhi"
-  - |
-    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="true"
-    PROJECTS="flink-connector-flume"
-  - |
-    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="true"
-    PROJECTS="flink-connector-kudu"
-
-
 before_install:
-  - ./dev/change-scala-version.sh $SCALA_VERSION
+- ./dev/change-scala-version.sh $SCALA_VERSION
 
 install: true
 
+jdk:
+- oraclejdk8
+- openjdk8
 
-before_script:
-  - if [[ $DOCKER == "true" ]]; then
-    docker-compose -f "$PROJECTS/dockers/docker-compose.yml" up -d;
-    fi
+env:
+  - |
+    FLINK_VERSION="1.6.0" SCALA_VERSION="2.11" PROFILE="default"
+  - |
+    FLINK_VERSION="1.6.0" SCALA_VERSION="2.11" PROFILE="docker-test"
+    PROJECTS="flink-connector-flume"
+  - |
+    FLINK_VERSION="1.6.0" SCALA_VERSION="2.11" PROFILE="docker-test"
+    PROJECTS="flink-connector-kudu"
 
-script: mvn clean verify -pl $PROJECTS -Pscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION
-
-after_script:
-  - if [[ $DOCKER == "true" ]]; then
-    docker-compose -f "$PROJECTS/dockers/docker-compose.yml" down;
+script:
+  - |
+    if [[ $PROFILE == "default" ]]; then
+      mvn clean verify -Pscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION
+    elif [[ $PROFILE == "docker-test" ]]; then
+      docker-compose -f "$PROJECTS/dockers/docker-compose.yml" up -d
+      mvn clean verify -pl $PROJECTS -Pscala-$SCALA_VERSION,$PROFILE -Dflink.version=$FLINK_VERSION
+      docker-compose -f "$PROJECTS/dockers/docker-compose.yml" down
     fi
