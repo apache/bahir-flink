@@ -55,7 +55,12 @@ public class InfluxDBSink extends RichSinkFunction<InfluxDBPoint> {
         influxDBClient = InfluxDBFactory.connect(influxDBConfig.getUrl(), influxDBConfig.getUsername(), influxDBConfig.getPassword());
 
         if (!influxDBClient.databaseExists(influxDBConfig.getDatabase())) {
-            throw new RuntimeException("This " + influxDBConfig.getDatabase() + " database does not exist!");
+            if(influxDBConfig.isCreateDatabase()) {
+                influxDBClient.createDatabase(influxDBConfig.getDatabase());
+            }
+            else {
+                throw new RuntimeException("This " + influxDBConfig.getDatabase() + " database does not exist!");
+            }
         }
 
         influxDBClient.setDatabase(influxDBConfig.getDatabase());

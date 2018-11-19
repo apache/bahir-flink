@@ -39,6 +39,7 @@ public class InfluxDBConfig implements Serializable {
     private int flushDuration;
     private TimeUnit flushDurationTimeUnit;
     private boolean enableGzip;
+    private boolean createDatabase;
 
     public InfluxDBConfig(InfluxDBConfig.Builder builder) {
         Preconditions.checkArgument(builder != null, "InfluxDBConfig builder can not be null");
@@ -52,6 +53,7 @@ public class InfluxDBConfig implements Serializable {
         this.flushDuration = builder.getFlushDuration();
         this.flushDurationTimeUnit = builder.getFlushDurationTimeUnit();
         this.enableGzip = builder.isEnableGzip();
+        this.createDatabase = builder.isCreateDatabase();
     }
 
     public String getUrl() {
@@ -86,6 +88,8 @@ public class InfluxDBConfig implements Serializable {
         return enableGzip;
     }
 
+    public boolean isCreateDatabase() { return createDatabase; }
+
     /**
      * Creates a new {@link InfluxDBConfig.Builder} instance.
      * <p/>
@@ -114,6 +118,7 @@ public class InfluxDBConfig implements Serializable {
         private int flushDuration = DEFAULT_FLUSH_DURATION;
         private TimeUnit flushDurationTimeUnit = TimeUnit.MILLISECONDS;
         private boolean enableGzip = false;
+        private boolean createDatabase = false;
 
         /**
          * Creates a builder
@@ -213,6 +218,17 @@ public class InfluxDBConfig implements Serializable {
         }
 
         /**
+         * Make InfluxDb sink create new database
+         *
+         * @param createDatabase createDatabase switch value
+         * @return this Builder to use it fluent
+         */
+        public InfluxDBConfig.Builder createDatabase(boolean createDatabase) {
+            this.createDatabase = createDatabase;
+            return this;
+        }
+
+        /**
          * Builds InfluxDBConfig.
          *
          * @return the InfluxDBConfig instance.
@@ -253,5 +269,7 @@ public class InfluxDBConfig implements Serializable {
         public boolean isEnableGzip() {
             return enableGzip;
         }
+
+        public boolean isCreateDatabase() { return createDatabase; }
     }
 }

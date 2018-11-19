@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.apache.flink.test.util.TestUtils.tryExecute;
 
+
 @DockerTest
 public class FlumeSinkTest {
 
