@@ -18,17 +18,17 @@
 package org.apache.flink.streaming.connectors.activemq;
 
 import org.apache.flink.streaming.connectors.activemq.internal.AMQExceptionListener;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import javax.jms.JMSException;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class AMQExceptionListenerTest {
+
     @Test
     public void logMessageOnException() throws JMSException {
         Logger logger = mock(Logger.class);
@@ -50,13 +50,16 @@ public class AMQExceptionListenerTest {
         verify(logger, times(1)).error("Received ActiveMQ exception", exception);
     }
 
-    @Test(expected = JMSException.class)
+
+    @Test
     public void throwException() throws JMSException {
         Logger logger = mock(Logger.class);
         AMQExceptionListener listener = new AMQExceptionListener(logger, false);
         listener.onException(new JMSException("error"));
-        listener.checkErroneous();
+
+        Assertions.assertThrows(JMSException.class, () -> listener.checkErroneous(), "a exception is expected");
     }
+
 
     @Test
     public void throwExceptionOnlyOnce() throws JMSException {
