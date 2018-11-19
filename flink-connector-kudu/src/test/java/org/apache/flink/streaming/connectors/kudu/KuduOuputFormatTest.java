@@ -26,9 +26,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+@DockerTest
 public class KuduOuputFormatTest extends KuduDatabase {
-
-
 
     @Test
     public void testInvalidKuduMaster() throws IOException {
