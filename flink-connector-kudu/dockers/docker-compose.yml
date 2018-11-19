@@ -19,7 +19,7 @@ version: '2'
 services:
 
   kudu-master:
-    image: eskabetxe/kudu:1.4.0
+    image: eskabetxe/kudu
     container_name: kudu-master
     hostname: 172.25.0.6
     ports:
@@ -32,7 +32,7 @@ services:
         ipv4_address: 172.25.0.6
 
   kudu-server1:
-    image: eskabetxe/kudu:1.4.0
+    image: eskabetxe/kudu
     container_name: kudu-server1
     hostname: 172.25.0.7
     environment:
@@ -49,7 +49,7 @@ services:
       - kudu-master
 
   kudu-server2:
-    image: eskabetxe/kudu:1.4.0
+    image: eskabetxe/kudu
     container_name: kudu-server2
     hostname: 172.25.0.8
     environment:
@@ -66,7 +66,7 @@ services:
       - kudu-master
 
   kudu-server3:
-    image: eskabetxe/kudu:1.4.0
+    image: eskabetxe/kudu
     container_name: kudu-server3
     hostname: 172.25.0.9
     environment:
