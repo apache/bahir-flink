@@ -29,10 +29,10 @@ import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.connectors.akka.utils.FeederActor;
 import org.apache.flink.streaming.connectors.akka.utils.Message;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
@@ -59,7 +59,7 @@ public class AkkaSourceTest {
 
   private volatile Exception exception;
 
-  @Before
+  @BeforeEach
   public void beforeTest() throws Exception {
     feederActorSystem = ActorSystem.create("feederActorSystem",
       getFeederActorConfig());
@@ -80,7 +80,7 @@ public class AkkaSourceTest {
     });
   }
 
-  @After
+  @AfterEach
   public void afterTest() throws Exception {
     feederActorSystem.terminate();
     Await.result(feederActorSystem.whenTerminated(), Duration.Inf());
@@ -105,7 +105,7 @@ public class AkkaSourceTest {
       Thread.sleep(5);
     }
     List<Object> message = DummySourceContext.message;
-    Assert.assertEquals(message.get(0).toString(), Message.WELCOME_MESSAGE);
+    Assertions.assertEquals(message.get(0).toString(), Message.WELCOME_MESSAGE);
   }
 
   @Test
@@ -125,8 +125,8 @@ public class AkkaSourceTest {
     }
 
     List<Object> messages = DummySourceContext.message;
-    Assert.assertEquals(messages.get(0).toString(), Message.WELCOME_MESSAGE);
-    Assert.assertEquals(messages.get(1).toString(), Message.FEEDER_MESSAGE);
+    Assertions.assertEquals(messages.get(0).toString(), Message.WELCOME_MESSAGE);
+    Assertions.assertEquals(messages.get(1).toString(), Message.FEEDER_MESSAGE);
   }
 
   @Test
@@ -148,7 +148,7 @@ public class AkkaSourceTest {
     List<Object> message = DummySourceContext.message;
     if (message.get(0) instanceof byte[]) {
       byte[] data = (byte[]) message.get(0);
-      Assert.assertEquals(new String(data), Message.WELCOME_MESSAGE);
+      Assertions.assertEquals(new String(data), Message.WELCOME_MESSAGE);
     }
   }
 
@@ -169,7 +169,7 @@ public class AkkaSourceTest {
     }
 
     List<Object> message = DummySourceContext.message;
-    Assert.assertEquals(message.get(0).toString(), Message.WELCOME_MESSAGE);
+    Assertions.assertEquals(message.get(0).toString(), Message.WELCOME_MESSAGE);
   }
 
   @Test
@@ -194,7 +194,7 @@ public class AkkaSourceTest {
       Thread.sleep(5);
       noOfRetries++;
     }
-    Assert.assertEquals("ack", Message.ACK_MESSAGE);
+    Assertions.assertEquals("ack", Message.ACK_MESSAGE);
   }
 
   private class AkkaTestSource extends AkkaSource {
