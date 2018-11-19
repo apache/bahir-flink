@@ -31,19 +31,23 @@ cache:
 services:
   - docker
 
+before_install:
+- ./dev/change-scala-version.sh $SCALA_VERSION
+
+install: true
+
 jdk:
-  - oraclejdk8
-  - openjdk8
+- oraclejdk8
+- openjdk8
 
 env:
   - |
-    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="false"
-    PROJECTS="flink-connector-activemq,flink-connector-akka,flink-connector-influxdb,flink-connector-netty,flink-connector-redis,flink-library-siddhi"
+    FLINK_VERSION="1.6.0" SCALA_VERSION="2.11" PROFILE="default"
   - |
-    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="true"
+    FLINK_VERSION="1.6.0" SCALA_VERSION="2.11" PROFILE="docker-test"
     PROJECTS="flink-connector-flume"
   - |
-    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="true"
+    FLINK_VERSION="1.6.0" SCALA_VERSION="2.11" PROFILE="docker-test"
     PROJECTS="flink-connector-kudu"
 
 before_install:
