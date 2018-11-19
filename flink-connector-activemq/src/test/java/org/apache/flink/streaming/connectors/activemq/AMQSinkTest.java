@@ -22,25 +22,17 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.configuration.Configuration;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import javax.jms.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class AMQSinkTest {
 
@@ -56,7 +48,7 @@ public class AMQSinkTest {
     private AMQSink<String> amqSink;
     private SerializationSchema<String> serializationSchema;
 
-    @Before
+    @BeforeEach
     public void before() throws Exception {
         connectionFactory = mock(ActiveMQConnectionFactory.class);
         producer = mock(MessageProducer.class);
@@ -124,13 +116,15 @@ public class AMQSinkTest {
         amqSink.invoke("msg", null);
     }
 
+
     @SuppressWarnings("unchecked")
-    @Test(expected = RuntimeException.class)
+    @Test
     public void exceptionOnSendAreThrownByDefault() throws Exception {
         when(session.createBytesMessage()).thenThrow(JMSException.class);
 
-        amqSink.invoke("msg", null);
+        Assertions.assertThrows(RuntimeException.class, () -> amqSink.invoke("msg", null), "a exception is expected");
     }
+
 
     @Test
     public void sessionAndConnectionAreClosed() throws Exception {
