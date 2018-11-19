@@ -16,23 +16,16 @@
  */
 package org.apache.flink.streaming.connectors.flume;
 
-import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
-import static org.apache.flink.test.util.TestUtils.tryExecute;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@DockerTest
-public class FlumeSinkTest {
-
-    @Test
-    public void testSink() throws Exception {
-        StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment();
-
-        environment.fromElements("string1", "string2")
-                .addSink(new FlumeSink<>("172.25.0.3", 44444, new SimpleStringSchema()));
-
-        tryExecute(environment, "FlumeTest");
-    }
-
+@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Tag("DockerTest")
+public @interface DockerTest {
 }
+

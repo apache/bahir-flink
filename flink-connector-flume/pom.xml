@@ -36,6 +36,7 @@ under the License.
 	<!-- Allow users to pass custom connector versions -->
 	<properties>
 		<flume-ng.version>1.8.0</flume-ng.version>
+        <junit.groups>!DockerTest</junit.groups>
 	</properties>
 
 	<dependencies>
@@ -52,13 +53,6 @@ under the License.
 			<version>${flume-ng.version}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.2.0</version>
-			<scope>test</scope>
-		</dependency>
-
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-tests_${scala.binary.version}</artifactId>
@@ -69,8 +63,24 @@ under the License.
 
 	</dependencies>
 
+    <profiles>
+        <profile>
+            <id>docker-test</id>
+            <properties>
+                <junit.groups>DockerTest</junit.groups>
+            </properties>
+        </profile>
+    </profiles>
+
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skipTests>true</skipTests>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
