@@ -31,11 +31,6 @@ cache:
 services:
   - docker
 
-before_install:
-  - ./dev/change-scala-version.sh $SCALA_VERSION
-
-install: true
-
 jdk:
   - oraclejdk8
   - openjdk8
