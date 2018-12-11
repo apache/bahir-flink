@@ -94,7 +94,7 @@
     <log4j.version>1.2.17</log4j.version>
 
     <!-- Flink version -->
-    <flink.version>1.6.0</flink.version>
+    <flink.version>1.7.0</flink.version>
 
     <scalatest.version>2.2.6</scalatest.version>
     <scalacheck.version>1.12.6</scalacheck.version> <!-- 1.13.0 appears incompatible with scalatest 2.2.6 -->
