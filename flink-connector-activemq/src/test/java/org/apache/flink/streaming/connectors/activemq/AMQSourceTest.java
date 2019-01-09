@@ -28,19 +28,14 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.connectors.activemq.internal.AMQExceptionListener;
 import org.apache.flink.streaming.connectors.activemq.internal.RunningChecker;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import scala.Array;
 
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-
+import javax.jms.*;
 import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
@@ -48,12 +43,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class AMQSourceTest {
 
@@ -73,7 +63,7 @@ public class AMQSourceTest {
     SourceFunction.SourceContext<String> context;
 
     @SuppressWarnings("unchecked")
-    @Before
+    @BeforeEach
     public void before() throws Exception {
         connectionFactory = mock(ActiveMQConnectionFactory.class);
         session = mock(Session.class);
@@ -183,21 +173,26 @@ public class AMQSourceTest {
         verify(message, times(1)).acknowledge();
     }
 
-    @Test(expected = JMSException.class)
+
+    @Test
     public void propagateAsyncException() throws Exception {
         AMQExceptionListener exceptionListener = mock(AMQExceptionListener.class);
         amqSource.setExceptionListener(exceptionListener);
         doThrow(JMSException.class).when(exceptionListener).checkErroneous();
-        amqSource.run(context);
+
+        Assertions.assertThrows(JMSException.class, () -> amqSource.run(context), "a exception is expected");
+
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void throwAcknowledgeExceptionByDefault() throws Exception {
         doThrow(JMSException.class).when(message).acknowledge();
 
         amqSource.run(context);
-        amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singleton(MSG_ID));
+
+        Assertions.assertThrows(RuntimeException.class, () -> amqSource.acknowledgeIDs(CHECKPOINT_ID, Collections.singleton(MSG_ID)), "a exception is expected");
     }
+
 
     @Test
     public void doNotThrowAcknowledgeExceptionByDefault() throws Exception {
