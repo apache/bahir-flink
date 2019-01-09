@@ -26,10 +26,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@DockerTest
 public class KuduInputFormatTest extends KuduDatabase {
-
-
-
 
     @Test
     public void testInvalidKuduMaster() throws IOException {
