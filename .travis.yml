@@ -37,8 +37,8 @@ before_install:
 install: true
 
 jdk:
-  - oraclejdk8
-  - openjdk8
+- oraclejdk8
+- openjdk8
 
 env:
   - |
@@ -67,3 +67,4 @@ after_script:
   - if [[ $DOCKER == "true" ]]; then
     docker-compose -f "$PROJECTS/dockers/docker-compose.yml" down;
     fi
+
