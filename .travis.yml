@@ -26,7 +26,7 @@ before_cache:
 
 cache:
   directories:
-  - $HOME/.m2
+    - $HOME/.m2
 
 services:
   - docker
@@ -37,15 +37,14 @@ jdk:
 
 env:
   - |
-    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="false"
+    FLINK_VERSION="1.7.1" SCALA_VERSION="2.11" DOCKER="false"
     PROJECTS="flink-connector-activemq,flink-connector-akka,flink-connector-influxdb,flink-connector-netty,flink-connector-redis,flink-library-siddhi"
   - |
-    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="true"
+    FLINK_VERSION="1.7.1" SCALA_VERSION="2.11" DOCKER="true"
     PROJECTS="flink-connector-flume"
   - |
-    FLINK_VERSION="1.5.1" SCALA_VERSION="2.11" DOCKER="true"
+    FLINK_VERSION="1.7.1" SCALA_VERSION="2.11" DOCKER="true"
     PROJECTS="flink-connector-kudu"
-
 
 before_install:
   - ./dev/change-scala-version.sh $SCALA_VERSION

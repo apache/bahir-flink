@@ -19,12 +19,12 @@ package org.apache.flink.streaming.connectors.flume;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+@DockerTest
 public class FlumeRpcClientTest {
 
     public FlumeRpcClient createGoodClient() {
         return new FlumeRpcClient("172.25.0.3", 44444);
     }
-
 
     @Test
     public void testInitClientMustFail() {
