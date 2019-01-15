@@ -17,6 +17,7 @@
 package org.apache.flink.streaming.connectors.kudu.connector;
 
 import com.stumbleupon.async.Callback;
+import com.stumbleupon.async.Deferred;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.kudu.client.*;
 import org.slf4j.Logger;
@@ -29,6 +30,8 @@ public class KuduConnector implements AutoCloseable {
 
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
+    private Callback<Boolean, OperationResponse> defaultCB;
+
     public enum Consistency {EVENTUAL, STRONG};
     public enum WriteMode {INSERT,UPDATE,UPSERT}
 
@@ -38,6 +41,7 @@ public class KuduConnector implements AutoCloseable {
     public KuduConnector(String kuduMasters, KuduTableInfo tableInfo) throws IOException {
         client = client(kuduMasters);
         table = table(tableInfo);
+        defaultCB = new ResponseCallback();
     }
 
     private AsyncKuduClient client(String kuduMasters) {
@@ -63,8 +67,8 @@ public class KuduConnector implements AutoCloseable {
         return true;
     }
 
-    public KuduScanner scanner(byte[] token) throws IOException {
-        return KuduScanToken.deserializeIntoScanner(token, client.syncClient());
+    public KuduRowIterator scanner(byte[] token) throws IOException {
+        return new KuduRowIterator(KuduScanToken.deserializeIntoScanner(token, client.syncClient()));
     }
 
     public List<KuduScanToken> scanTokens(List<KuduFilterInfo> tableFilters, List<String> tableProjections, Long rowLimit) {
@@ -82,27 +86,18 @@ public class KuduConnector implements AutoCloseable {
 
         if (rowLimit !=null && rowLimit > 0) {
             tokenBuilder.limit(rowLimit);
-            // FIXME: https://issues.apache.org/jira/browse/KUDU-16
-            // Server side limit() operator for java-based scanners are not implemented yet
         }
 
         return tokenBuilder.build();
     }
 
-    public boolean writeRow(KuduRow row, Consistency consistency, WriteMode writeMode) throws Exception {
+    public Deferred<OperationResponse> writeRow(KuduRow row, WriteMode writeMode) throws Exception {
         final Operation operation = KuduMapper.toOperation(table, writeMode, row);
 
-        if (Consistency.EVENTUAL.equals(consistency)) {
-            AsyncKuduSession session = client.newSession();
-            session.apply(operation);
-            session.flush();
-            return session.close().addCallback(new ResponseCallback()).join();
-        } else {
-            KuduSession session = client.syncClient().newSession();
-            session.apply(operation);
-            session.flush();
-            return processResponse(session.close());
-        }
+        AsyncKuduSession session = client.newSession();
+        Deferred<OperationResponse> response = session.apply(operation);
+        session.close();
+        return response;
     }
 
     @Override
@@ -112,22 +107,21 @@ public class KuduConnector implements AutoCloseable {
         client.close();
     }
 
-    private Boolean processResponse(List<OperationResponse> operationResponses) {
-        Boolean isOk = operationResponses.isEmpty();
-        for(OperationResponse operationResponse : operationResponses) {
-            logResponseError(operationResponse.getRowError());
-        }
-        return isOk;
-    }
-
-    private void logResponseError(RowError error) {
-        LOG.error("Error {} on {}: {} ", error.getErrorStatus(), error.getOperation(), error.toString());
-    }
-
-    private class ResponseCallback implements Callback<Boolean, List<OperationResponse>> {
+    private class ResponseCallback implements Callback<Boolean, OperationResponse> {
         @Override
-        public Boolean call(List<OperationResponse> operationResponses) {
-            return processResponse(operationResponses);
+        public Boolean call(OperationResponse operationResponse) {
+            return processResponse(operationResponse);
+        }
+
+        private Boolean processResponse(OperationResponse operationResponse) {
+            if (operationResponse == null) return true;
+            logResponseError(operationResponse.getRowError());
+            return operationResponse.hasRowError();
+        }
+
+        private void logResponseError(RowError error) {
+            LOG.error("Error {} on {}: {} ", error.getErrorStatus(), error.getOperation(), error.toString());
         }
     }
+
 }

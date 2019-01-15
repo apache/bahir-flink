@@ -17,17 +17,19 @@
 package org.apache.flink.streaming.connectors.kudu;
 
 import org.apache.flink.api.common.io.OutputFormat;
+import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduConnector;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduRow;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduTableInfo;
+import org.apache.flink.streaming.connectors.kudu.serde.KuduSerialization;
 import org.apache.flink.util.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class KuduOutputFormat<OUT extends KuduRow> implements OutputFormat<OUT> {
+public class KuduOutputFormat<OUT> extends RichOutputFormat<OUT> {
 
     private static final Logger LOG = LoggerFactory.getLogger(KuduOutputFormat.class);
 
@@ -36,10 +38,12 @@ public class KuduOutputFormat<OUT extends KuduRow> implements OutputFormat<OUT> 
     private KuduConnector.Consistency consistency;
     private KuduConnector.WriteMode writeMode;
 
+    private KuduSerialization<OUT> serializer;
+
     private transient KuduConnector tableContext;
 
 
-    public KuduOutputFormat(String kuduMasters, KuduTableInfo tableInfo) {
+    public KuduOutputFormat(String kuduMasters, KuduTableInfo tableInfo, KuduSerialization<OUT> serializer) {
         Preconditions.checkNotNull(kuduMasters,"kuduMasters could not be null");
         this.kuduMasters = kuduMasters;
 
@@ -47,6 +51,7 @@ public class KuduOutputFormat<OUT extends KuduRow> implements OutputFormat<OUT> 
         this.tableInfo = tableInfo;
         this.consistency = KuduConnector.Consistency.STRONG;
         this.writeMode = KuduConnector.WriteMode.UPSERT;
+        this.serializer = serializer;
     }
 
     public KuduOutputFormat<OUT> withEventualConsistency() {
@@ -90,9 +95,10 @@ public class KuduOutputFormat<OUT extends KuduRow> implements OutputFormat<OUT> 
     }
 
     @Override
-    public void writeRecord(OUT kuduRow) throws IOException {
+    public void writeRecord(OUT row) throws IOException {
         try {
-            tableContext.writeRow(kuduRow, consistency, writeMode);
+            KuduRow kuduRow = serializer.serialize(row);
+            tableContext.writeRow(kuduRow, writeMode);
         } catch (Exception e) {
             throw new IOException(e.getLocalizedMessage(), e);
         }
