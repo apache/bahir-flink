@@ -17,11 +17,13 @@
 package org.apache.flink.streaming.connectors.kudu.connector;
 
 import org.apache.flink.types.Row;
-import org.apache.kudu.Schema;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class KuduRow extends Row {
@@ -33,24 +35,6 @@ public class KuduRow extends Row {
         rowNames = new LinkedHashMap<>();
     }
 
-    public KuduRow(Object object, Schema schema) {
-        super(validFields(object));
-        for (Class<?> c = object.getClass(); c != null; c = c.getSuperclass()) {
-            basicValidation(c.getDeclaredFields())
-                    .filter(field -> schema.getColumn(field.getName()) != null)
-                    .forEach(cField -> {
-                        try {
-                            cField.setAccessible(true);
-                            setField(schema.getColumnIndex(cField.getName()), cField.getName(), cField.get(object));
-                        } catch (IllegalAccessException e) {
-                            String error = String.format("Cannot get value for %s", cField.getName());
-                            throw new IllegalArgumentException(error, e);
-                        }
-                    });
-        }
-    }
-
-
     public Object getField(String name) {
         return super.getField(rowNames.get(name));
     }
@@ -58,6 +42,10 @@ public class KuduRow extends Row {
     public void setField(int pos, String name, Object value) {
         super.setField(pos, value);
         this.rowNames.put(name, pos);
+    }
+
+    public boolean isNull(String name) {
+        return isNull(rowNames.get(name));
     }
 
     public boolean isNull(int pos) {
@@ -84,50 +72,6 @@ public class KuduRow extends Row {
                 .sorted(Comparator.comparing(Map.Entry::getValue))
                 .forEach(entry -> toRet.put(entry.getKey(), super.getField(entry.getValue())));
         return  toRet;
-    }
-
-    public <P> P blind(Class<P> clazz) {
-        P o = createInstance(clazz);
-
-        for (Class<?> c = clazz; c != null; c = c.getSuperclass()) {
-            Field[] fields = c.getDeclaredFields();
-            for (Field cField : fields) {
-                try {
-                    if(rowNames.containsKey(cField.getName())
-                            && !Modifier.isStatic(cField.getModifiers())
-                            && !Modifier.isTransient(cField.getModifiers())) {
-
-                        cField.setAccessible(true);
-                        Object value = getField(cField.getName());
-                        if (value != null) {
-                            if (cField.getType() == value.getClass()) {
-                                cField.set(o, value);
-                            } else if (cField.getType() == Long.class && value.getClass() == Date.class) {
-                                cField.set(o, ((Date) value).getTime());
-                            } else {
-                                cField.set(o, value);
-                            }
-                        }
-                    }
-                } catch (IllegalAccessException e) {
-                    String error = String.format("Cannot get value for %s", cField.getName());
-                    throw new IllegalArgumentException(error, e);
-                }
-            }
-        }
-
-        return o;
-
-    }
-
-
-    private <P> P createInstance(Class<P> clazz) {
-        try {
-            return clazz.getConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            String error = String.format("Cannot create instance for %s", clazz.getSimpleName());
-            throw new IllegalArgumentException(error, e);
-        }
     }
 
     @Override

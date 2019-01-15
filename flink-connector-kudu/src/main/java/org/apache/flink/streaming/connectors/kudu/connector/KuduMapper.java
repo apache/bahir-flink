@@ -17,7 +17,6 @@
 package org.apache.flink.streaming.connectors.kudu.connector;
 
 
-import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
 import org.apache.kudu.Type;
 import org.apache.kudu.client.KuduTable;
@@ -25,75 +24,73 @@ import org.apache.kudu.client.Operation;
 import org.apache.kudu.client.PartialRow;
 import org.apache.kudu.client.RowResult;
 
-import java.util.List;
-
-public final class KuduMapper {
+final class KuduMapper {
 
     private KuduMapper() { }
 
-    public static KuduRow toKuduRow(RowResult row) {
+    static KuduRow toKuduRow(RowResult row) {
         Schema schema = row.getColumnProjection();
-        List<ColumnSchema> columns = schema.getColumns();
 
-        KuduRow values = new KuduRow(columns.size());
-        for (int i = 0; i < columns.size(); i++) {
-            String name = schema.getColumnByIndex(i).getName();
-            if(row.isNull(i)) {
-                values.setField(i, name, null);
+        KuduRow values = new KuduRow(schema.getColumnCount());
+        schema.getColumns().forEach(column -> {
+            String name = column.getName();
+            int pos = schema.getColumnIndex(name);
+            if(row.isNull(name)) {
+                values.setField(pos, name, null);
             } else {
-                Type type = schema.getColumnByIndex(i).getType();
+                Type type = column.getType();
                 switch (type) {
                     case BINARY:
-                        values.setField(i, name, row.getBinary(i));
+                        values.setField(pos, name, row.getBinary(name));
                         break;
                     case STRING:
-                        values.setField(i, name, row.getString(i));
+                        values.setField(pos, name, row.getString(name));
                         break;
                     case BOOL:
-                        values.setField(i, name, row.getBoolean(i));
+                        values.setField(pos, name, row.getBoolean(name));
                         break;
                     case DOUBLE:
-                        values.setField(i, name, row.getDouble(i));
+                        values.setField(pos, name, row.getDouble(name));
                         break;
                     case FLOAT:
-                        values.setField(i, name, row.getFloat(i));
+                        values.setField(pos, name, row.getFloat(name));
                         break;
                     case INT8:
-                        values.setField(i, name, row.getByte(i));
+                        values.setField(pos, name, row.getByte(name));
                         break;
                     case INT16:
-                        values.setField(i, name, row.getShort(i));
+                        values.setField(pos, name, row.getShort(name));
                         break;
                     case INT32:
-                        values.setField(i, name, row.getInt(i));
+                        values.setField(pos, name, row.getInt(name));
                         break;
                     case INT64:
+                        values.setField(pos, name, row.getLong(name));
+                        break;
                     case UNIXTIME_MICROS:
-                        values.setField(i, name, row.getLong(i));
+                        values.setField(pos, name, row.getLong(name) / 1000);
                         break;
                     default:
                         throw new IllegalArgumentException("Illegal var type: " + type);
                 }
             }
-        }
+        });
         return values;
     }
 
 
-    public static Operation toOperation(KuduTable table, KuduConnector.WriteMode writeMode, KuduRow row) {
+    static Operation toOperation(KuduTable table, KuduConnector.WriteMode writeMode, KuduRow row) {
         final Operation operation = toOperation(table, writeMode);
         final PartialRow partialRow = operation.getRow();
 
-        Schema schema = table.getSchema();
-        List<ColumnSchema> columns = schema.getColumns();
+        table.getSchema().getColumns().forEach(column -> {
+            String columnName = column.getName();
+            Object value = row.getField(column.getName());
 
-        for (int i = 0; i < columns.size(); i++) {
-            String columnName = schema.getColumnByIndex(i).getName();
-            Object value = row.getField(i);
             if (value == null) {
                 partialRow.setNull(columnName);
             } else {
-                Type type = schema.getColumnByIndex(i).getType();
+                Type type = column.getType();
                 switch (type) {
                     case STRING:
                         partialRow.addString(columnName, (String) value);
@@ -130,11 +127,11 @@ public final class KuduMapper {
                         throw new IllegalArgumentException("Illegal var type: " + type);
                 }
             }
-        }
+        });
         return operation;
     }
 
-    public static Operation toOperation(KuduTable table, KuduConnector.WriteMode writeMode) {
+    static Operation toOperation(KuduTable table, KuduConnector.WriteMode writeMode) {
         switch (writeMode) {
             case INSERT: return table.newInsert();
             case UPDATE: return table.newUpdate();

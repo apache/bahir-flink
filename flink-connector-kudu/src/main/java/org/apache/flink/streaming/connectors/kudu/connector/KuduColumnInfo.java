@@ -80,10 +80,48 @@ public class KuduColumnInfo implements Serializable {
         public static Builder create(String name, Type type) {
             return new Builder(name, type);
         }
+        public static Builder createByte(String name) {
+            return create(name, Type.INT8);
+        }
+        public static Builder createShort(String name) {
+            return create(name, Type.INT16);
+        }
+        public static Builder createInteger(String name) {
+            return create(name, Type.INT32);
+        }
+        public static Builder createLong(String name) {
+            return create(name, Type.INT64);
+        }
+        public static Builder createDouble(String name) {
+            return create(name, Type.DOUBLE);
+        }
+        public static Builder createFloat(String name) {
+            return create(name, Type.FLOAT);
+        }
+        public static Builder createString(String name) {
+            return create(name, Type.STRING);
+        }
+        public static Builder createBool(String name) {
+            return create(name, Type.BOOL);
+        }
+        public static Builder createByteArray(String name) {
+            return create(name, Type.BINARY);
+        }
+        public static Builder createUnixTime(String name) {
+            return create(name, Type.UNIXTIME_MICROS);
+        }
+
+        public Builder asKey() {
+            return key(true);
+        }
 
         public Builder key(boolean key) {
             this.column.key = key;
             return this;
+        }
+
+        public Builder asRangeKey() {
+            return rangeKey(true);
         }
 
         public Builder rangeKey(boolean rangeKey) {
@@ -91,9 +129,21 @@ public class KuduColumnInfo implements Serializable {
             return this;
         }
 
+        public Builder asHashKey() {
+            return hashKey(true);
+        }
+
         public Builder hashKey(boolean hashKey) {
             this.column.hashKey = hashKey;
             return this;
+        }
+
+        public Builder asNullable() {
+            return nullable(true);
+        }
+
+        public Builder asNotNullable() {
+            return nullable(false);
         }
 
         public Builder nullable(boolean nullable) {

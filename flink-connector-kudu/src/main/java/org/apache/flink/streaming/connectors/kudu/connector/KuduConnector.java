@@ -17,17 +17,23 @@
 package org.apache.flink.streaming.connectors.kudu.connector;
 
 import com.stumbleupon.async.Callback;
+import com.stumbleupon.async.Deferred;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.flink.api.common.time.Time;
 import org.apache.kudu.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class KuduConnector implements AutoCloseable {
 
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
+
+    private Callback<Boolean, OperationResponse> defaultCB;
 
     public enum Consistency {EVENTUAL, STRONG};
     public enum WriteMode {INSERT,UPDATE,UPSERT}
@@ -35,9 +41,22 @@ public class KuduConnector implements AutoCloseable {
     private AsyncKuduClient client;
     private KuduTable table;
 
+    private Consistency consistency;
+    private WriteMode writeMode;
+
+    private static AtomicInteger pendingTransactions = new AtomicInteger();
+    private static AtomicBoolean errorTransactions = new AtomicBoolean(false);
+
     public KuduConnector(String kuduMasters, KuduTableInfo tableInfo) throws IOException {
-        client = client(kuduMasters);
-        table = table(tableInfo);
+        this(kuduMasters, tableInfo, KuduConnector.Consistency.STRONG, KuduConnector.WriteMode.UPSERT);
+    }
+
+    public KuduConnector(String kuduMasters, KuduTableInfo tableInfo, Consistency consistency, WriteMode writeMode) throws IOException {
+        this.client = client(kuduMasters);
+        this.table = table(tableInfo);
+        this.consistency = consistency;
+        this.writeMode = writeMode;
+        this.defaultCB = new ResponseCallback();
     }
 
     private AsyncKuduClient client(String kuduMasters) {
@@ -63,8 +82,8 @@ public class KuduConnector implements AutoCloseable {
         return true;
     }
 
-    public KuduScanner scanner(byte[] token) throws IOException {
-        return KuduScanToken.deserializeIntoScanner(token, client.syncClient());
+    public KuduRowIterator scanner(byte[] token) throws IOException {
+        return new KuduRowIterator(KuduScanToken.deserializeIntoScanner(token, client.syncClient()));
     }
 
     public List<KuduScanToken> scanTokens(List<KuduFilterInfo> tableFilters, List<String> tableProjections, Long rowLimit) {
@@ -82,52 +101,60 @@ public class KuduConnector implements AutoCloseable {
 
         if (rowLimit !=null && rowLimit > 0) {
             tokenBuilder.limit(rowLimit);
-            // FIXME: https://issues.apache.org/jira/browse/KUDU-16
-            // Server side limit() operator for java-based scanners are not implemented yet
         }
 
         return tokenBuilder.build();
     }
 
-    public boolean writeRow(KuduRow row, Consistency consistency, WriteMode writeMode) throws Exception {
+    public boolean writeRow(KuduRow row) throws Exception {
         final Operation operation = KuduMapper.toOperation(table, writeMode, row);
 
-        if (Consistency.EVENTUAL.equals(consistency)) {
-            AsyncKuduSession session = client.newSession();
-            session.apply(operation);
-            session.flush();
-            return session.close().addCallback(new ResponseCallback()).join();
+        AsyncKuduSession session = client.newSession();
+        Deferred<OperationResponse> response = session.apply(operation);
+
+        if (KuduConnector.Consistency.EVENTUAL.equals(consistency)) {
+            pendingTransactions.incrementAndGet();
+            response.addCallback(defaultCB);
         } else {
-            KuduSession session = client.syncClient().newSession();
-            session.apply(operation);
-            session.flush();
-            return processResponse(session.close());
+            processResponse(response.join());
         }
+
+        session.close();
+        return !errorTransactions.get();
+
     }
 
     @Override
     public void close() throws Exception {
-        if (client == null) return;
+        while(pendingTransactions.get() > 0) {
+            LOG.info("sleeping {}s by pending transactions", pendingTransactions.get());
+            Thread.sleep(Time.seconds(pendingTransactions.get()).toMilliseconds());
+        }
 
+        if (client == null) return;
         client.close();
     }
 
-    private Boolean processResponse(List<OperationResponse> operationResponses) {
-        Boolean isOk = operationResponses.isEmpty();
-        for(OperationResponse operationResponse : operationResponses) {
-            logResponseError(operationResponse.getRowError());
+    private class ResponseCallback implements Callback<Boolean, OperationResponse> {
+        @Override
+        public Boolean call(OperationResponse operationResponse) {
+            pendingTransactions.decrementAndGet();
+            processResponse(operationResponse);
+            return errorTransactions.get();
         }
-        return isOk;
+    }
+
+    protected void processResponse(OperationResponse operationResponse) {
+        if (operationResponse == null) return;
+
+        if (operationResponse.hasRowError()) {
+            logResponseError(operationResponse.getRowError());
+            errorTransactions.set(true);
+        }
     }
 
     private void logResponseError(RowError error) {
         LOG.error("Error {} on {}: {} ", error.getErrorStatus(), error.getOperation(), error.toString());
     }
 
-    private class ResponseCallback implements Callback<Boolean, List<OperationResponse>> {
-        @Override
-        public Boolean call(List<OperationResponse> operationResponses) {
-            return processResponse(operationResponses);
-        }
-    }
 }

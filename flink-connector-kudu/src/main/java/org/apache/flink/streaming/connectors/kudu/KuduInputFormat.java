@@ -24,7 +24,9 @@ import org.apache.flink.core.io.InputSplitAssigner;
 import org.apache.flink.core.io.LocatableInputSplit;
 import org.apache.flink.streaming.connectors.kudu.connector.*;
 import org.apache.flink.util.Preconditions;
-import org.apache.kudu.client.*;
+import org.apache.kudu.client.KuduException;
+import org.apache.kudu.client.KuduScanToken;
+import org.apache.kudu.client.LocatedTablet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +45,7 @@ public class KuduInputFormat extends RichInputFormat<KuduRow, KuduInputFormat.Ku
     private boolean endReached;
 
     private transient KuduConnector tableContext;
-    private transient KuduScanner scanner;
-    private transient RowResultIterator resultIterator;
+    private transient KuduRowIterator resultIterator;
 
     private static final Logger LOG = LoggerFactory.getLogger(KuduInputFormat.class);
 
@@ -90,15 +91,14 @@ public class KuduInputFormat extends RichInputFormat<KuduRow, KuduInputFormat.Ku
         endReached = false;
         startTableContext();
 
-        scanner = tableContext.scanner(split.getScanToken());
-        resultIterator = scanner.nextRows();
+        resultIterator = tableContext.scanner(split.getScanToken());
     }
 
     @Override
     public void close() {
-        if (scanner != null) {
+        if (resultIterator != null) {
             try {
-                scanner.close();
+                resultIterator.close();
             } catch (KuduException e) {
                 e.printStackTrace();
             }
@@ -168,18 +168,11 @@ public class KuduInputFormat extends RichInputFormat<KuduRow, KuduInputFormat.Ku
     public KuduRow nextRecord(KuduRow reuse) throws IOException {
         // check that current iterator has next rows
         if (this.resultIterator.hasNext()) {
-            RowResult row = this.resultIterator.next();
-            return KuduMapper.toKuduRow(row);
-        }
-        // if not, check that current scanner has more iterators
-        else if (scanner.hasMoreRows()) {
-            this.resultIterator = scanner.nextRows();
-            return nextRecord(reuse);
-        }
-        else {
+            return resultIterator.next();
+        } else {
             endReached = true;
+            return null;
         }
-        return null;
     }
 
     /**

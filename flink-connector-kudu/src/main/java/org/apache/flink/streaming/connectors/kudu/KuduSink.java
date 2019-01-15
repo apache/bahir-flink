@@ -21,13 +21,14 @@ import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduConnector;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduRow;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduTableInfo;
+import org.apache.flink.streaming.connectors.kudu.serde.KuduSerialization;
 import org.apache.flink.util.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class KuduSink<OUT extends KuduRow> extends RichSinkFunction<OUT> {
+public class KuduSink<OUT> extends RichSinkFunction<OUT> {
 
     private static final Logger LOG = LoggerFactory.getLogger(KuduOutputFormat.class);
 
@@ -36,10 +37,11 @@ public class KuduSink<OUT extends KuduRow> extends RichSinkFunction<OUT> {
     private KuduConnector.Consistency consistency;
     private KuduConnector.WriteMode writeMode;
 
-    private transient KuduConnector tableContext;
+    private KuduSerialization<OUT> serializer;
 
+    private transient KuduConnector connector;
 
-    public KuduSink(String kuduMasters, KuduTableInfo tableInfo) {
+    public KuduSink(String kuduMasters, KuduTableInfo tableInfo, KuduSerialization<OUT> serializer) {
         Preconditions.checkNotNull(kuduMasters,"kuduMasters could not be null");
         this.kuduMasters = kuduMasters;
 
@@ -47,6 +49,7 @@ public class KuduSink<OUT extends KuduRow> extends RichSinkFunction<OUT> {
         this.tableInfo = tableInfo;
         this.consistency = KuduConnector.Consistency.STRONG;
         this.writeMode = KuduConnector.WriteMode.UPSERT;
+        this.serializer = serializer.withSchema(tableInfo.getSchema());
     }
 
     public KuduSink<OUT> withEventualConsistency() {
@@ -76,29 +79,26 @@ public class KuduSink<OUT extends KuduRow> extends RichSinkFunction<OUT> {
 
     @Override
     public void open(Configuration parameters) throws IOException {
-        startTableContext();
+        if (connector != null) return;
+        connector = new KuduConnector(kuduMasters, tableInfo, consistency, writeMode);
+        serializer.withSchema(tableInfo.getSchema());
     }
-
-    private void startTableContext() throws IOException {
-        if (tableContext != null) return;
-        tableContext = new KuduConnector(kuduMasters, tableInfo);
-    }
-
 
     @Override
-    public void invoke(OUT kuduRow) throws Exception {
-        try {
-            tableContext.writeRow(kuduRow, consistency, writeMode);
-        } catch (Exception e) {
-            throw new IOException(e.getLocalizedMessage(), e);
+    public void invoke(OUT row) throws Exception {
+        KuduRow kuduRow = serializer.serialize(row);
+        boolean response = connector.writeRow(kuduRow);
+
+        if(!response) {
+            throw new IOException("error with some transaction");
         }
     }
 
     @Override
     public void close() throws Exception {
-        if (this.tableContext == null) return;
+        if (this.connector == null) return;
         try {
-            this.tableContext.close();
+            this.connector.close();
         } catch (Exception e) {
             throw new IOException(e.getLocalizedMessage(), e);
         }

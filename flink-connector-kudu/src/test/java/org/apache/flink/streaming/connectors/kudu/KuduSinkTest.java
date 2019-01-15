@@ -20,6 +20,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduDatabase;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduRow;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduTableInfo;
+import org.apache.flink.streaming.connectors.kudu.serde.DefaultSerDe;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -33,18 +34,18 @@ public class KuduSinkTest extends KuduDatabase {
     @Test
     public void testInvalidKuduMaster() throws IOException {
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),false);
-        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(null, tableInfo));
+        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(null, tableInfo, new DefaultSerDe()));
     }
 
     @Test
     public void testInvalidTableInfo() throws IOException {
-        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(hostsCluster, null));
+        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(hostsCluster, null, new DefaultSerDe()));
     }
 
     @Test
     public void testNotTableExist() throws IOException {
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),false);
-        KuduSink sink = new KuduSink<>(hostsCluster, tableInfo);
+        KuduSink sink = new KuduSink<>(hostsCluster, tableInfo, new DefaultSerDe());
         Assertions.assertThrows(UnsupportedOperationException.class, () -> sink.open(new Configuration()));
     }
 
@@ -52,7 +53,7 @@ public class KuduSinkTest extends KuduDatabase {
     public void testOutputWithStrongConsistency() throws Exception {
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
-        KuduSink sink = new KuduSink<>(hostsCluster, tableInfo)
+        KuduSink sink = new KuduSink<>(hostsCluster, tableInfo, new DefaultSerDe())
                 .withStrongConsistency();
         sink.open(new Configuration());
 
@@ -69,7 +70,7 @@ public class KuduSinkTest extends KuduDatabase {
     @Test
     public void testOutputWithEventualConsistency() throws Exception {
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
-        KuduSink sink = new KuduSink<>(hostsCluster, tableInfo)
+        KuduSink sink = new KuduSink<>(hostsCluster, tableInfo, new DefaultSerDe())
                 .withEventualConsistency();
         sink.open(new Configuration());
 

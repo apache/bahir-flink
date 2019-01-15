@@ -67,7 +67,7 @@ public class KuduDatabase {
             KuduConnector tableContext = new KuduConnector(hostsCluster, tableInfo);
             booksDataRow().forEach(row -> {
                 try {
-                    tableContext.writeRow(row, KuduConnector.Consistency.STRONG, KuduConnector.WriteMode.UPSERT);
+                    tableContext.writeRow(row);
                 }catch (Exception e) {
                     e.printStackTrace();
                 }
