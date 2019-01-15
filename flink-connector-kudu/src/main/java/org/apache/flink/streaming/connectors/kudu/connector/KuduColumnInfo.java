@@ -81,9 +81,17 @@ public class KuduColumnInfo implements Serializable {
             return new Builder(name, type);
         }
 
+        public Builder asKey() {
+            return key(true);
+        }
+
         public Builder key(boolean key) {
             this.column.key = key;
             return this;
+        }
+
+        public Builder asRangeKey() {
+            return rangeKey(true);
         }
 
         public Builder rangeKey(boolean rangeKey) {
@@ -91,9 +99,17 @@ public class KuduColumnInfo implements Serializable {
             return this;
         }
 
+        public Builder asHashKey() {
+            return hashKey(true);
+        }
+
         public Builder hashKey(boolean hashKey) {
             this.column.hashKey = hashKey;
             return this;
+        }
+
+        public Builder asNullable() {
+            return nullable(true);
         }
 
         public Builder nullable(boolean nullable) {

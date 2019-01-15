@@ -17,11 +17,13 @@
 package org.apache.flink.streaming.connectors.kudu.connector;
 
 import org.apache.flink.types.Row;
-import org.apache.kudu.Schema;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class KuduRow extends Row {

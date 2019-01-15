@@ -17,15 +17,12 @@
 package org.apache.flink.streaming.connectors.kudu.connector;
 
 
-import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
 import org.apache.kudu.Type;
 import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.Operation;
 import org.apache.kudu.client.PartialRow;
 import org.apache.kudu.client.RowResult;
-
-import java.util.List;
 
 final class KuduMapper {
 
