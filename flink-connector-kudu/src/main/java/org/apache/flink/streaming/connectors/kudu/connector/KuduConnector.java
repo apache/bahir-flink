@@ -19,12 +19,15 @@ package org.apache.flink.streaming.connectors.kudu.connector;
 import com.stumbleupon.async.Callback;
 import com.stumbleupon.async.Deferred;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.flink.api.common.time.Time;
 import org.apache.kudu.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class KuduConnector implements AutoCloseable {
 
@@ -38,10 +41,23 @@ public class KuduConnector implements AutoCloseable {
     private AsyncKuduClient client;
     private KuduTable table;
 
+    private Consistency consistency;
+    private WriteMode writeMode;
+
+    private static AtomicInteger pendingTransactions = new AtomicInteger();
+    private static AtomicBoolean errorTransactions = new AtomicBoolean(false);
+    private Callback<Boolean, OperationResponse> callback;
+
     public KuduConnector(String kuduMasters, KuduTableInfo tableInfo) throws IOException {
-        client = client(kuduMasters);
-        table = table(tableInfo);
-        defaultCB = new ResponseCallback();
+        this(kuduMasters, tableInfo, KuduConnector.Consistency.STRONG, KuduConnector.WriteMode.UPSERT);
+    }
+
+    public KuduConnector(String kuduMasters, KuduTableInfo tableInfo, Consistency consistency, WriteMode writeMode) throws IOException {
+        this.client = client(kuduMasters);
+        this.table = table(tableInfo);
+        this.consistency = consistency;
+        this.writeMode = writeMode;
+        this.defaultCB = new ResponseCallback();
     }
 
     private AsyncKuduClient client(String kuduMasters) {
@@ -91,37 +107,54 @@ public class KuduConnector implements AutoCloseable {
         return tokenBuilder.build();
     }
 
-    public Deferred<OperationResponse> writeRow(KuduRow row, WriteMode writeMode) throws Exception {
+    public boolean writeRow(KuduRow row) throws Exception {
         final Operation operation = KuduMapper.toOperation(table, writeMode, row);
 
         AsyncKuduSession session = client.newSession();
         Deferred<OperationResponse> response = session.apply(operation);
+
+        if (KuduConnector.Consistency.EVENTUAL.equals(consistency)) {
+            pendingTransactions.incrementAndGet();
+            response.addCallback(callback);
+        } else {
+            processResponse(response.join());
+        }
+
         session.close();
-        return response;
+        return !errorTransactions.get();
+
     }
 
     @Override
     public void close() throws Exception {
-        if (client == null) return;
+        while(pendingTransactions.get() > 0) {
+            LOG.info("sleeping {}s by pending transactions", pendingTransactions.get());
+            Thread.sleep(Time.seconds(pendingTransactions.get()).toMilliseconds());
+        }
 
+        if (client == null) return;
         client.close();
     }
 
     private class ResponseCallback implements Callback<Boolean, OperationResponse> {
         @Override
         public Boolean call(OperationResponse operationResponse) {
-            return processResponse(operationResponse);
+            processResponse(operationResponse);
+            return errorTransactions.get();
         }
+    }
 
-        private Boolean processResponse(OperationResponse operationResponse) {
-            if (operationResponse == null) return true;
+    protected void processResponse(OperationResponse operationResponse) {
+        if (operationResponse == null) return;
+
+        if (operationResponse.hasRowError()) {
             logResponseError(operationResponse.getRowError());
-            return operationResponse.hasRowError();
+            errorTransactions.set(true);
         }
+    }
 
-        private void logResponseError(RowError error) {
-            LOG.error("Error {} on {}: {} ", error.getErrorStatus(), error.getOperation(), error.toString());
-        }
+    private void logResponseError(RowError error) {
+        LOG.error("Error {} on {}: {} ", error.getErrorStatus(), error.getOperation(), error.toString());
     }
 
 }

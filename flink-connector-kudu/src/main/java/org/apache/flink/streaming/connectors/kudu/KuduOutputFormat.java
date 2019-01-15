@@ -16,6 +16,7 @@
  */
 package org.apache.flink.streaming.connectors.kudu;
 
+import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduConnector;
@@ -39,7 +40,7 @@ public class KuduOutputFormat<OUT> extends RichOutputFormat<OUT> {
 
     private KuduSerialization<OUT> serializer;
 
-    private transient KuduConnector tableContext;
+    private transient KuduConnector connector;
 
 
     public KuduOutputFormat(String kuduMasters, KuduTableInfo tableInfo, KuduSerialization<OUT> serializer) {
@@ -52,6 +53,7 @@ public class KuduOutputFormat<OUT> extends RichOutputFormat<OUT> {
         this.writeMode = KuduConnector.WriteMode.UPSERT;
         this.serializer = serializer;
     }
+
 
     public KuduOutputFormat<OUT> withEventualConsistency() {
         this.consistency = KuduConnector.Consistency.EVENTUAL;
@@ -85,29 +87,30 @@ public class KuduOutputFormat<OUT> extends RichOutputFormat<OUT> {
 
     @Override
     public void open(int taskNumber, int numTasks) throws IOException {
-        startTableContext();
-    }
-
-    private void startTableContext() throws IOException {
-        if (tableContext != null) return;
-        tableContext = new KuduConnector(kuduMasters, tableInfo);
+        if (connector != null) return;
+        connector = new KuduConnector(kuduMasters, tableInfo, consistency, writeMode);
     }
 
     @Override
     public void writeRecord(OUT row) throws IOException {
+        boolean response;
         try {
             KuduRow kuduRow = serializer.serialize(row);
-            tableContext.writeRow(kuduRow, writeMode);
+            response = connector.writeRow(kuduRow);
         } catch (Exception e) {
             throw new IOException(e.getLocalizedMessage(), e);
+        }
+
+        if(!response) {
+            throw new IOException("error with some transaction");
         }
     }
 
     @Override
     public void close() throws IOException {
-        if (this.tableContext == null) return;
+        if (this.connector == null) return;
         try {
-            this.tableContext.close();
+            this.connector.close();
         } catch (Exception e) {
             throw new IOException(e.getLocalizedMessage(), e);
         }

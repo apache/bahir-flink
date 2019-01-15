@@ -45,13 +45,8 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> {
     private KuduConnector.WriteMode writeMode;
 
     private KuduSerialization<OUT> serializer;
-    private Callback<Boolean, OperationResponse> callback;
 
-    private transient KuduConnector tableContext;
-
-    private static AtomicInteger pendingTransactions = new AtomicInteger();
-    private static AtomicBoolean errorTransactions = new AtomicBoolean(false);
-    private static Integer maxPendingTransactions = 100000;
+    private transient KuduConnector connector;
 
     public KuduSink(String kuduMasters, KuduTableInfo tableInfo, KuduSerialization<OUT> serializer) {
         Preconditions.checkNotNull(kuduMasters,"kuduMasters could not be null");
@@ -91,74 +86,26 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> {
 
     @Override
     public void open(Configuration parameters) throws IOException {
-        startTableContext();
-    }
-
-    private void startTableContext() throws IOException {
-        if (tableContext != null) return;
-        tableContext = new KuduConnector(kuduMasters, tableInfo);
+        if (connector != null) return;
+        connector = new KuduConnector(kuduMasters, tableInfo, consistency, writeMode);
         serializer.withSchema(tableInfo.getSchema());
-        callback = new ResponseCallback();
     }
-
 
     @Override
     public void invoke(OUT row) throws Exception {
         KuduRow kuduRow = serializer.serialize(row);
-        Deferred<OperationResponse> response = tableContext.writeRow(kuduRow, writeMode);
+        boolean response = connector.writeRow(kuduRow);
 
-        if (KuduConnector.Consistency.EVENTUAL.equals(consistency)) {
-            pendingTransactions.incrementAndGet();
-            response.addCallback(callback);
-        } else {
-            processResponse(response.join());
-        }
-
-        checkErrors();
-    }
-
-    private void checkErrors() throws Exception {
-        if(errorTransactions.get()) {
+        if(!response) {
             throw new IOException("error with some transaction");
         }
     }
 
-    private class ResponseCallback implements Callback<Boolean, OperationResponse> {
-        @Override
-        public Boolean call(OperationResponse operationResponse) {
-            pendingTransactions.decrementAndGet();
-            return processResponse(operationResponse);
-        }
-    }
-
-    private Boolean processResponse(OperationResponse operationResponse) {
-        if (operationResponse == null) return true;
-
-        if (operationResponse.hasRowError()) {
-            logResponseError(operationResponse.getRowError());
-            errorTransactions.set(true);
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private void logResponseError(RowError error) {
-        LOG.error("Error {} on {}: {} ", error.getErrorStatus(), error.getOperation(), error.toString());
-    }
-
-
     @Override
     public void close() throws Exception {
-
-        while(pendingTransactions.get() > 0) {
-            LOG.info("sleeping {}s by pending transactions", pendingTransactions.get());
-            Thread.sleep(Time.seconds(pendingTransactions.get()).toMilliseconds());
-        }
-
-        if (this.tableContext == null) return;
+        if (this.connector == null) return;
         try {
-            this.tableContext.close();
+            this.connector.close();
         } catch (Exception e) {
             throw new IOException(e.getLocalizedMessage(), e);
         }
