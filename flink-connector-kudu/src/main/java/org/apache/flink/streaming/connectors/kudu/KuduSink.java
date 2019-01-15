@@ -16,9 +16,6 @@
  */
 package org.apache.flink.streaming.connectors.kudu;
 
-import com.stumbleupon.async.Callback;
-import com.stumbleupon.async.Deferred;
-import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduConnector;
@@ -26,14 +23,10 @@ import org.apache.flink.streaming.connectors.kudu.connector.KuduRow;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.streaming.connectors.kudu.serde.KuduSerialization;
 import org.apache.flink.util.Preconditions;
-import org.apache.kudu.client.OperationResponse;
-import org.apache.kudu.client.RowError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class KuduSink<OUT> extends RichSinkFunction<OUT> {
 

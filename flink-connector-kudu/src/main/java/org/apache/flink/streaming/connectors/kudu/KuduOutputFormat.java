@@ -16,7 +16,6 @@
  */
 package org.apache.flink.streaming.connectors.kudu;
 
-import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduConnector;
