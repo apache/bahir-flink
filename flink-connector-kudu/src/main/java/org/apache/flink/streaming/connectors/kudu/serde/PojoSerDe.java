@@ -21,6 +21,7 @@ import org.apache.flink.streaming.connectors.kudu.connector.KuduRow;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduTableInfo;
 import org.apache.kudu.Schema;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -52,6 +53,8 @@ public class PojoSerDe<P> implements KuduSerialization<P>, KuduDeserialization<P
     }
 
     private KuduRow mapTo(P object) {
+        if (schema == null) throw new IllegalArgumentException("schema must be set to serialize");
+
         KuduRow row = new KuduRow(schema.getRowSize());
 
         for (Class<?> c = object.getClass(); c != null; c = c.getSuperclass()) {
@@ -119,7 +122,9 @@ public class PojoSerDe<P> implements KuduSerialization<P>, KuduDeserialization<P
 
     private P createInstance(Class<P> clazz) {
         try {
-            return clazz.getConstructor().newInstance();
+            Constructor<P> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return constructor.newInstance();
         } catch (ReflectiveOperationException e) {
             String error = String.format("Cannot create instance for %s", clazz.getSimpleName());
             throw new IllegalArgumentException(error, e);
