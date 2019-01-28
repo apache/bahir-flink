@@ -65,8 +65,10 @@ final class KuduMapper {
                         values.setField(pos, name, row.getInt(name));
                         break;
                     case INT64:
-                    case UNIXTIME_MICROS:
                         values.setField(pos, name, row.getLong(name));
+                        break;
+                    case UNIXTIME_MICROS:
+                        values.setField(pos, name, row.getLong(name) / 1000);
                         break;
                     default:
                         throw new IllegalArgumentException("Illegal var type: " + type);
