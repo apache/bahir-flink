@@ -46,7 +46,6 @@ public class KuduConnector implements AutoCloseable {
 
     private static AtomicInteger pendingTransactions = new AtomicInteger();
     private static AtomicBoolean errorTransactions = new AtomicBoolean(false);
-    private Callback<Boolean, OperationResponse> callback;
 
     public KuduConnector(String kuduMasters, KuduTableInfo tableInfo) throws IOException {
         this(kuduMasters, tableInfo, KuduConnector.Consistency.STRONG, KuduConnector.WriteMode.UPSERT);
@@ -115,7 +114,7 @@ public class KuduConnector implements AutoCloseable {
 
         if (KuduConnector.Consistency.EVENTUAL.equals(consistency)) {
             pendingTransactions.incrementAndGet();
-            response.addCallback(callback);
+            response.addCallback(defaultCB);
         } else {
             processResponse(response.join());
         }
@@ -139,6 +138,7 @@ public class KuduConnector implements AutoCloseable {
     private class ResponseCallback implements Callback<Boolean, OperationResponse> {
         @Override
         public Boolean call(OperationResponse operationResponse) {
+            pendingTransactions.decrementAndGet();
             processResponse(operationResponse);
             return errorTransactions.get();
         }
