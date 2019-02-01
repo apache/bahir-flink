@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.flume;
+package org.apache.flink.streaming.connectors.flume.v1;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
