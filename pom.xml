@@ -608,8 +608,8 @@
           <failOnViolation>true</failOnViolation>
           <includeTestSourceDirectory>true</includeTestSourceDirectory>
           <failsOnError>false</failsOnError>
-          <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
-          <testSourceDirectory>${basedir}/src/test/java</testSourceDirectory>
+          <sourceDirectories>${basedir}/src/main/java</sourceDirectories>
+          <testSourceDirectories>${basedir}/src/test/java</testSourceDirectories>
           <configLocation>dev/checkstyle.xml</configLocation>
           <outputFile>${basedir}/target/checkstyle-output.xml</outputFile>
           <encoding>${project.build.sourceEncoding}</encoding>
