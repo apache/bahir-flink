@@ -23,12 +23,12 @@ under the License.
 
     <parent>
         <groupId>org.apache.bahir</groupId>
-        <artifactId>bahir-flink-parent_2.11</artifactId>
+        <artifactId>bahir-flink-parent</artifactId>
         <version>1.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>flink-connector-akka_2.11</artifactId>
+    <artifactId>flink-connector-akka_${scala.binary.version}</artifactId>
     <name>flink-connector-akka</name>
     <url>http://bahir.apache.org/</url>
     <packaging>jar</packaging>

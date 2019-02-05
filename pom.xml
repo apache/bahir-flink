@@ -21,10 +21,10 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>18</version>
+    <version>21</version>
   </parent>
   <groupId>org.apache.bahir</groupId>
-  <artifactId>bahir-flink-parent_2.11</artifactId>
+  <artifactId>bahir-flink-parent</artifactId>
   <version>1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Apache Bahir for Apache Flink - Parent POM</name>
@@ -696,7 +696,9 @@
     <profile>
       <id>scala-2.11</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>!scala-2.12</name>
+        </property>
       </activation>
       <properties>
         <scala.version>2.11.12</scala.version>
@@ -718,6 +720,45 @@
                     <bannedDependencies>
                       <excludes combine.children="append">
                         <exclude>*:*_2.10</exclude>
+                        <exclude>*:*_2.12</exclude>
+                      </excludes>
+                    </bannedDependencies>
+                  </rules>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>scala-2.12</id>
+      <activation>
+        <property>
+          <name>scala-2.12</name>
+        </property>
+      </activation>
+      <properties>
+        <scala.version>2.12.8</scala.version>
+        <scala.binary.version>2.12</scala.binary.version>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>enforce-versions</id>
+                <goals>
+                  <goal>enforce</goal>
+                </goals>
+                <configuration>
+                  <rules>
+                    <bannedDependencies>
+                      <excludes combine.children="append">
+                        <exclude>*:*_2.10</exclude>
+                        <exclude>*:*_2.11</exclude>
                       </excludes>
                     </bannedDependencies>
                   </rules>
