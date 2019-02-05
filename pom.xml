@@ -102,8 +102,8 @@
     <junit.jupiter.version>5.3.1</junit.jupiter.version>
     <junit.groups></junit.groups>
 
-    <scalatest.version>2.2.6</scalatest.version>
-    <scalacheck.version>1.12.6</scalacheck.version> <!-- 1.13.0 appears incompatible with scalatest 2.2.6 -->
+    <scalatest.version>3.0.5</scalatest.version>
+    <scalacheck.version>1.14.0</scalacheck.version>
 
     <PermGen>64m</PermGen>
     <MaxPermGen>512m</MaxPermGen>
@@ -248,7 +248,7 @@
         <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
-          <version>0.12</version>
+          <version>0.13</version>
           <executions>
             <execution>
               <id>enforce-licenses</id>
@@ -276,12 +276,12 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
-          <version>1.10</version>
+          <version>3.0.0</version>
         </plugin>
         <plugin>
           <groupId>net.alchim31.maven</groupId>
           <artifactId>scala-maven-plugin</artifactId>
-          <version>3.2.2</version>
+          <version>3.4.6</version>
           <executions>
             <execution>
               <id>scala-compile-first</id>
@@ -328,7 +328,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.5.1</version>
+          <version>3.8.0</version>
           <configuration>
             <source>${java.version}</source>
             <target>${java.version}</target>
@@ -345,7 +345,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.22.0</version>
+          <version>2.22.1</version>
           <!-- Note config is repeated in scalatest config -->
           <configuration>
             <groups>${junit.groups}</groups>
@@ -369,7 +369,7 @@
         <plugin>
           <groupId>org.scalatest</groupId>
           <artifactId>scalatest-maven-plugin</artifactId>
-          <version>1.0</version>
+          <version>2.0.0</version>
           <!-- Note config is repeated in surefire config -->
           <configuration>
             <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
@@ -397,7 +397,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>2.6</version>
+          <version>3.1.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -407,7 +407,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
-          <version>2.4</version>
+          <version>3.0.1</version>
           <configuration>
             <attach>true</attach>
           </configuration>
@@ -424,12 +424,12 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-clean-plugin</artifactId>
-          <version>3.0.0</version>
+          <version>3.1.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.10.3</version>
+          <version>3.0.1</version>
           <configuration>
             <skip>true</skip>
           </configuration>
@@ -437,12 +437,12 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
-          <version>1.4.0</version>
+          <version>1.6.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.6</version>
+          <version>3.1.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -457,6 +457,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.1.1</version>
           <executions>
             <execution>
               <id>default-cli</id>
@@ -532,7 +533,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.10</version>
         <executions>
           <execution>
             <id>generate-test-classpath</id>
@@ -566,7 +566,6 @@
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
-        <version>0.11</version>
       </plugin>
       <plugin>
         <groupId>net.alchim31.maven</groupId>
@@ -579,7 +578,7 @@
       <plugin>
         <groupId>org.scalastyle</groupId>
         <artifactId>scalastyle-maven-plugin</artifactId>
-        <version>0.8.0</version>
+        <version>1.0.0</version>
         <configuration>
           <verbose>false</verbose>
           <failOnViolation>true</failOnViolation>
@@ -603,7 +602,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.17</version>
+        <version>3.0.0</version>
         <configuration>
           <consoleOutput>false</consoleOutput>
           <failOnViolation>true</failOnViolation>
