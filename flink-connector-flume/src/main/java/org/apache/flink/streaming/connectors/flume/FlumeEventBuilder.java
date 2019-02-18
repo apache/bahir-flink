@@ -14,25 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.flume.v1;
 
-import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.junit.jupiter.api.Test;
+package org.apache.flink.streaming.connectors.flume;
 
-import static org.apache.flink.test.util.TestUtils.tryExecute;
+import org.apache.flink.api.common.functions.Function;
+import org.apache.flink.api.common.functions.RuntimeContext;
 
-@DockerTest
-public class FlumeSinkTest {
+import org.apache.flume.Event;
 
-    @Test
-    public void testSink() throws Exception {
-        StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment();
+import java.io.Serializable;
 
-        environment.fromElements("string1", "string2")
-                .addSink(new FlumeSink<>("172.25.0.3", 44444, new SimpleStringSchema()));
+/**
+ * A function that can create a Event from an incoming instance of the given type.
+ *
+ * @param <IN>
+ */
+public interface FlumeEventBuilder<IN> extends Function, Serializable {
 
-        tryExecute(environment, "FlumeTest");
-    }
+    Event createFlumeEvent(IN value, RuntimeContext ctx);
 
 }

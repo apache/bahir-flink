@@ -14,23 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.flink.streaming.connectors.flume;
 
-package org.apache.flink.streaming.connectors.flume.v2;
+import org.junit.jupiter.api.Tag;
 
-import org.apache.flink.api.common.functions.Function;
-import org.apache.flink.api.common.functions.RuntimeContext;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.apache.flume.Event;
-
-import java.io.Serializable;
-
-/**
- * A function that can create a Event from an incoming instance of the given type.
- *
- * @param <IN>
- */
-public interface FlumeEventBuilder<IN> extends Function, Serializable {
-
-    Event createFlumeEvent(IN value, RuntimeContext ctx);
-
+@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Tag("DockerTest")
+public @interface DockerTest {
 }
+

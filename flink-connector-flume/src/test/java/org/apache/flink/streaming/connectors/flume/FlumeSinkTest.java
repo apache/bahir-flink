@@ -14,46 +14,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.apache.flink.streaming.connectors.flume.v2.examples;
+package org.apache.flink.streaming.connectors.flume;
 
 import org.apache.flink.api.common.functions.RuntimeContext;
-import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.connectors.flume.v2.FlumeEventBuilder;
-import org.apache.flink.streaming.connectors.flume.v2.FlumeSink;
-
 import org.apache.flume.Event;
 import org.apache.flume.event.EventBuilder;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.Charset;
 
-/**
- * An example FlumeSink that sends data to Flume service.
- */
-public class FlumeSinkExample {
-    private static String clientType = "thrift";
-    private static String hostname = "localhost";
-    private static int port = 9000;
+import static org.apache.flink.test.util.TestUtils.tryExecute;
 
-    public static void main(String[] args) throws Exception {
-        //FlumeSink send data
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+@DockerTest
+public class FlumeSinkTest {
+
+    @Test
+    public void testSink() throws Exception {
+        StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment();
 
         FlumeEventBuilder<String> flumeEventBuilder = new FlumeEventBuilder<String>() {
             @Override
             public Event createFlumeEvent(String value, RuntimeContext ctx) {
-                return EventBuilder.withBody(value, Charset.defaultCharset());
+                return EventBuilder.withBody(value, Charset.forName("UTF-8"));
             }
         };
 
-        FlumeSink<String> flumeSink = new FlumeSink<>(clientType, hostname, port, flumeEventBuilder, 1, 1, 1);
+        FlumeSink<String> flumeSink = new FlumeSink<>("default", "172.25.0.3", 44444, flumeEventBuilder, 1, 1, 1);
 
-        // Note: parallelisms and FlumeSink batchSize
-        // if every parallelism not enough batchSize, this parallelism not word FlumeThriftService output
-        DataStreamSink<String> dataStream = env.fromElements("one", "two", "three", "four", "five")
+        environment.fromElements("string1", "string2")
                 .addSink(flumeSink);
 
-        env.execute();
+        tryExecute(environment, "FlumeTest");
     }
+
 }

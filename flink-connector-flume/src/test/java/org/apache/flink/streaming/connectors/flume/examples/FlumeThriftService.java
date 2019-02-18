@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.flink.streaming.connectors.flume.v2.examples;
+package org.apache.flink.streaming.connectors.flume.examples;
 
 import org.apache.flume.Channel;
 import org.apache.flume.ChannelSelector;

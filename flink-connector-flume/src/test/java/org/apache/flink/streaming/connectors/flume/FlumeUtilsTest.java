@@ -14,18 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.flume.v1;
+package org.apache.flink.streaming.connectors.flume;
 
-import org.junit.jupiter.api.Tag;
+import org.apache.flume.api.RpcClient;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+@DockerTest
+public class FlumeUtilsTest {
+    private RpcClient client;
 
-@Target({ ElementType.TYPE, ElementType.METHOD })
-@Retention(RetentionPolicy.RUNTIME)
-@Tag("DockerTest")
-public @interface DockerTest {
+    @Test
+    public void testGetRpcClient() {
+        client = FlumeUtils.getRpcClient("default","172.25.0.3", 44444, 1);
+        Assertions.assertNotNull(client);
+    }
+
+    @Test
+    public void testDestroy() {
+        FlumeUtils.destroy(client);
+        Assertions.assertNull(client);
+    }
 }
-
