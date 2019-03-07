@@ -88,6 +88,7 @@ public class KuduOutputFormat<OUT> extends RichOutputFormat<OUT> {
     public void open(int taskNumber, int numTasks) throws IOException {
         if (connector != null) return;
         connector = new KuduConnector(kuduMasters, tableInfo, consistency, writeMode);
+        serializer = serializer.withSchema(tableInfo.getSchema());
     }
 
     @Override
