@@ -9,7 +9,7 @@ following dependency to your project:
       <version>1.1-SNAPSHOT</version>
     </dependency>
 
-*Version Compatibility*: This module is compatible with Apache Kudu *1.7.1* (last stable version).
+*Version Compatibility*: This module is compatible with Apache Kudu *1.9.0* (last stable version).
 
 Note that the streaming connectors are not part of the binary distribution of Flink. You need to link them into your job jar for cluster execution.
 See how to link with them for cluster execution [here](https://ci.apache.org/projects/flink/flink-docs-stable/start/dependencies.html).
