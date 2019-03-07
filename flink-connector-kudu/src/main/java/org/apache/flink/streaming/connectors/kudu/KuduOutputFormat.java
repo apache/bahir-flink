@@ -50,7 +50,7 @@ public class KuduOutputFormat<OUT> extends RichOutputFormat<OUT> {
         this.tableInfo = tableInfo;
         this.consistency = KuduConnector.Consistency.STRONG;
         this.writeMode = KuduConnector.WriteMode.UPSERT;
-        this.serializer = serializer;
+        this.serializer = serializer.withSchema(tableInfo.getSchema());
     }
 
 
