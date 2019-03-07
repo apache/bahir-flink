@@ -30,7 +30,7 @@
   <packaging>jar</packaging>
 
   <properties>
-    <kudu.version>1.8.0</kudu.version>
+    <kudu.version>1.9.0</kudu.version>
 
     <junit.groups>!DockerTest</junit.groups>
   </properties>
