@@ -89,7 +89,6 @@
     <java.version>1.8</java.version>
 
     <scala.version>2.11.12</scala.version>
-    <scala.version>2.11.8</scala.version>
 
     <scala.binary.version>2.11</scala.binary.version>
 
@@ -97,7 +96,7 @@
     <log4j.version>1.2.17</log4j.version>
 
     <!-- Flink version -->
-    <flink.version>1.7.0</flink.version>
+    <flink.version>1.7.1</flink.version>
 
     <junit.jupiter.version>5.3.1</junit.jupiter.version>
     <junit.groups></junit.groups>
@@ -524,6 +523,16 @@
             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>org.scalastyle</groupId>
+          <artifactId>scalastyle-maven-plugin</artifactId>
+          <version>1.0.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>3.0.0</version>
+        </plugin>
       </plugins>
     </pluginManagement>
 
@@ -578,7 +587,6 @@
       <plugin>
         <groupId>org.scalastyle</groupId>
         <artifactId>scalastyle-maven-plugin</artifactId>
-        <version>1.0.0</version>
         <configuration>
           <verbose>false</verbose>
           <failOnViolation>true</failOnViolation>
@@ -602,7 +610,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>3.0.0</version>
         <configuration>
           <consoleOutput>false</consoleOutput>
           <failOnViolation>true</failOnViolation>
