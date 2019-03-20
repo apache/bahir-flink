@@ -38,13 +38,10 @@ jdk:
 env:
   - |
     FLINK_VERSION="1.7.2" SCALA_VERSION="2.11" DOCKER="false"
-    PROJECTS="flink-connector-activemq,flink-connector-akka,flink-connector-influxdb,flink-connector-netty,flink-connector-redis,flink-library-siddhi"
+    PROJECTS="flink-connector-activemq,flink-connector-akka,flink-connector-influxdb,flink-connector-netty,flink-connector-redis,flink-library-siddhi,flink-connector-kudu"
   - |
     FLINK_VERSION="1.7.2" SCALA_VERSION="2.11" DOCKER="true"
     PROJECTS="flink-connector-flume"
-  - |
-    FLINK_VERSION="1.7.2" SCALA_VERSION="2.11" DOCKER="true"
-    PROJECTS="flink-connector-kudu"
 
 before_install:
   - ./dev/change-scala-version.sh $SCALA_VERSION
