@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-@DockerTest
+
 public class KuduSinkTest extends KuduDatabase {
 
     @Test
@@ -39,21 +39,24 @@ public class KuduSinkTest extends KuduDatabase {
 
     @Test
     public void testInvalidTableInfo() throws IOException {
-        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(hostsCluster, null, new DefaultSerDe()));
+        String masterAddresses = harness.getMasterAddressesAsString();
+        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(masterAddresses, null, new DefaultSerDe()));
     }
 
     @Test
     public void testNotTableExist() throws IOException {
+        String masterAddresses = harness.getMasterAddressesAsString();
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),false);
-        KuduSink sink = new KuduSink<>(hostsCluster, tableInfo, new DefaultSerDe());
+        KuduSink sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe());
         Assertions.assertThrows(UnsupportedOperationException.class, () -> sink.open(new Configuration()));
     }
 
     @Test
     public void testOutputWithStrongConsistency() throws Exception {
+        String masterAddresses = harness.getMasterAddressesAsString();
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
-        KuduSink sink = new KuduSink<>(hostsCluster, tableInfo, new DefaultSerDe())
+        KuduSink sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe())
                 .withStrongConsistency();
         sink.open(new Configuration());
 
@@ -69,8 +72,10 @@ public class KuduSinkTest extends KuduDatabase {
 
     @Test
     public void testOutputWithEventualConsistency() throws Exception {
+        String masterAddresses = harness.getMasterAddressesAsString();
+
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
-        KuduSink sink = new KuduSink<>(hostsCluster, tableInfo, new DefaultSerDe())
+        KuduSink sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe())
                 .withEventualConsistency();
         sink.open(new Configuration());
 

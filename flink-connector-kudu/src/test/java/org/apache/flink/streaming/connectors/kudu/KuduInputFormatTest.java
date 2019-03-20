@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@DockerTest
+
 public class KuduInputFormatTest extends KuduDatabase {
 
     @Test
@@ -37,7 +37,8 @@ public class KuduInputFormatTest extends KuduDatabase {
 
     @Test
     public void testInvalidTableInfo() throws IOException {
-        Assertions.assertThrows(NullPointerException.class, () -> new KuduInputFormat(hostsCluster, null));
+        String masterAddresses = harness.getMasterAddressesAsString();
+        Assertions.assertThrows(NullPointerException.class, () -> new KuduInputFormat(masterAddresses, null));
     }
 
     @Test
@@ -68,7 +69,8 @@ public class KuduInputFormatTest extends KuduDatabase {
 
 
     public static List<KuduRow> readRows(KuduTableInfo tableInfo, String... fieldProjection) throws Exception {
-        KuduInputFormat inputFormat = new KuduInputFormat(hostsCluster, tableInfo)
+        String masterAddresses = harness.getMasterAddressesAsString();
+        KuduInputFormat inputFormat = new KuduInputFormat(masterAddresses, tableInfo)
                 .withTableProjections(fieldProjection);
 
         KuduInputFormat.KuduInputSplit[] splits = inputFormat.createInputSplits(1);

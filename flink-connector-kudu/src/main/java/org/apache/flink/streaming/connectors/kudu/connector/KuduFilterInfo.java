@@ -38,7 +38,7 @@ public class KuduFilterInfo {
         KuduPredicate predicate;
         switch (this.type) {
             case IS_IN:
-                predicate = KuduPredicate.newInListPredicate(column, (List) this.value);
+                predicate = KuduPredicate.newInListPredicate(column, (List<?>) this.value);
                 break;
             case IS_NULL:
                 predicate = KuduPredicate.newIsNullPredicate(column);
@@ -137,7 +137,7 @@ public class KuduFilterInfo {
             return filter(FilterType.IS_NULL, null);
         }
 
-        public Builder isIn(List values) {
+        public Builder isIn(List<?> values) {
             return filter(FilterType.IS_IN, values);
         }
 

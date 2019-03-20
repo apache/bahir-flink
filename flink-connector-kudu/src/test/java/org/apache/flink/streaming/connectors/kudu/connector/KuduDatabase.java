@@ -17,15 +17,21 @@
 package org.apache.flink.streaming.connectors.kudu.connector;
 
 import org.apache.kudu.Type;
+import org.apache.kudu.test.KuduTestHarness;
+import org.junit.Rule;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.migrationsupport.rules.ExternalResourceSupport;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@ExtendWith(ExternalResourceSupport.class)
 public class KuduDatabase {
 
-    protected static final String hostsCluster = "172.25.0.6";
+    @Rule
+    public static KuduTestHarness harness = new KuduTestHarness();
 
     protected static final Object[][] booksTableData = {
             {1001, "Java for dummies", "Tan Ah Teck", 11.11, 11},
@@ -64,7 +70,8 @@ public class KuduDatabase {
 
     public void setUpDatabase(KuduTableInfo tableInfo) {
         try {
-            KuduConnector tableContext = new KuduConnector(hostsCluster, tableInfo);
+            String masterAddresses = harness.getMasterAddressesAsString();
+            KuduConnector tableContext = new KuduConnector(masterAddresses, tableInfo);
             booksDataRow().forEach(row -> {
                 try {
                     tableContext.writeRow(row);
@@ -77,9 +84,10 @@ public class KuduDatabase {
         }
     }
 
-    protected static void cleanDatabase(KuduTableInfo tableInfo) {
+    protected void cleanDatabase(KuduTableInfo tableInfo) {
         try {
-            KuduConnector tableContext = new KuduConnector(hostsCluster, tableInfo);
+            String masterAddresses = harness.getMasterAddressesAsString();
+            KuduConnector tableContext = new KuduConnector(masterAddresses, tableInfo);
             tableContext.deleteTable();
             tableContext.close();
         } catch (Exception e) {
