@@ -37,7 +37,7 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> implements Checkpointed
 
     private static final long serialVersionUID = 1L;
 
-	private static final Logger LOG = LoggerFactory.getLogger(KuduOutputFormat.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KuduOutputFormat.class);
 
     private String kuduMasters;
     private KuduTableInfo tableInfo;
@@ -89,12 +89,12 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> implements Checkpointed
         this.flushMode = FlushMode.AUTO_FLUSH_SYNC;
         return this;
     }
-    
+
     public KuduSink<OUT> withAsyncFlushMode() {
         this.flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
         return this;
     }
-    
+
     @Override
     public void open(Configuration parameters) throws IOException {
         if (this.connector != null) return;
@@ -103,10 +103,13 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> implements Checkpointed
     }
     
     /**
-     * if flink checkpoint is disable,synchronously write data to kudu.
-     * if flink checkpoint is enable, asynchronously write data to kudu by default.
-     * (Note: async may result in out-of-order writes to Kudu. 
-     *  you also can change to sync by explicitly calling withSyncFlushMode() when initializing KuduSink. )
+     * If flink checkpoint is disable,synchronously write data to kudu.
+     * <p>If flink checkpoint is enable, asynchronously write data to kudu by default.
+     *
+     * <p>(Note: async may result in out-of-order writes to Kudu.
+     *  you also can change to sync by explicitly calling {@link KuduSink#withSyncFlushMode()} when initializing KuduSink. )
+     *
+     * @return flushMode
      */
     private FlushMode getflushMode() {
         FlushMode flushMode = FlushMode.AUTO_FLUSH_SYNC;
@@ -119,7 +122,7 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> implements Checkpointed
         }
         return flushMode;
     }
-    
+
     @Override
     public void invoke(OUT row) throws Exception {
         KuduRow kuduRow = serializer.serialize(row);
@@ -140,15 +143,15 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> implements Checkpointed
         }
     }
 
-	@Override
+    @Override
     public void initializeState(FunctionInitializationContext context) throws Exception {
     }
 
-	@Override
+    @Override
     public void snapshotState(FunctionSnapshotContext context) throws Exception {
         if (LOG.isDebugEnabled()) {
-        	LOG.debug("Snapshotting state {} ...", context.getCheckpointId());
+            LOG.debug("Snapshotting state {} ...", context.getCheckpointId());
         }
-		this.connector.flush();
+        this.connector.flush();
     }
 }

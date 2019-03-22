@@ -110,7 +110,7 @@ public class KuduConnector implements AutoCloseable {
 
         return tokenBuilder.build();
     }
-    
+
     public boolean writeRow(KuduRow row) throws Exception {
         final Operation operation = KuduMapper.toOperation(table, writeMode, row);
 
@@ -136,15 +136,15 @@ public class KuduConnector implements AutoCloseable {
 
         if (session == null) return;
         session.close();
-        
+
         if (client == null) return;
         client.close();
     }
 
     public void flush(){
-    	this.session.flush();
+        this.session.flush();
     }
-    
+
     private class ResponseCallback implements Callback<Boolean, OperationResponse> {
         @Override
         public Boolean call(OperationResponse operationResponse) {

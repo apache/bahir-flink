@@ -33,7 +33,7 @@ public class KuduOutputFormat<OUT> extends RichOutputFormat<OUT> {
 
     private static final long serialVersionUID = 1L;
 
-	private static final Logger LOG = LoggerFactory.getLogger(KuduOutputFormat.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KuduOutputFormat.class);
 
     private String kuduMasters;
     private KuduTableInfo tableInfo;
