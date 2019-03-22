@@ -43,6 +43,7 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> implements Checkpointed
     private KuduTableInfo tableInfo;
     private KuduConnector.Consistency consistency;
     private KuduConnector.WriteMode writeMode;
+    private FlushMode flushMode;
 
     private KuduSerialization<OUT> serializer;
 
@@ -84,16 +85,41 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> implements Checkpointed
         return this;
     }
 
+    public KuduSink<OUT> withSyncFlushMode() {
+        this.flushMode = FlushMode.AUTO_FLUSH_SYNC;
+        return this;
+    }
+    
+    public KuduSink<OUT> withAsyncFlushMode() {
+        this.flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
+        return this;
+    }
+    
     @Override
     public void open(Configuration parameters) throws IOException {
         if (this.connector != null) return;
-        FlushMode flushMode = ((StreamingRuntimeContext) getRuntimeContext()).isCheckpointingEnabled() ?
-        		FlushMode.AUTO_FLUSH_BACKGROUND :FlushMode.AUTO_FLUSH_SYNC;
-        this.connector = new KuduConnector(kuduMasters, tableInfo, consistency, writeMode, flushMode);
+        this.connector = new KuduConnector(kuduMasters, tableInfo, consistency, writeMode, getflushMode());
         this.serializer.withSchema(tableInfo.getSchema());
-        
     }
-
+    
+    /**
+     * if flink checkpoint is disable,synchronously write data to kudu.
+     * if flink checkpoint is enable, asynchronously write data to kudu by default.
+     * (Note: async may result in out-of-order writes to Kudu. 
+     *  you also can change to sync by explicitly calling withSyncFlushMode() when initializing KuduSink. )
+     */
+    private FlushMode getflushMode() {
+        FlushMode flushMode = FlushMode.AUTO_FLUSH_SYNC;
+        boolean enableCheckpoint = ((StreamingRuntimeContext) getRuntimeContext()).isCheckpointingEnabled();
+        if(enableCheckpoint && this.flushMode == null) {
+            flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
+        }
+        if(enableCheckpoint && this.flushMode != null) {
+            flushMode = this.flushMode;
+        }
+        return flushMode;
+    }
+    
     @Override
     public void invoke(OUT row) throws Exception {
         KuduRow kuduRow = serializer.serialize(row);
