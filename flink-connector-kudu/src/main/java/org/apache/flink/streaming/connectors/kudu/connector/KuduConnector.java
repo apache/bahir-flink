@@ -134,11 +134,11 @@ public class KuduConnector implements AutoCloseable {
             Thread.sleep(Time.seconds(pendingTransactions.get()).toMilliseconds());
         }
 
-        if (client == null) return;
-        client.close();
-        
         if (session == null) return;
         session.close();
+        
+        if (client == null) return;
+        client.close();
     }
 
     public void flush(){
