@@ -101,7 +101,7 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> implements Checkpointed
         this.connector = new KuduConnector(kuduMasters, tableInfo, consistency, writeMode, getflushMode());
         this.serializer.withSchema(tableInfo.getSchema());
     }
-    
+
     /**
      * If flink checkpoint is disable,synchronously write data to kudu.
      * <p>If flink checkpoint is enable, asynchronously write data to kudu by default.
