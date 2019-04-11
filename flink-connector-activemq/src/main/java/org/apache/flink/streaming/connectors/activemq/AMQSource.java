@@ -226,10 +226,11 @@ public class AMQSource<OUT> extends MessageAcknowledgingSourceBase<OUT, String>
             bytesMessage.readBytes(bytes);
             OUT value = deserializationSchema.deserialize(bytes);
             synchronized (ctx.getCheckpointLock()) {
-                ctx.collect(value);
-                if (!autoAck) {
-                    addId(bytesMessage.getJMSMessageID());
+                if (!autoAck && addId(bytesMessage.getJMSMessageID())) {
+                    ctx.collect(value);
                     unacknowledgedMessages.put(bytesMessage.getJMSMessageID(), bytesMessage);
+                } else {
+                    ctx.collect(value);
                 }
             }
         }
