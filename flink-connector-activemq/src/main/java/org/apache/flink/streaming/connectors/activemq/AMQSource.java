@@ -219,7 +219,7 @@ public class AMQSource<OUT> extends MessageAcknowledgingSourceBase<OUT, String>
             Message message = consumer.receive(1000);
             if (! (message instanceof BytesMessage)) {
                 LOG.warn("Active MQ source received non bytes message: {}", message);
-                return;
+                continue;
             }
             BytesMessage bytesMessage = (BytesMessage) message;
             byte[] bytes = new byte[(int) bytesMessage.getBodyLength()];
