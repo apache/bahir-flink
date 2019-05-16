@@ -24,7 +24,6 @@ import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.TaskManagerOptions;
-import org.apache.flink.runtime.minicluster.LocalFlinkMiniCluster;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -33,10 +32,8 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.test.util.SuccessException;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.jupiter.api.Disabled;
 import scala.concurrent.duration.Deadline;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -48,37 +45,23 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
-@Disabled("failing")
 public class ActiveMQConnectorITCase {
 
     public static final int MESSAGES_NUM = 10000;
     public static final String QUEUE_NAME = "queue";
     public static final String TOPIC_NAME = "topic";
-    private static LocalFlinkMiniCluster flink;
-    private static int flinkPort;
+
+    private static Configuration flinkConfig;
 
     @BeforeClass
     public static void beforeClass() {
         // start also a re-usable Flink mini cluster
-        Configuration flinkConfig = new Configuration();
+        flinkConfig = new Configuration();
         flinkConfig.setInteger(ConfigConstants.LOCAL_NUMBER_TASK_MANAGER, 1);
         flinkConfig.setInteger(TaskManagerOptions.NUM_TASK_SLOTS.key(), 8);
         flinkConfig.setInteger(TaskManagerOptions.MANAGED_MEMORY_SIZE.key(), 16);
         flinkConfig.setString(ConfigConstants.RESTART_STRATEGY_FIXED_DELAY_DELAY, "0 s");
 
-        flink = new LocalFlinkMiniCluster(flinkConfig, false);
-        flink.start();
-
-        flinkPort = flink.getLeaderRPCPort();
-    }
-
-    @AfterClass
-    public static void afterClass() {
-        flinkPort = -1;
-        if (flink != null) {
-            flink.startInternalShutdown();
-        }
     }
 
     @Test
@@ -126,7 +109,7 @@ public class ActiveMQConnectorITCase {
     }
 
     private StreamExecutionEnvironment createExecutionEnvironment() {
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.createRemoteEnvironment("localhost", flinkPort);
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
         env.setRestartStrategy(RestartStrategies.noRestart());
         env.getConfig().disableSysoutLogging();
         return env;
