@@ -23,12 +23,15 @@ import org.apache.flink.streaming.connectors.kudu.connector.KuduRow;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.streaming.connectors.kudu.serde.KuduSerialization;
 import org.apache.flink.util.Preconditions;
+import org.apache.kudu.client.SessionConfiguration.FlushMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class KuduOutputFormat<OUT> extends RichOutputFormat<OUT> {
+
+    private static final long serialVersionUID = 1L;
 
     private static final Logger LOG = LoggerFactory.getLogger(KuduOutputFormat.class);
 
@@ -87,7 +90,7 @@ public class KuduOutputFormat<OUT> extends RichOutputFormat<OUT> {
     @Override
     public void open(int taskNumber, int numTasks) throws IOException {
         if (connector != null) return;
-        connector = new KuduConnector(kuduMasters, tableInfo, consistency, writeMode);
+        connector = new KuduConnector(kuduMasters, tableInfo, consistency, writeMode,FlushMode.AUTO_FLUSH_SYNC);
         serializer = serializer.withSchema(tableInfo.getSchema());
     }
 

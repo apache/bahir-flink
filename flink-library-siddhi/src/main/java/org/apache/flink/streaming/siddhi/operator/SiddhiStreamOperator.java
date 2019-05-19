@@ -36,8 +36,8 @@ import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
  */
 public class SiddhiStreamOperator<IN, OUT> extends AbstractSiddhiOperator<Tuple2<String, IN>, OUT> {
 
-    public SiddhiStreamOperator(SiddhiOperatorContext siddhiPlan) {
-        super(siddhiPlan);
+    public SiddhiStreamOperator(SiddhiOperatorContext siddhiPlan, String operatorName) {
+        super(siddhiPlan, operatorName);
     }
 
     @Override
@@ -68,9 +68,10 @@ public class SiddhiStreamOperator<IN, OUT> extends AbstractSiddhiOperator<Tuple2
 
     @Override
     protected PriorityQueue<StreamRecord<Tuple2<String, IN>>> restoreQueuerState(DataInputView dataInputView) throws IOException {
-        int sizeOfQueue = dataInputView.readInt();
+        int snapshotSize = dataInputView.readInt();
+        int sizeOfQueue = snapshotSize > 0 ? snapshotSize : this.INITIAL_PRIORITY_QUEUE_CAPACITY;
         PriorityQueue<StreamRecord<Tuple2<String, IN>>> priorityQueue = new PriorityQueue<>(sizeOfQueue);
-        for (int i = 0; i < sizeOfQueue; i++) {
+        for (int i = 0; i < snapshotSize; i++) {
             String streamId = dataInputView.readUTF();
             StreamElement streamElement = getStreamRecordSerializer(streamId).deserialize(dataInputView);
             priorityQueue.offer(streamElement.<Tuple2<String, IN>>asRecord());

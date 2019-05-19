@@ -236,7 +236,7 @@ public abstract class SiddhiStream {
             TypeInformation<T> typeInformation =
                 SiddhiTypeFactory.getTupleTypeInformation(siddhiContext.getFinalExecutionPlan(), outStreamId);
             siddhiContext.setOutputStreamType(typeInformation);
-            return returnsInternal(siddhiContext);
+            return returnsInternal(siddhiContext, outStreamId);
         }
 
         /**
@@ -269,11 +269,11 @@ public abstract class SiddhiStream {
             siddhiContext.setOutputStreamType(typeInformation);
             siddhiContext.setExtensions(environment.getExtensions());
             siddhiContext.setExecutionConfig(environment.getExecutionEnvironment().getConfig());
-            return returnsInternal(siddhiContext);
+            return returnsInternal(siddhiContext, outStreamId);
         }
 
-        private <T> DataStream<T> returnsInternal(SiddhiOperatorContext siddhiContext) {
-            return SiddhiStreamFactory.createDataStream(siddhiContext, this.dataStream);
+        private <T> DataStream<T> returnsInternal(SiddhiOperatorContext siddhiContext, String outStreamId) {
+            return SiddhiStreamFactory.createDataStream(siddhiContext, this.dataStream, outStreamId);
         }
     }
 }
