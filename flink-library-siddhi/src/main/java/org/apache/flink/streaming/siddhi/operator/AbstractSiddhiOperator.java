@@ -20,8 +20,10 @@ package org.apache.flink.streaming.siddhi.operator;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
@@ -51,7 +53,11 @@ import org.slf4j.LoggerFactory;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.stream.input.InputHandler;
+import org.wso2.siddhi.query.api.SiddhiApp;
+import org.wso2.siddhi.query.api.annotation.Annotation;
+import org.wso2.siddhi.query.api.annotation.Element;
 import org.wso2.siddhi.query.api.definition.AbstractDefinition;
+import org.wso2.siddhi.query.compiler.SiddhiCompiler;
 
 /**
  * <h1>Siddhi Runtime Operator</h1>
@@ -86,10 +92,10 @@ import org.wso2.siddhi.query.api.definition.AbstractDefinition;
 public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOperator<OUT>
     implements OneInputStreamOperator<IN, OUT> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSiddhiOperator.class);
-    private static final int INITIAL_PRIORITY_QUEUE_CAPACITY = 11;
+    protected static final int INITIAL_PRIORITY_QUEUE_CAPACITY = 11;
     private static final String SIDDHI_RUNTIME_STATE_NAME = "siddhiRuntimeState";
     private static final String QUEUED_RECORDS_STATE_NAME = "queuedRecordsState";
-
+    protected final String operatorName;
     private final SiddhiOperatorContext siddhiPlan;
     private final String executionExpression;
     private final boolean isProcessingTime;
@@ -108,13 +114,13 @@ public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOper
     /**
      * @param siddhiPlan Siddhi CEP  Execution Plan
      */
-    public AbstractSiddhiOperator(SiddhiOperatorContext siddhiPlan) {
+    public AbstractSiddhiOperator(SiddhiOperatorContext siddhiPlan, String operatorName) {
         validate(siddhiPlan);
         this.executionExpression = siddhiPlan.getFinalExecutionPlan();
         this.siddhiPlan = siddhiPlan;
         this.isProcessingTime = this.siddhiPlan.getTimeCharacteristic() == TimeCharacteristic.ProcessingTime;
         this.streamRecordSerializers = new HashMap<>();
-
+        this.operatorName = operatorName;
         registerStreamRecordSerializers();
     }
 
@@ -228,7 +234,15 @@ public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOper
             for (Map.Entry<String, Class<?>> entry : this.siddhiPlan.getExtensions().entrySet()) {
                 this.siddhiManager.setExtension(entry.getKey(), entry.getValue());
             }
-            this.siddhiRuntime = siddhiManager.createSiddhiAppRuntime(executionExpression);
+
+            SiddhiApp siddhiApp = SiddhiCompiler.parse(executionExpression);
+            Annotation nameAnnotation = new Annotation("Name");
+            Element element = new Element(null, operatorName);
+            List<Element> elements = new ArrayList<>();
+            elements.add(element);
+            nameAnnotation.setElements(elements);
+            siddhiApp.getAnnotations().add(nameAnnotation);
+            this.siddhiRuntime = siddhiManager.createSiddhiAppRuntime(siddhiApp);
             this.siddhiRuntime.start();
             registerInputAndOutput(this.siddhiRuntime);
             LOGGER.info("Siddhi {} started", siddhiRuntime.getName());

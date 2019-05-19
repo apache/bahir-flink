@@ -17,18 +17,25 @@
 package org.apache.flink.streaming.connectors.kudu;
 
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.state.FunctionInitializationContext;
+import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
+import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduConnector;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduRow;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.streaming.connectors.kudu.serde.KuduSerialization;
 import org.apache.flink.util.Preconditions;
+import org.apache.kudu.client.SessionConfiguration.FlushMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class KuduSink<OUT> extends RichSinkFunction<OUT> {
+public class KuduSink<OUT> extends RichSinkFunction<OUT> implements CheckpointedFunction {
+
+    private static final long serialVersionUID = 1L;
 
     private static final Logger LOG = LoggerFactory.getLogger(KuduOutputFormat.class);
 
@@ -36,6 +43,7 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> {
     private KuduTableInfo tableInfo;
     private KuduConnector.Consistency consistency;
     private KuduConnector.WriteMode writeMode;
+    private FlushMode flushMode;
 
     private KuduSerialization<OUT> serializer;
 
@@ -77,11 +85,42 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> {
         return this;
     }
 
+    public KuduSink<OUT> withSyncFlushMode() {
+        this.flushMode = FlushMode.AUTO_FLUSH_SYNC;
+        return this;
+    }
+
+    public KuduSink<OUT> withAsyncFlushMode() {
+        this.flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
+        return this;
+    }
+
     @Override
     public void open(Configuration parameters) throws IOException {
-        if (connector != null) return;
-        connector = new KuduConnector(kuduMasters, tableInfo, consistency, writeMode);
-        serializer.withSchema(tableInfo.getSchema());
+        if (this.connector != null) return;
+        this.connector = new KuduConnector(kuduMasters, tableInfo, consistency, writeMode, getflushMode());
+        this.serializer.withSchema(tableInfo.getSchema());
+    }
+
+    /**
+     * If flink checkpoint is disable,synchronously write data to kudu.
+     * <p>If flink checkpoint is enable, asynchronously write data to kudu by default.
+     *
+     * <p>(Note: async may result in out-of-order writes to Kudu.
+     *  you also can change to sync by explicitly calling {@link KuduSink#withSyncFlushMode()} when initializing KuduSink. )
+     *
+     * @return flushMode
+     */
+    private FlushMode getflushMode() {
+        FlushMode flushMode = FlushMode.AUTO_FLUSH_SYNC;
+        boolean enableCheckpoint = ((StreamingRuntimeContext) getRuntimeContext()).isCheckpointingEnabled();
+        if(enableCheckpoint && this.flushMode == null) {
+            flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
+        }
+        if(enableCheckpoint && this.flushMode != null) {
+            flushMode = this.flushMode;
+        }
+        return flushMode;
     }
 
     @Override
@@ -102,5 +141,17 @@ public class KuduSink<OUT> extends RichSinkFunction<OUT> {
         } catch (Exception e) {
             throw new IOException(e.getLocalizedMessage(), e);
         }
+    }
+
+    @Override
+    public void initializeState(FunctionInitializationContext context) throws Exception {
+    }
+
+    @Override
+    public void snapshotState(FunctionSnapshotContext context) throws Exception {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Snapshotting state {} ...", context.getCheckpointId());
+        }
+        this.connector.flush();
     }
 }
