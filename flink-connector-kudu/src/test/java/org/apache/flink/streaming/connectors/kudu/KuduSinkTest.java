@@ -17,12 +17,15 @@
 package org.apache.flink.streaming.connectors.kudu;
 
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.streaming.api.operators.StreamingRuntimeContext;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduDatabase;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduRow;
 import org.apache.flink.streaming.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.streaming.connectors.kudu.serde.DefaultSerDe;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,6 +33,14 @@ import java.util.UUID;
 
 
 public class KuduSinkTest extends KuduDatabase {
+
+    private static StreamingRuntimeContext context;
+
+    @BeforeAll
+    public static void start() {
+        context = Mockito.mock(StreamingRuntimeContext.class);
+        Mockito.when(context.isCheckpointingEnabled()).thenReturn(true);
+    }
 
     @Test
     public void testInvalidKuduMaster() throws IOException {
@@ -48,6 +59,7 @@ public class KuduSinkTest extends KuduDatabase {
         String masterAddresses = harness.getMasterAddressesAsString();
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),false);
         KuduSink sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe());
+        sink.setRuntimeContext(context);
         Assertions.assertThrows(UnsupportedOperationException.class, () -> sink.open(new Configuration()));
     }
 
@@ -58,6 +70,7 @@ public class KuduSinkTest extends KuduDatabase {
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
         KuduSink sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe())
                 .withStrongConsistency();
+        sink.setRuntimeContext(context);
         sink.open(new Configuration());
 
         for (KuduRow kuduRow : booksDataRow()) {
@@ -77,6 +90,7 @@ public class KuduSinkTest extends KuduDatabase {
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
         KuduSink sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe())
                 .withEventualConsistency();
+        sink.setRuntimeContext(context);
         sink.open(new Configuration());
 
         for (KuduRow kuduRow : booksDataRow()) {
