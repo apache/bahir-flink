@@ -219,17 +219,18 @@ public class AMQSource<OUT> extends MessageAcknowledgingSourceBase<OUT, String>
             Message message = consumer.receive(1000);
             if (! (message instanceof BytesMessage)) {
                 LOG.warn("Active MQ source received non bytes message: {}", message);
-                return;
+                continue;
             }
             BytesMessage bytesMessage = (BytesMessage) message;
             byte[] bytes = new byte[(int) bytesMessage.getBodyLength()];
             bytesMessage.readBytes(bytes);
             OUT value = deserializationSchema.deserialize(bytes);
             synchronized (ctx.getCheckpointLock()) {
-                ctx.collect(value);
-                if (!autoAck) {
-                    addId(bytesMessage.getJMSMessageID());
+                if (!autoAck && addId(bytesMessage.getJMSMessageID())) {
+                    ctx.collect(value);
                     unacknowledgedMessages.put(bytesMessage.getJMSMessageID(), bytesMessage);
+                } else {
+                    ctx.collect(value);
                 }
             }
         }

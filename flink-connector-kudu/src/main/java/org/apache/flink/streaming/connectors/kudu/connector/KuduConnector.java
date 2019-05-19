@@ -18,9 +18,11 @@ package org.apache.flink.streaming.connectors.kudu.connector;
 
 import com.stumbleupon.async.Callback;
 import com.stumbleupon.async.Deferred;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.time.Time;
 import org.apache.kudu.client.*;
+import org.apache.kudu.client.SessionConfiguration.FlushMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +42,7 @@ public class KuduConnector implements AutoCloseable {
 
     private AsyncKuduClient client;
     private KuduTable table;
+    private AsyncKuduSession session;
 
     private Consistency consistency;
     private WriteMode writeMode;
@@ -48,15 +51,17 @@ public class KuduConnector implements AutoCloseable {
     private static AtomicBoolean errorTransactions = new AtomicBoolean(false);
 
     public KuduConnector(String kuduMasters, KuduTableInfo tableInfo) throws IOException {
-        this(kuduMasters, tableInfo, KuduConnector.Consistency.STRONG, KuduConnector.WriteMode.UPSERT);
+        this(kuduMasters, tableInfo, KuduConnector.Consistency.STRONG, KuduConnector.WriteMode.UPSERT,FlushMode.AUTO_FLUSH_SYNC);
     }
 
-    public KuduConnector(String kuduMasters, KuduTableInfo tableInfo, Consistency consistency, WriteMode writeMode) throws IOException {
+    public KuduConnector(String kuduMasters, KuduTableInfo tableInfo, Consistency consistency, WriteMode writeMode,FlushMode flushMode) throws IOException {
         this.client = client(kuduMasters);
         this.table = table(tableInfo);
+        this.session = client.newSession();
         this.consistency = consistency;
         this.writeMode = writeMode;
         this.defaultCB = new ResponseCallback();
+        this.session.setFlushMode(flushMode);
     }
 
     private AsyncKuduClient client(String kuduMasters) {
@@ -109,7 +114,6 @@ public class KuduConnector implements AutoCloseable {
     public boolean writeRow(KuduRow row) throws Exception {
         final Operation operation = KuduMapper.toOperation(table, writeMode, row);
 
-        AsyncKuduSession session = client.newSession();
         Deferred<OperationResponse> response = session.apply(operation);
 
         if (KuduConnector.Consistency.EVENTUAL.equals(consistency)) {
@@ -119,7 +123,6 @@ public class KuduConnector implements AutoCloseable {
             processResponse(response.join());
         }
 
-        session.close();
         return !errorTransactions.get();
 
     }
@@ -131,8 +134,15 @@ public class KuduConnector implements AutoCloseable {
             Thread.sleep(Time.seconds(pendingTransactions.get()).toMilliseconds());
         }
 
+        if (session == null) return;
+        session.close();
+
         if (client == null) return;
         client.close();
+    }
+
+    public void flush(){
+        this.session.flush();
     }
 
     private class ResponseCallback implements Callback<Boolean, OperationResponse> {

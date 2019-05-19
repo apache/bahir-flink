@@ -18,9 +18,8 @@ package org.apache.flink.streaming.connectors.netty.example
 
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.api.scala._
-import org.apache.flink.table.api.scala._
-import org.apache.flink.table.api.TableEnvironment
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
+import org.apache.flink.table.api.scala._
 
 /**
  * Simple example for demonstrating the use of SQL on a Stream Table.
@@ -41,7 +40,7 @@ object StreamSqlExample {
 
     // set up execution environment
     val env = StreamExecutionEnvironment.getExecutionEnvironment
-    val tEnv = TableEnvironment.getTableEnvironment(env)
+    val tEnv = StreamTableEnvironment.create(env)
 
     val spec = if (param.get("tcp") == "true") {
       new TcpReceiverSource(7070, Some("http://localhost:9090/cb"))
