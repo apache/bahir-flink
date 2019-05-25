@@ -62,8 +62,8 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
             jedisCluster.hset(key, hashField, value);
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
-                LOG.error("Cannot send Redis message with command HSET to hash {} error message {}",
-                    key, hashField, e.getMessage());
+                LOG.error("Cannot send Redis message with command HSET to hash {} of key {} error message {}",
+                    hashField, key, e.getMessage());
             }
             throw e;
         }
