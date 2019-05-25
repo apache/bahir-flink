@@ -37,7 +37,6 @@ public class FlinkJedisSentinelConfig extends FlinkJedisConfigBase {
     private final String masterName;
     private final Set<String> sentinels;
     private final int soTimeout;
-    private final String password;
     private final int database;
 
     /**
@@ -61,7 +60,7 @@ public class FlinkJedisSentinelConfig extends FlinkJedisConfigBase {
                                     int connectionTimeout, int soTimeout,
                                     String password, int database,
                                     int maxTotal, int maxIdle, int minIdle) {
-        super(connectionTimeout, maxTotal, maxIdle, minIdle);
+        super(connectionTimeout, maxTotal, maxIdle, minIdle, password);
         Objects.requireNonNull(masterName, "Master name should be presented");
         Objects.requireNonNull(sentinels, "Sentinels information should be presented");
         Util.checkArgument(!sentinels.isEmpty(), "Sentinel hosts should not be empty");
@@ -69,7 +68,6 @@ public class FlinkJedisSentinelConfig extends FlinkJedisConfigBase {
         this.masterName = masterName;
         this.sentinels = new HashSet<>(sentinels);
         this.soTimeout = soTimeout;
-        this.password = password;
         this.database = database;
     }
 
@@ -98,15 +96,6 @@ public class FlinkJedisSentinelConfig extends FlinkJedisConfigBase {
      */
     public int getSoTimeout() {
         return soTimeout;
-    }
-
-    /**
-     * Returns password.
-     *
-     * @return password
-     */
-    public String getPassword() {
-        return password;
     }
 
     /**

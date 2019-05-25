@@ -88,8 +88,12 @@ public class RedisCommandsContainerBuilder {
         genericObjectPoolConfig.setMaxTotal(jedisClusterConfig.getMaxTotal());
         genericObjectPoolConfig.setMinIdle(jedisClusterConfig.getMinIdle());
 
-        JedisCluster jedisCluster = new JedisCluster(jedisClusterConfig.getNodes(), jedisClusterConfig.getConnectionTimeout(),
-            jedisClusterConfig.getMaxRedirections(), genericObjectPoolConfig);
+        JedisCluster jedisCluster = new JedisCluster(jedisClusterConfig.getNodes(),
+                jedisClusterConfig.getConnectionTimeout(),
+                jedisClusterConfig.getConnectionTimeout(),
+                jedisClusterConfig.getMaxRedirections(),
+                jedisClusterConfig.getPassword(),
+                genericObjectPoolConfig);
         return new RedisClusterContainer(jedisCluster);
     }
 

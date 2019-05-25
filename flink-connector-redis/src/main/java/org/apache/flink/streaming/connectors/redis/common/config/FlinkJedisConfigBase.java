@@ -31,8 +31,9 @@ public abstract class FlinkJedisConfigBase implements Serializable {
     protected final int maxIdle;
     protected final int minIdle;
     protected final int connectionTimeout;
+    protected final String password;
 
-    protected FlinkJedisConfigBase(int connectionTimeout, int maxTotal, int maxIdle, int minIdle){
+    protected FlinkJedisConfigBase(int connectionTimeout, int maxTotal, int maxIdle, int minIdle, String password) {
         Util.checkArgument(connectionTimeout >= 0, "connection timeout can not be negative");
         Util.checkArgument(maxTotal >= 0, "maxTotal value can not be negative");
         Util.checkArgument(maxIdle >= 0, "maxIdle value can not be negative");
@@ -42,6 +43,7 @@ public abstract class FlinkJedisConfigBase implements Serializable {
         this.maxTotal = maxTotal;
         this.maxIdle = maxIdle;
         this.minIdle = minIdle;
+        this.password = password;
     }
 
     /**
@@ -87,5 +89,14 @@ public abstract class FlinkJedisConfigBase implements Serializable {
      */
     public int getMinIdle() {
         return minIdle;
+    }
+
+    /**
+     * Returns password.
+     *
+     * @return password
+     */
+    public String getPassword() {
+        return password;
     }
 }

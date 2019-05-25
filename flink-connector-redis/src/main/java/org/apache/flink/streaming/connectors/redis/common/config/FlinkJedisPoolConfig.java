@@ -31,7 +31,6 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
     private final String host;
     private final int port;
     private final int database;
-    private final String password;
 
 
     /**
@@ -50,12 +49,11 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
      */
     private FlinkJedisPoolConfig(String host, int port, int connectionTimeout, String password, int database,
                                 int maxTotal, int maxIdle, int minIdle) {
-        super(connectionTimeout, maxTotal, maxIdle, minIdle);
+        super(connectionTimeout, maxTotal, maxIdle, minIdle, password);
         Objects.requireNonNull(host, "Host information should be presented");
         this.host = host;
         this.port = port;
         this.database = database;
-        this.password = password;
     }
 
     /**
@@ -84,15 +82,6 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
      */
     public int getDatabase() {
         return database;
-    }
-
-    /**
-     * Returns password.
-     *
-     * @return password
-     */
-    public String getPassword() {
-        return password;
     }
 
     /**
