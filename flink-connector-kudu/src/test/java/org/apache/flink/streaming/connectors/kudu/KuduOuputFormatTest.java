@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-@DockerTest
 public class KuduOuputFormatTest extends KuduDatabase {
 
     @Test
@@ -38,21 +37,24 @@ public class KuduOuputFormatTest extends KuduDatabase {
 
     @Test
     public void testInvalidTableInfo() throws IOException {
-        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(hostsCluster, null, new DefaultSerDe()));
+        String masterAddresses = harness.getMasterAddressesAsString();
+        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(masterAddresses, null, new DefaultSerDe()));
     }
 
     @Test
     public void testNotTableExist() throws IOException {
+        String masterAddresses = harness.getMasterAddressesAsString();
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),false);
-        KuduOutputFormat outputFormat = new KuduOutputFormat<>(hostsCluster, tableInfo, new DefaultSerDe());
+        KuduOutputFormat outputFormat = new KuduOutputFormat<>(masterAddresses, tableInfo, new DefaultSerDe());
         Assertions.assertThrows(UnsupportedOperationException.class, () -> outputFormat.open(0,1));
     }
 
     @Test
     public void testOutputWithStrongConsistency() throws Exception {
+        String masterAddresses = harness.getMasterAddressesAsString();
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
-        KuduOutputFormat outputFormat = new KuduOutputFormat<>(hostsCluster, tableInfo, new DefaultSerDe())
+        KuduOutputFormat outputFormat = new KuduOutputFormat<>(masterAddresses, tableInfo, new DefaultSerDe())
                 .withStrongConsistency();
         outputFormat.open(0,1);
 
@@ -69,9 +71,10 @@ public class KuduOuputFormatTest extends KuduDatabase {
 
     @Test
     public void testOutputWithEventualConsistency() throws Exception {
+        String masterAddresses = harness.getMasterAddressesAsString();
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
-        KuduOutputFormat outputFormat = new KuduOutputFormat<>(hostsCluster, tableInfo, new DefaultSerDe())
+        KuduOutputFormat outputFormat = new KuduOutputFormat<>(masterAddresses, tableInfo, new DefaultSerDe())
                 .withEventualConsistency();
         outputFormat.open(0,1);
 
