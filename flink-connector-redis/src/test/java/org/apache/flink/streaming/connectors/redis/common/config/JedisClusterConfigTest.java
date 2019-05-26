@@ -17,7 +17,6 @@
 package org.apache.flink.streaming.connectors.redis.common.config;
 
 import org.apache.flink.util.TestLogger;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
