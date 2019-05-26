@@ -32,6 +32,7 @@
   <properties>
     <kudu.version>1.9.0</kudu.version>
 
+    <mockito.version>1.10.19</mockito.version>
     <junit.groups>!DockerTest</junit.groups>
   </properties>
 
@@ -50,24 +51,43 @@
     </dependency>
 
     <!--test dependencies-->
-
     <dependency>
       <groupId>org.apache.kudu</groupId>
-      <artifactId>kudu-client</artifactId>
+      <artifactId>kudu-test-utils</artifactId>
       <version>${kudu.version}</version>
-      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.kudu</groupId>
+      <artifactId>kudu-binary</artifactId>
+      <version>${kudu.version}</version>
+      <classifier>${os.detected.classifier}</classifier>
+      <scope>test</scope>
+    </dependency>
+    <!-- this is added because test cluster use @Rule from junit4 -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-migrationsupport</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
-  <profiles>
-    <profile>
-      <id>docker-test</id>
-      <properties>
-        <junit.groups>DockerTest</junit.groups>
-      </properties>
-    </profile>
-  </profiles>
+  <build>
+    <extensions>
+      <extension>
+        <groupId>kr.motd.maven</groupId>
+        <artifactId>os-maven-plugin</artifactId>
+        <version>1.6.2</version>
+      </extension>
+    </extensions>
+  </build>
 
 </project>
