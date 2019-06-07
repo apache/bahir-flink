@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class JedisClusterConfigTest extends TestLogger {
 
@@ -63,5 +64,20 @@ public class JedisClusterConfigTest extends TestLogger {
                 .setPassword("test-pwd")
                 .build();
         assertEquals("test-pwd", clusterConfig.getPassword());
+    }
+
+    @Test
+    public void shouldPasswordNotBeenSet() {
+        Set<InetSocketAddress> set = new HashSet<>();
+        InetSocketAddress address = InetSocketAddress.createUnresolved("localhost", 8080);
+        set.add(address);
+        FlinkJedisClusterConfig.Builder builder = new FlinkJedisClusterConfig.Builder();
+        FlinkJedisClusterConfig clusterConfig = builder.setMinIdle(0)
+                .setMaxIdle(0)
+                .setMaxTotal(0)
+                .setTimeout(0)
+                .setNodes(set)
+                .build();
+        assertNull(clusterConfig.getPassword());
     }
 }
