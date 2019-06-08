@@ -44,7 +44,7 @@ public class FlinkJedisConfigBaseTest extends TestLogger {
     private class TestConfig extends FlinkJedisConfigBase {
 
         protected TestConfig(int connectionTimeout, int maxTotal, int maxIdle, int minIdle) {
-            super(connectionTimeout, maxTotal, maxIdle, minIdle);
+            super(connectionTimeout, maxTotal, maxIdle, minIdle, "dummy");
         }
     }
 }
