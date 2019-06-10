@@ -703,7 +703,7 @@
       <id>scala-2.11</id>
       <activation>
         <property>
-          <name>!scala-2.12</name>
+          <name>scala-2.11</name>
         </property>
       </activation>
       <properties>
