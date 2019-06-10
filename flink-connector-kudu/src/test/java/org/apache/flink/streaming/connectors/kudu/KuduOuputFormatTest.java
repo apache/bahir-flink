@@ -45,7 +45,7 @@ public class KuduOuputFormatTest extends KuduDatabase {
     public void testNotTableExist() throws IOException {
         String masterAddresses = harness.getMasterAddressesAsString();
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),false);
-        KuduOutputFormat outputFormat = new KuduOutputFormat<>(masterAddresses, tableInfo, new DefaultSerDe());
+        KuduOutputFormat<KuduRow> outputFormat = new KuduOutputFormat<>(masterAddresses, tableInfo, new DefaultSerDe());
         Assertions.assertThrows(UnsupportedOperationException.class, () -> outputFormat.open(0,1));
     }
 
@@ -54,7 +54,7 @@ public class KuduOuputFormatTest extends KuduDatabase {
         String masterAddresses = harness.getMasterAddressesAsString();
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
-        KuduOutputFormat outputFormat = new KuduOutputFormat<>(masterAddresses, tableInfo, new DefaultSerDe())
+        KuduOutputFormat<KuduRow> outputFormat = new KuduOutputFormat<>(masterAddresses, tableInfo, new DefaultSerDe())
                 .withStrongConsistency();
         outputFormat.open(0,1);
 
@@ -74,7 +74,7 @@ public class KuduOuputFormatTest extends KuduDatabase {
         String masterAddresses = harness.getMasterAddressesAsString();
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
-        KuduOutputFormat outputFormat = new KuduOutputFormat<>(masterAddresses, tableInfo, new DefaultSerDe())
+        KuduOutputFormat<KuduRow> outputFormat = new KuduOutputFormat<>(masterAddresses, tableInfo, new DefaultSerDe())
                 .withEventualConsistency();
         outputFormat.open(0,1);
 
