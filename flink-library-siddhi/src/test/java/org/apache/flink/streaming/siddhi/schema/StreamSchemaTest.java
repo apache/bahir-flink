@@ -41,8 +41,8 @@ public class StreamSchemaTest {
 
     @Test
     public void testStreamSchemaWithTuple() {
-        TypeInformation<Tuple4> typeInfo = Types.TUPLE(Types.INT, Types.LONG, Types.STRING, Types.DOUBLE);
-        StreamSchema<Tuple4> schema = new StreamSchema<>(typeInfo, "id", "timestamp", "name", "price");
+        TypeInformation<Tuple4<Integer,Long,String,Double>> typeInfo = Types.TUPLE(Types.INT, Types.LONG, Types.STRING, Types.DOUBLE);
+        StreamSchema<Tuple4<Integer,Long,String,Double>> schema = new StreamSchema<>(typeInfo, "id", "timestamp", "name", "price");
         assertEquals(Tuple4.class, schema.getTypeInfo().getTypeClass());
         assertEquals(4, schema.getFieldIndexes().length);
         assertEquals(Tuple4.class, schema.getTypeInfo().getTypeClass());

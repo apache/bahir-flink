@@ -61,55 +61,55 @@ public class SiddhiTupleFactory {
             case 0:
                 return setTupleValue(new Tuple0(), row);
             case 1:
-                return setTupleValue(new Tuple1(), row);
+                return setTupleValue(new Tuple1<>(), row);
             case 2:
-                return setTupleValue(new Tuple2(), row);
+                return setTupleValue(new Tuple2<>(), row);
             case 3:
-                return setTupleValue(new Tuple3(), row);
+                return setTupleValue(new Tuple3<>(), row);
             case 4:
-                return setTupleValue(new Tuple4(), row);
+                return setTupleValue(new Tuple4<>(), row);
             case 5:
-                return setTupleValue(new Tuple5(), row);
+                return setTupleValue(new Tuple5<>(), row);
             case 6:
-                return setTupleValue(new Tuple6(), row);
+                return setTupleValue(new Tuple6<>(), row);
             case 7:
-                return setTupleValue(new Tuple7(), row);
+                return setTupleValue(new Tuple7<>(), row);
             case 8:
-                return setTupleValue(new Tuple8(), row);
+                return setTupleValue(new Tuple8<>(), row);
             case 9:
-                return setTupleValue(new Tuple9(), row);
+                return setTupleValue(new Tuple9<>(), row);
             case 10:
-                return setTupleValue(new Tuple10(), row);
+                return setTupleValue(new Tuple10<>(), row);
             case 11:
-                return setTupleValue(new Tuple11(), row);
+                return setTupleValue(new Tuple11<>(), row);
             case 12:
-                return setTupleValue(new Tuple12(), row);
+                return setTupleValue(new Tuple12<>(), row);
             case 13:
-                return setTupleValue(new Tuple13(), row);
+                return setTupleValue(new Tuple13<>(), row);
             case 14:
-                return setTupleValue(new Tuple14(), row);
+                return setTupleValue(new Tuple14<>(), row);
             case 15:
-                return setTupleValue(new Tuple15(), row);
+                return setTupleValue(new Tuple15<>(), row);
             case 16:
-                return setTupleValue(new Tuple16(), row);
+                return setTupleValue(new Tuple16<>(), row);
             case 17:
-                return setTupleValue(new Tuple17(), row);
+                return setTupleValue(new Tuple17<>(), row);
             case 18:
-                return setTupleValue(new Tuple18(), row);
+                return setTupleValue(new Tuple18<>(), row);
             case 19:
-                return setTupleValue(new Tuple19(), row);
+                return setTupleValue(new Tuple19<>(), row);
             case 20:
-                return setTupleValue(new Tuple20(), row);
+                return setTupleValue(new Tuple20<>(), row);
             case 21:
-                return setTupleValue(new Tuple21(), row);
+                return setTupleValue(new Tuple21<>(), row);
             case 22:
-                return setTupleValue(new Tuple22(), row);
+                return setTupleValue(new Tuple22<>(), row);
             case 23:
-                return setTupleValue(new Tuple23(), row);
+                return setTupleValue(new Tuple23<>(), row);
             case 24:
-                return setTupleValue(new Tuple24(), row);
+                return setTupleValue(new Tuple24<>(), row);
             case 25:
-                return setTupleValue(new Tuple25(), row);
+                return setTupleValue(new Tuple25<>(), row);
             default:
                 throw new IllegalArgumentException("Too long row: " + row.length + ", unable to convert to Tuple");
         }

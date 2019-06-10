@@ -253,7 +253,7 @@ public class SiddhiCEPITCase extends AbstractTestBase implements Serializable {
         DataStream<Event> input1 = env.addSource(new RandomEventSource(5), "input1");
         DataStream<Event> input2 = env.addSource(new RandomEventSource(5), "input2");
 
-        DataStream<? extends Map> output = SiddhiCEP
+        DataStream<? extends Map<?,?>> output = SiddhiCEP
             .define("inputStream1", input1.keyBy("id"), "id", "name", "price", "timestamp")
             .union("inputStream2", input2.keyBy("id"), "id", "name", "price", "timestamp")
             .cql(
