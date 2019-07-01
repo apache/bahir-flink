@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * A sink that delivers data to a Redis channel using the Jedis client.
@@ -128,6 +129,7 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
     public void invoke(IN input, Context context) throws Exception {
         String key = redisSinkMapper.getKeyFromData(input);
         String value = redisSinkMapper.getValueFromData(input);
+        Optional<String> optAdditionalKey = redisSinkMapper.getAdditionalKey(input);
 
         switch (redisCommand) {
             case RPUSH:
@@ -149,13 +151,13 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
                 this.redisCommandsContainer.publish(key, value);
                 break;
             case ZADD:
-                this.redisCommandsContainer.zadd(this.additionalKey, value, key);
+                this.redisCommandsContainer.zadd(optAdditionalKey.orElse(this.additionalKey), value, key);
                 break;
             case ZREM:
-                this.redisCommandsContainer.zrem(this.additionalKey, key);
+                this.redisCommandsContainer.zrem(optAdditionalKey.orElse(this.additionalKey), key);
                 break;
             case HSET:
-                this.redisCommandsContainer.hset(this.additionalKey, key, value);
+                this.redisCommandsContainer.hset(optAdditionalKey.orElse(this.additionalKey), key, value);
                 break;
             default:
                 throw new IllegalArgumentException("Cannot process such data type: " + redisCommand);

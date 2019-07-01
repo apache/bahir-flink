@@ -19,6 +19,7 @@ package org.apache.flink.streaming.connectors.redis.common.mapper;
 import org.apache.flink.api.common.functions.Function;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * Function that creates the description how the input data should be mapped to redis type.
@@ -63,4 +64,15 @@ public interface RedisMapper<T> extends Function, Serializable {
      * @return value
      */
     String getValueFromData(T data);
+
+    /**
+     * Extracts the additional key from data as an {@link Optional<String>}.
+     * The default implementation returns an empty Optional.
+     *
+     * @param data
+     * @return Optional
+     */
+    default Optional<String> getAdditionalKey(T data) {
+        return Optional.empty();
+    }
 }
