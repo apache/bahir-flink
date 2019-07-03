@@ -58,7 +58,7 @@ public class KuduSinkTest extends KuduDatabase {
     public void testNotTableExist() throws IOException {
         String masterAddresses = harness.getMasterAddressesAsString();
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),false);
-        KuduSink sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe());
+        KuduSink<KuduRow> sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe());
         sink.setRuntimeContext(context);
         Assertions.assertThrows(UnsupportedOperationException.class, () -> sink.open(new Configuration()));
     }
@@ -68,7 +68,7 @@ public class KuduSinkTest extends KuduDatabase {
         String masterAddresses = harness.getMasterAddressesAsString();
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
-        KuduSink sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe())
+        KuduSink<KuduRow> sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe())
                 .withStrongConsistency();
         sink.setRuntimeContext(context);
         sink.open(new Configuration());
@@ -88,7 +88,7 @@ public class KuduSinkTest extends KuduDatabase {
         String masterAddresses = harness.getMasterAddressesAsString();
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
-        KuduSink sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe())
+        KuduSink<KuduRow> sink = new KuduSink<>(masterAddresses, tableInfo, new DefaultSerDe())
                 .withEventualConsistency();
         sink.setRuntimeContext(context);
         sink.open(new Configuration());

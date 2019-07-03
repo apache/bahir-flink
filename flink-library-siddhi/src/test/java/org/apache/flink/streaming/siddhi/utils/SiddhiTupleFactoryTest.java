@@ -27,7 +27,7 @@ public class SiddhiTupleFactoryTest {
     @Test
     public void testConvertObjectArrayToTuple() {
         Object[] row = new Object[]{1, "message", 1234567L, true, new Object()};
-        Tuple5 tuple5 = SiddhiTupleFactory.newTuple(row);
+        Tuple5<Integer,String,Long,Boolean,Object> tuple5 = SiddhiTupleFactory.newTuple(row);
         assertEquals(5, tuple5.getArity());
         assertArrayEquals(row, new Object[]{
             tuple5.f0,

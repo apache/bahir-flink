@@ -47,7 +47,7 @@ public class FlumeSink<IN> extends RichSinkFunction<IN> {
     private int maxRetryAttempts;
     private long waitTimeMs;
     private List<IN> incomingList;
-    private FlumeEventBuilder eventBuilder;
+    private FlumeEventBuilder<IN> eventBuilder;
     private RpcClient client;
 
     public FlumeSink(String clientType, String hostname, int port, FlumeEventBuilder<IN> eventBuilder) {
@@ -71,7 +71,7 @@ public class FlumeSink<IN> extends RichSinkFunction<IN> {
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-        incomingList = new ArrayList();
+        incomingList = new ArrayList<>();
         client = FlumeUtils.getRpcClient(clientType, hostname, port, batchSize);
     }
 
@@ -104,7 +104,7 @@ public class FlumeSink<IN> extends RichSinkFunction<IN> {
                 return;
             }
             toFlushList = incomingList;
-            incomingList = new ArrayList();
+            incomingList = new ArrayList<>();
         }
 
         for (IN value: toFlushList) {
