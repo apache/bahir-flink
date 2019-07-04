@@ -49,8 +49,8 @@ before_install:
 script:
   - if [[ $DOCKER == "true" ]]; then
     docker-compose -f "$PROJECT/dockers/docker-compose.yml" up -d;
-    mvn clean verify -pl $PROJECT -Dscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION ;
+    mvn -q clean verify -pl $PROJECT -Dscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION ;
     docker-compose -f "$PROJECT/dockers/docker-compose.yml" down;
     else
-    mvn clean verify -Dscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION ;
+    mvn -q clean verify -Dscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION ;
     fi
