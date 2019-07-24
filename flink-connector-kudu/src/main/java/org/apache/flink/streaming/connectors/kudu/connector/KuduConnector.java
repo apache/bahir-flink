@@ -76,7 +76,14 @@ public class KuduConnector implements AutoCloseable {
             return syncClient.openTable(tableName);
         }
         if (infoTable.createIfNotExist()) {
-            return syncClient.createTable(tableName, infoTable.getSchema(), infoTable.getCreateTableOptions());
+            try {
+                return syncClient.createTable(tableName, infoTable.getSchema(), infoTable.getCreateTableOptions());
+            }catch (KuduException ke){
+                if (ke.getMessage().contains("already exists with id ")) {
+                    return syncClient.openTable(tableName);
+                }
+                throw ke;
+            }
         }
         throw new UnsupportedOperationException("table not exists and is marketed to not be created");
     }
