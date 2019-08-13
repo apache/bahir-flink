@@ -29,15 +29,19 @@ env.setParallelism(PARALLELISM);
 // create a table info object
 KuduTableInfo tableInfo = KuduTableInfo.Builder
         .create("books")
-        .addColumn(KuduColumnInfo.Builder.create("id", Type.INT32).key(true).hashKey(true).build())
-        .addColumn(KuduColumnInfo.Builder.create("title", Type.STRING).build())
-        .addColumn(KuduColumnInfo.Builder.create("author", Type.STRING).build())
-        .addColumn(KuduColumnInfo.Builder.create("price", Type.DOUBLE).build())
-        .addColumn(KuduColumnInfo.Builder.create("quantity", Type.INT32).build())
+        .addColumn(KuduColumnInfo.Builder.createInteger("id").asKey().asHashKey().build())
+        .addColumn(KuduColumnInfo.Builder.createString("title").build())
+        .addColumn(KuduColumnInfo.Builder.createString("author").build())
+        .addColumn(KuduColumnInfo.Builder.createDouble("price").build())
+        .addColumn(KuduColumnInfo.Builder.createInteger("quantity").build())
         .build();
-    
+// create a reader configuration
+KuduReaderConfig readerConfig = KuduReaderConfig.Builder
+        .setMasters("172.25.0.6")
+        .setRowLimit(1000)
+        .build();    
 // Pass the tableInfo to the KuduInputFormat and provide kuduMaster ips
-env.createInput(new KuduInputFormat<>("172.25.0.6", tableInfo))
+env.createInput(new KuduInputFormat<>(readerConfig, tableInfo, new DefaultSerDe()))
         .count();
         
 env.execute();
@@ -54,18 +58,23 @@ env.setParallelism(PARALLELISM);
 KuduTableInfo tableInfo = KuduTableInfo.Builder
         .create("books")
         .createIfNotExist(true)
-        .replicas(1)
-        .addColumn(KuduColumnInfo.Builder.create("id", Type.INT32).key(true).hashKey(true).build())
-        .addColumn(KuduColumnInfo.Builder.create("title", Type.STRING).build())
-        .addColumn(KuduColumnInfo.Builder.create("author", Type.STRING).build())
-        .addColumn(KuduColumnInfo.Builder.create("price", Type.DOUBLE).build())
-        .addColumn(KuduColumnInfo.Builder.create("quantity", Type.INT32).build())
+        .replicas(3)
+        .addColumn(KuduColumnInfo.Builder.createInteger("id").asKey().asHashKey().build())
+        .addColumn(KuduColumnInfo.Builder.createString("title").build())
+        .addColumn(KuduColumnInfo.Builder.createString("author").build())
+        .addColumn(KuduColumnInfo.Builder.createDouble("price").build())
+        .addColumn(KuduColumnInfo.Builder.createInteger("quantity").build())
         .build();
-
+// create a writer configuration
+KuduWriterConfig writerConfig = KuduWriterConfig.Builder
+        .setMasters("172.25.0.6")
+        .setUpsertWrite()
+        .setStrongConsistency()
+        .build();
 ...
 
 env.fromCollection(books)
-        .output(new KuduOutputFormat<>("172.25.0.6", tableInfo));
+        .output(new KuduOutputFormat<>(writerConfig, tableInfo, new DefaultSerDe()));
 
 env.execute();
 ```
@@ -81,18 +90,23 @@ env.setParallelism(PARALLELISM);
 KuduTableInfo tableInfo = KuduTableInfo.Builder
         .create("books")
         .createIfNotExist(true)
-        .replicas(1)
-        .addColumn(KuduColumnInfo.Builder.create("id", Type.INT32).key(true).hashKey(true).build())
-        .addColumn(KuduColumnInfo.Builder.create("title", Type.STRING).build())
-        .addColumn(KuduColumnInfo.Builder.create("author", Type.STRING).build())
-        .addColumn(KuduColumnInfo.Builder.create("price", Type.DOUBLE).build())
-        .addColumn(KuduColumnInfo.Builder.create("quantity", Type.INT32).build())
+        .replicas(3)
+        .addColumn(KuduColumnInfo.Builder.createInteger("id").asKey().asHashKey().build())
+        .addColumn(KuduColumnInfo.Builder.createString("title").build())
+        .addColumn(KuduColumnInfo.Builder.createString("author").build())
+        .addColumn(KuduColumnInfo.Builder.createDouble("price").build())
+        .addColumn(KuduColumnInfo.Builder.createInteger("quantity").build())
         .build();
-
+// create a writer configuration
+KuduWriterConfig writerConfig = KuduWriterConfig.Builder
+        .setMasters("172.25.0.6")
+        .setUpsertWrite()
+        .setStrongConsistency()
+        .build();
 ...
 
 env.fromCollection(books)
-    .addSink(new KuduSink<>("172.25.0.6", tableInfo));
+    .addSink(new KuduSink<>(writerConfig, tableInfo, new DefaultSerDe()));
 
 env.execute();
 ```
