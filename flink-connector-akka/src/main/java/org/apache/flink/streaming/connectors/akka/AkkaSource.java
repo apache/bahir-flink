@@ -23,7 +23,6 @@ import akka.actor.PoisonPill;
 import akka.actor.Props;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
-import org.apache.flink.api.common.functions.StoppableFunction;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
@@ -39,8 +38,7 @@ import java.util.Collections;
  * Implementation of {@link SourceFunction} specialized to read messages
  * from Akka actors.
  */
-public class AkkaSource extends RichSourceFunction<Object>
-  implements StoppableFunction {
+public class AkkaSource extends RichSourceFunction<Object> {
 
   private static final Logger LOG = LoggerFactory.getLogger(AkkaSource.class);
 
@@ -112,12 +110,6 @@ public class AkkaSource extends RichSourceFunction<Object>
   @Override
   public void cancel() {
     LOG.info("Cancelling akka source");
-    close();
-  }
-
-  @Override
-  public void stop() {
-    LOG.info("Stopping akka source");
     close();
   }
 
