@@ -25,6 +25,7 @@ import redis.clients.jedis.JedisSentinelPool;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Redis command container if we want to connect to a single Redis server or to Redis sentinels
@@ -86,11 +87,14 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
     }
 
     @Override
-    public void hset(final String key, final String hashField, final String value) {
+    public void hset(final String key, final String hashField, final String value, final Optional<Integer> ttl) {
         Jedis jedis = null;
         try {
             jedis = getInstance();
             jedis.hset(key, hashField, value);
+            if (ttl.isPresent()) {
+                jedis.expire(key, ttl.get());
+            }
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
                 LOG.error("Cannot send Redis message with command HSET to key {} and hashField {} error message {}",
