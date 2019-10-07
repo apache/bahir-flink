@@ -75,4 +75,15 @@ public interface RedisMapper<T> extends Function, Serializable {
     default Optional<String> getAdditionalKey(T data) {
         return Optional.empty();
     }
+
+    /**
+     * Extracts the additional time to live (TTL) for data as an {@link Optional<Integer>}.
+     * The default implementation returns an empty Optional.
+     *
+     * @param data
+     * @return Optional
+     */
+    default Optional<Integer> getAdditionalTTL(T data) {
+        return Optional.empty();
+    }
 }
