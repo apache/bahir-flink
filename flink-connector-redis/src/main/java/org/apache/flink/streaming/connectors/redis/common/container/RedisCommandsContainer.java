@@ -18,6 +18,7 @@ package org.apache.flink.streaming.connectors.redis.common.container;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * The container for all available Redis commands.
@@ -32,15 +33,17 @@ public interface RedisCommandsContainer extends Serializable {
     void open() throws Exception;
 
     /**
-     * Sets field in the hash stored at key to value.
+     * Sets field in the hash stored at key to value, with TTL, if needed.
+     * Setting expire time to key is optional.
      * If key does not exist, a new key holding a hash is created.
      * If field already exists in the hash, it is overwritten.
      *
      * @param key Hash name
      * @param hashField Hash field
      * @param value Hash value
+     * @param ttl Hash expire time
      */
-    void hset(String key, String hashField, String value);
+    void hset(String key, String hashField, String value, Optional<Integer> ttl);
 
     /**
      * Insert the specified value at the tail of the list stored at key.
