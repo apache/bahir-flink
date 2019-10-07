@@ -22,7 +22,7 @@ import java.util.Objects;
 /**
  * The description of the command type. This must be passed while creating new {@link RedisMapper}.
  * <p>When creating descriptor for the group of {@link RedisDataType#HASH} and {@link RedisDataType#SORTED_SET},
- * you need to use first constructor {@link #RedisCommandDescription(RedisCommand, String)}.
+ * you need to use first constructor {@link #RedisCommandDescription(RedisCommand, String, Integer)}.
  * If the {@code additionalKey} is {@code null} it will throw {@code IllegalArgumentException}
  *
  * <p>When {@link RedisCommand} is not in group of {@link RedisDataType#HASH} and {@link RedisDataType#SORTED_SET}
@@ -46,6 +46,13 @@ public class RedisCommandDescription implements Serializable {
     private String additionalKey;
 
     /**
+     * This additional key is optional for the group {@link RedisDataType#HASH}.
+     * In this case, we need four variables.
+     * <p>For {@link RedisDataType#HASH} we need hash name, hash key, element and TTL.
+     */
+    private Integer additionalTTL;
+
+    /**
      * Use this constructor when data type is {@link RedisDataType#HASH} or {@link RedisDataType#SORTED_SET}.
      * If different data type is specified, {@code additionalKey} is ignored.
      * @param redisCommand the redis command type {@link RedisCommand}
@@ -55,6 +62,7 @@ public class RedisCommandDescription implements Serializable {
         Objects.requireNonNull(redisCommand, "Redis command type can not be null");
         this.redisCommand = redisCommand;
         this.additionalKey = additionalKey;
+        this.additionalTTL = Integer.MAX_VALUE;
 
         if (redisCommand.getRedisDataType() == RedisDataType.HASH ||
             redisCommand.getRedisDataType() == RedisDataType.SORTED_SET) {
@@ -65,12 +73,33 @@ public class RedisCommandDescription implements Serializable {
     }
 
     /**
+     * Use this constructor when data type is {@link RedisDataType#HASH} with a additional TTL.
+     * If different data type is specified, {@code additionalKey} is ignored.
+     * @param redisCommand the redis command type {@link RedisCommand}
+     * @param additionalKey additional key for Hash data type
+     * @param additionalTTL additional TTL optional for Hash data type
+     */
+    public RedisCommandDescription(RedisCommand redisCommand, String additionalKey, Integer additionalTTL) {
+        Objects.requireNonNull(redisCommand, "Redis command type can not be null");
+        this.redisCommand = redisCommand;
+        this.additionalKey = additionalKey;
+        this.additionalTTL = additionalTTL;
+
+        if (redisCommand.getRedisDataType() == RedisDataType.HASH ||
+            redisCommand.getRedisDataType() == RedisDataType.SORTED_SET) {
+            if (additionalKey == null) {
+                throw new IllegalArgumentException("Hash should have additional key");
+            }
+        }
+    }
+
+    /**
      * Use this constructor when command type is not in group {@link RedisDataType#HASH} or {@link RedisDataType#SORTED_SET}.
      *
      * @param redisCommand the redis data type {@link RedisCommand}
      */
     public RedisCommandDescription(RedisCommand redisCommand) {
-        this(redisCommand, null);
+        this(redisCommand, null, null);
     }
 
     /**
@@ -87,7 +116,12 @@ public class RedisCommandDescription implements Serializable {
      *
      * @return the additional key
      */
-    public String getAdditionalKey() {
-        return additionalKey;
-    }
+    public String getAdditionalKey() { return additionalKey; }
+
+    /**
+     * Returns the additional time to live (TTL) if data type is {@link RedisDataType#HASH}.
+     *
+     * @return the additional TTL
+     */
+    public Integer getAdditionalTTL() { return additionalTTL; }
 }
