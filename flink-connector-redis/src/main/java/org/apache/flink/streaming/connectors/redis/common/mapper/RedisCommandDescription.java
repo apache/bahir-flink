@@ -71,16 +71,32 @@ public class RedisCommandDescription implements Serializable {
                 throw new IllegalArgumentException("Hash should have additional key");
             }
         }
+
+        if (redisCommand.equals(RedisCommand.SETEX)) {
+            if (additionalTTL == null) {
+                throw new IllegalArgumentException("SETEX command should have time to live (TTL)");
+            }
+        }
     }
 
     /**
-     * Use this constructor when data type is {@link RedisDataType#HASH} or {@link RedisDataType#SORTED_SET}.
+     * Use this constructor when data type is {@link RedisDataType#HASH} (without TTL) or {@link RedisDataType#SORTED_SET}.
      * If different data type is specified, {@code additionalKey} is ignored.
      * @param redisCommand the redis command type {@link RedisCommand}
      * @param additionalKey additional key for Hash and Sorted set data type
      */
     public RedisCommandDescription(RedisCommand redisCommand, String additionalKey) {
         this(redisCommand, additionalKey, null);
+    }
+
+    /**
+     * Use this constructor when using SETEX command {@link RedisDataType#STRING}.
+     * This command requires a TTL. Throws {@link IllegalArgumentException} if it is null.
+     * @param redisCommand the redis command type {@link RedisCommand}
+     * @param additionalTTL additional TTL required for SETEX command
+     */
+    public RedisCommandDescription(RedisCommand redisCommand, Integer additionalTTL) {
+        this(redisCommand, null, additionalTTL);
     }
 
     /**
