@@ -23,7 +23,6 @@ import redis.clients.jedis.JedisCluster;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Redis command container if we want to connect to a Redis cluster.
@@ -58,10 +57,12 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
     }
 
     @Override
-    public void hset(final String key, final String hashField, final String value, final Optional<Integer> ttl) {
+    public void hset(final String key, final String hashField, final String value, final Integer ttl) {
         try {
             jedisCluster.hset(key, hashField, value);
-            ttl.ifPresent(ttlValue -> jedisCluster.expire(key, ttlValue));
+            if (ttl != null) {
+                jedisCluster.expire(key, ttl);
+            }
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
                 LOG.error("Cannot send Redis message with command HSET to hash {} of key {} error message {}",
