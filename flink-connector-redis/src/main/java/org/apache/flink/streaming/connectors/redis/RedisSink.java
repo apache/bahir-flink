@@ -92,6 +92,12 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
      * {@code additionalKey} used as set name for {@link RedisDataType#SORTED_SET}
      */
     private String additionalKey;
+
+    /**
+     * This additional time to live is optional for {@link RedisDataType#HASH}.
+     * It sets the TTL for a specific key.
+     */
+    private Integer additionalTTL;
     private RedisMapper<IN> redisSinkMapper;
     private RedisCommand redisCommand;
 
@@ -113,7 +119,9 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
 
         this.redisSinkMapper = redisSinkMapper;
         RedisCommandDescription redisCommandDescription = redisSinkMapper.getCommandDescription();
+
         this.redisCommand = redisCommandDescription.getCommand();
+        this.additionalTTL = redisCommandDescription.getAdditionalTTL();
         this.additionalKey = redisCommandDescription.getAdditionalKey();
     }
 
@@ -130,6 +138,7 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
         String key = redisSinkMapper.getKeyFromData(input);
         String value = redisSinkMapper.getValueFromData(input);
         Optional<String> optAdditionalKey = redisSinkMapper.getAdditionalKey(input);
+        Optional<Integer> optTTLExpire = redisSinkMapper.getAdditionalTTL(input);
 
         switch (redisCommand) {
             case RPUSH:
@@ -157,7 +166,8 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
                 this.redisCommandsContainer.zrem(optAdditionalKey.orElse(this.additionalKey), key);
                 break;
             case HSET:
-                this.redisCommandsContainer.hset(optAdditionalKey.orElse(this.additionalKey), key, value);
+                this.redisCommandsContainer.hset(optAdditionalKey.orElse(this.additionalKey), key, value,
+                        optTTLExpire.orElse(this.additionalTTL));
                 break;
             default:
                 throw new IllegalArgumentException("Cannot process such data type: " + redisCommand);
