@@ -38,6 +38,7 @@ public class RedisSinkITCase extends RedisITCaseBase {
     private static final Long ZERO = 0L;
     private static final String REDIS_KEY = "TEST_KEY";
     private static final String REDIS_ADDITIONAL_KEY = "TEST_ADDITIONAL_KEY";
+    private static final Integer REDIS_ADDITIONAL_TTL = 1;
 
     StreamExecutionEnvironment env;
 
@@ -127,6 +128,24 @@ public class RedisSinkITCase extends RedisITCaseBase {
         env.execute("Test Redis Hash Data Type");
 
         assertEquals(NUM_ELEMENTS, jedis.hlen(REDIS_ADDITIONAL_KEY));
+        Thread.sleep(1000);
+        assertEquals(true, jedis.exists(REDIS_ADDITIONAL_KEY));
+
+        jedis.del(REDIS_ADDITIONAL_KEY);
+    }
+
+    @Test
+    public void testRedisHashDataTypeWithTTL() throws Exception {
+        DataStreamSource<Tuple2<String, String>> source = env.addSource(new TestSourceFunctionHash());
+        RedisSink<Tuple2<String, String>> redisSink = new RedisSink<>(jedisPoolConfig,
+                new RedisAdditionalTTLMapper(RedisCommand.HSET));
+
+        source.addSink(redisSink);
+        env.execute("Test Redis Hash Data Type");
+
+        assertEquals(NUM_ELEMENTS, jedis.hlen(REDIS_ADDITIONAL_KEY));
+        Thread.sleep(1000);
+        assertEquals(false, jedis.exists(REDIS_ADDITIONAL_KEY));
 
         jedis.del(REDIS_ADDITIONAL_KEY);
     }
@@ -227,6 +246,30 @@ public class RedisSinkITCase extends RedisITCaseBase {
         @Override
         public RedisCommandDescription getCommandDescription() {
             return new RedisCommandDescription(redisCommand, REDIS_ADDITIONAL_KEY);
+        }
+
+        @Override
+        public String getKeyFromData(Tuple2<String, String> data) {
+            return data.f0;
+        }
+
+        @Override
+        public String getValueFromData(Tuple2<String, String> data) {
+            return data.f1;
+        }
+    }
+
+    public static class RedisAdditionalTTLMapper implements RedisMapper<Tuple2<String, String>> {
+
+        private RedisCommand redisCommand;
+
+        RedisAdditionalTTLMapper(RedisCommand redisCommand){
+            this.redisCommand = redisCommand;
+        }
+
+        @Override
+        public RedisCommandDescription getCommandDescription() {
+            return new RedisCommandDescription(redisCommand, REDIS_ADDITIONAL_KEY, REDIS_ADDITIONAL_TTL);
         }
 
         @Override
