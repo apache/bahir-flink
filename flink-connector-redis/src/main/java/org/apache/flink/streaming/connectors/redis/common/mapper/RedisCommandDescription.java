@@ -53,26 +53,6 @@ public class RedisCommandDescription implements Serializable {
     private Integer additionalTTL;
 
     /**
-     * Use this constructor when data type is {@link RedisDataType#HASH} or {@link RedisDataType#SORTED_SET}.
-     * If different data type is specified, {@code additionalKey} is ignored.
-     * @param redisCommand the redis command type {@link RedisCommand}
-     * @param additionalKey additional key for Hash and Sorted set data type
-     */
-    public RedisCommandDescription(RedisCommand redisCommand, String additionalKey) {
-        Objects.requireNonNull(redisCommand, "Redis command type can not be null");
-        this.redisCommand = redisCommand;
-        this.additionalKey = additionalKey;
-        this.additionalTTL = Integer.MAX_VALUE;
-
-        if (redisCommand.getRedisDataType() == RedisDataType.HASH ||
-            redisCommand.getRedisDataType() == RedisDataType.SORTED_SET) {
-            if (additionalKey == null) {
-                throw new IllegalArgumentException("Hash and Sorted Set should have additional key");
-            }
-        }
-    }
-
-    /**
      * Use this constructor when data type is {@link RedisDataType#HASH} with a additional TTL.
      * If different data type is specified, {@code additionalKey} is ignored.
      * @param redisCommand the redis command type {@link RedisCommand}
@@ -91,6 +71,16 @@ public class RedisCommandDescription implements Serializable {
                 throw new IllegalArgumentException("Hash should have additional key");
             }
         }
+    }
+
+    /**
+     * Use this constructor when data type is {@link RedisDataType#HASH} or {@link RedisDataType#SORTED_SET}.
+     * If different data type is specified, {@code additionalKey} is ignored.
+     * @param redisCommand the redis command type {@link RedisCommand}
+     * @param additionalKey additional key for Hash and Sorted set data type
+     */
+    public RedisCommandDescription(RedisCommand redisCommand, String additionalKey) {
+        this(redisCommand, additionalKey, null);
     }
 
     /**
