@@ -38,7 +38,9 @@ public class RedisSinkITCase extends RedisITCaseBase {
     private static final Long ZERO = 0L;
     private static final String REDIS_KEY = "TEST_KEY";
     private static final String REDIS_ADDITIONAL_KEY = "TEST_ADDITIONAL_KEY";
-    private static final Integer REDIS_ADDITIONAL_TTL = 1;
+    private static final Integer REDIS_TTL = 1;
+    private static final String TEST_MESSAGE = "TEST_MESSAGE";
+    private static final Long TEST_MESSAGE_LENGTH = (long) TEST_MESSAGE.length();
 
     StreamExecutionEnvironment env;
 
@@ -80,6 +82,22 @@ public class RedisSinkITCase extends RedisITCaseBase {
         assertEquals(NUM_ELEMENTS, jedis.scard(REDIS_KEY));
 
         jedis.del(REDIS_KEY);
+    }
+
+    @Test
+    public void testRedisStringDataTypeWithTTL() throws Exception {
+        DataStreamSource<Tuple2<String, String>> source = env.addSource(new TestSourceFunctionString());
+        RedisSink<Tuple2<String, String>> redisSink = new RedisSink<>(jedisPoolConfig,
+                new RedisAdditionalDataAAAMapper(RedisCommand.SETEX));
+
+        source.addSink(redisSink);
+        env.execute("Test Redis Set Data Type With TTL");
+
+        assertEquals(TEST_MESSAGE_LENGTH, jedis.strlen(REDIS_KEY));
+        Thread.sleep(REDIS_TTL * 1000);
+        assertEquals(false, jedis.exists(REDIS_KEY));
+
+        jedis.del(REDIS_ADDITIONAL_KEY);
     }
 
     @Test
@@ -128,7 +146,7 @@ public class RedisSinkITCase extends RedisITCaseBase {
         env.execute("Test Redis Hash Data Type");
 
         assertEquals(NUM_ELEMENTS, jedis.hlen(REDIS_ADDITIONAL_KEY));
-        Thread.sleep(1000);
+        Thread.sleep(REDIS_TTL * 1000);
         assertEquals(true, jedis.exists(REDIS_ADDITIONAL_KEY));
 
         jedis.del(REDIS_ADDITIONAL_KEY);
@@ -144,7 +162,7 @@ public class RedisSinkITCase extends RedisITCaseBase {
         env.execute("Test Redis Hash Data Type");
 
         assertEquals(NUM_ELEMENTS, jedis.hlen(REDIS_ADDITIONAL_KEY));
-        Thread.sleep(1000);
+        Thread.sleep(REDIS_TTL * 1000);
         assertEquals(false, jedis.exists(REDIS_ADDITIONAL_KEY));
 
         jedis.del(REDIS_ADDITIONAL_KEY);
@@ -166,6 +184,24 @@ public class RedisSinkITCase extends RedisITCaseBase {
         public void run(SourceContext<Tuple2<String, String>> ctx) throws Exception {
             for (int i = 0; i < NUM_ELEMENTS && running; i++) {
                 ctx.collect(new Tuple2<>(REDIS_KEY, "message #" + i));
+            }
+        }
+
+        @Override
+        public void cancel() {
+            running = false;
+        }
+    }
+
+    private static class TestSourceFunctionString implements SourceFunction<Tuple2<String, String>> {
+        private static final long serialVersionUID = 1L;
+
+        private volatile boolean running = true;
+
+        @Override
+        public void run(SourceContext<Tuple2<String, String>> ctx) throws Exception {
+            if (running) {
+                ctx.collect(new Tuple2<>(REDIS_KEY, TEST_MESSAGE));
             }
         }
 
@@ -259,6 +295,30 @@ public class RedisSinkITCase extends RedisITCaseBase {
         }
     }
 
+    public static class RedisAdditionalDataAAAMapper implements RedisMapper<Tuple2<String, String>> {
+
+        private RedisCommand redisCommand;
+
+        RedisAdditionalDataAAAMapper(RedisCommand redisCommand){
+            this.redisCommand = redisCommand;
+        }
+
+        @Override
+        public RedisCommandDescription getCommandDescription() {
+            return new RedisCommandDescription(redisCommand, REDIS_TTL);
+        }
+
+        @Override
+        public String getKeyFromData(Tuple2<String, String> data) {
+            return data.f0;
+        }
+
+        @Override
+        public String getValueFromData(Tuple2<String, String> data) {
+            return data.f1;
+        }
+    }
+
     public static class RedisAdditionalTTLMapper implements RedisMapper<Tuple2<String, String>> {
 
         private RedisCommand redisCommand;
@@ -269,7 +329,7 @@ public class RedisSinkITCase extends RedisITCaseBase {
 
         @Override
         public RedisCommandDescription getCommandDescription() {
-            return new RedisCommandDescription(redisCommand, REDIS_ADDITIONAL_KEY, REDIS_ADDITIONAL_TTL);
+            return new RedisCommandDescription(redisCommand, REDIS_ADDITIONAL_KEY, REDIS_TTL);
         }
 
         @Override

@@ -98,6 +98,7 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
      * It sets the TTL for a specific key.
      */
     private Integer additionalTTL;
+
     private RedisMapper<IN> redisSinkMapper;
     private RedisCommand redisCommand;
 
@@ -129,7 +130,7 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
      * Called when new data arrives to the sink, and forwards it to Redis channel.
      * Depending on the specified Redis data type (see {@link RedisDataType}),
      * a different Redis command will be applied.
-     * Available commands are RPUSH, LPUSH, SADD, PUBLISH, SET, PFADD, HSET, ZADD.
+     * Available commands are RPUSH, LPUSH, SADD, PUBLISH, SET, SETEX, PFADD, HSET, ZADD.
      *
      * @param input The incoming data
      */
@@ -137,6 +138,7 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
     public void invoke(IN input, Context context) throws Exception {
         String key = redisSinkMapper.getKeyFromData(input);
         String value = redisSinkMapper.getValueFromData(input);
+
         Optional<String> optAdditionalKey = redisSinkMapper.getAdditionalKey(input);
         Optional<Integer> optTTLExpire = redisSinkMapper.getAdditionalTTL(input);
 
@@ -152,6 +154,9 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
                 break;
             case SET:
                 this.redisCommandsContainer.set(key, value);
+                break;
+            case SETEX:
+                this.redisCommandsContainer.setex(key, this.additionalTTL, value);
                 break;
             case PFADD:
                 this.redisCommandsContainer.pfadd(key, value);
