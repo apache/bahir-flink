@@ -24,7 +24,7 @@ import redis.clients.jedis.JedisSentinelPool;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Objects; 
+import java.util.Objects;
 
 /**
  * Redis command container if we want to connect to a single Redis server or to Redis sentinels
@@ -183,6 +183,23 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
             if (LOG.isErrorEnabled()) {
                 LOG.error("Cannot send Redis message with command SET to key {} error message {}",
                     key, e.getMessage());
+            }
+            throw e;
+        } finally {
+            releaseInstance(jedis);
+        }
+    }
+
+    @Override
+    public void setex(final String key, final Integer ttl, final String value) {
+        Jedis jedis = null;
+        try {
+            jedis = getInstance();
+            jedis.setex(key, ttl, value);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command SETEX to key {} error message {}",
+                        key, e.getMessage());
             }
             throw e;
         } finally {
