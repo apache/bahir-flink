@@ -43,7 +43,7 @@ public interface RedisCommandsContainer extends Serializable {
      * @param value Hash value
      * @param ttl Hash expire time
      */
-    void hset(String key, String hashField, String value, Optional<Integer> ttl);
+    void hset(String key, String hashField, String value, Integer ttl);
 
     /**
      * Insert the specified value at the tail of the list stored at key.
