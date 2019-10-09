@@ -191,7 +191,7 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
     }
 
     @Override
-    public void setex(final String key, final Integer ttl, final String value) {
+    public void setex(final String key, final String value, final Integer ttl) {
         Jedis jedis = null;
         try {
             jedis = getInstance();

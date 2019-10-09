@@ -18,7 +18,6 @@ package org.apache.flink.streaming.connectors.redis.common.container;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Optional;
 
 /**
  * The container for all available Redis commands.
@@ -91,7 +90,16 @@ public interface RedisCommandsContainer extends Serializable {
      */
     void set(String key, String value);
 
-    void setex(String key, Integer ttl, String value);
+    /**
+     * Set key to hold the string value, with a time to live (TTL). If key already holds a value,
+     * it is overwritten, regardless of its type. Any previous time to live associated with the key is
+     * reset on successful SETEX operation.
+     *
+     * @param key the key name in which value to be set
+     * @param value the value
+     * @param ttl time to live (TTL)
+     */
+    void setex(String key, String value, Integer ttl);
 
     /**
      * Adds all the element arguments to the HyperLogLog data structure

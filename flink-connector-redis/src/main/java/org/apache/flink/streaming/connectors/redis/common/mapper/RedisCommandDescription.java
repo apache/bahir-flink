@@ -22,10 +22,12 @@ import java.util.Objects;
 /**
  * The description of the command type. This must be passed while creating new {@link RedisMapper}.
  * <p>When creating descriptor for the group of {@link RedisDataType#HASH} and {@link RedisDataType#SORTED_SET},
- * you need to use first constructor {@link #RedisCommandDescription(RedisCommand, String, Integer)}.
+ * you need to use first constructor {@link #RedisCommandDescription(RedisCommand, String)}.
  * If the {@code additionalKey} is {@code null} it will throw {@code IllegalArgumentException}
  *
- * <p>When {@link RedisCommand} is not in group of {@link RedisDataType#HASH} and {@link RedisDataType#SORTED_SET}
+ * If command is {@link RedisCommand#SETEX}, its required to use TTL. The proper constructor is {@link #RedisCommandDescription(RedisCommand, Integer)}.
+ *
+ * <p>When {@link RedisCommand} is not in group of {@link RedisDataType#HASH} and {@link RedisDataType#SORTED_SET}, also not {@link RedisCommand#SETEX},
  * you can use second constructor {@link #RedisCommandDescription(RedisCommand)}
  */
 public class RedisCommandDescription implements Serializable {
@@ -38,7 +40,7 @@ public class RedisCommandDescription implements Serializable {
      * This additional key is needed for the group {@link RedisDataType#HASH} and {@link RedisDataType#SORTED_SET}.
      * Other {@link RedisDataType} works only with two variable i.e. name of the list and value to be added.
      * But for {@link RedisDataType#HASH} and {@link RedisDataType#SORTED_SET} we need three variables.
-     * <p>For {@link RedisDataType#HASH} we need hash name, hash key and element.
+     * <p>For {@link RedisDataType#HASH} we need hash name, hash key and element. Its possible to use TTL.
      * {@link #getAdditionalKey()} used as hash name for {@link RedisDataType#HASH}
      * <p>For {@link RedisDataType#SORTED_SET} we need set name, the element and it's score.
      * {@link #getAdditionalKey()} used as set name for {@link RedisDataType#SORTED_SET}
@@ -46,15 +48,19 @@ public class RedisCommandDescription implements Serializable {
     private String additionalKey;
 
     /**
-     * This additional key is optional for the group {@link RedisDataType#HASH}.
-     * In this case, we need four variables.
-     * <p>For {@link RedisDataType#HASH} we need hash name, hash key, element and TTL.
+     * This additional key is optional for the group {@link RedisDataType#HASH}, required for {@link RedisCommand#SETEX}.
+     * For the other types and commands, its not used.
+     * <p>For {@link RedisDataType#HASH} we need hash name, hash key and element. Its possible to use TTL.
+     * {@link #getAdditionalTTL()} used as time to live (TTL) for {@link RedisDataType#HASH}
+     * <p>For {@link RedisCommand#SETEX}, we need key, value and time to live (TTL).
      */
     private Integer additionalTTL;
 
     /**
-     * Use this constructor when data type is {@link RedisDataType#HASH} with a additional TTL.
-     * If different data type is specified, {@code additionalKey} is ignored.
+     * Default constructor for {@link RedisCommandDescription}.
+     * For {@link RedisDataType#HASH} and {@link RedisDataType#SORTED_SET} data types, {@code additionalKey} is required.
+     * For {@link RedisCommand#SETEX} command, {@code additionalTTL} is required.
+     * In both cases, if the respective variables are not provided, it throws an {@link IllegalArgumentException}
      * @param redisCommand the redis command type {@link RedisCommand}
      * @param additionalKey additional key for Hash data type
      * @param additionalTTL additional TTL optional for Hash data type
@@ -68,7 +74,7 @@ public class RedisCommandDescription implements Serializable {
         if (redisCommand.getRedisDataType() == RedisDataType.HASH ||
             redisCommand.getRedisDataType() == RedisDataType.SORTED_SET) {
             if (additionalKey == null) {
-                throw new IllegalArgumentException("Hash should have additional key");
+                throw new IllegalArgumentException("Hash and Sorted Set should have additional key");
             }
         }
 

@@ -29,6 +29,8 @@ import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 
+import java.util.Optional;
+
 import static org.junit.Assert.assertEquals;
 
 public class RedisSinkITCase extends RedisITCaseBase {
@@ -36,9 +38,11 @@ public class RedisSinkITCase extends RedisITCaseBase {
     private FlinkJedisPoolConfig jedisPoolConfig;
     private static final Long NUM_ELEMENTS = 20L;
     private static final Long ZERO = 0L;
+    private static final Long REDIS_NOT_ASSOCIATED_EXPIRE_FLAG = -1L;
+    private static final Long REDIS_KEY_NOT_EXISTS_FLAG = -2L;
+    private static final Long REDIS_TTL_IN_SECS = 1L;
     private static final String REDIS_KEY = "TEST_KEY";
     private static final String REDIS_ADDITIONAL_KEY = "TEST_ADDITIONAL_KEY";
-    private static final Integer REDIS_TTL = 1;
     private static final String TEST_MESSAGE = "TEST_MESSAGE";
     private static final Long TEST_MESSAGE_LENGTH = (long) TEST_MESSAGE.length();
 
@@ -88,16 +92,15 @@ public class RedisSinkITCase extends RedisITCaseBase {
     public void testRedisStringDataTypeWithTTL() throws Exception {
         DataStreamSource<Tuple2<String, String>> source = env.addSource(new TestSourceFunctionString());
         RedisSink<Tuple2<String, String>> redisSink = new RedisSink<>(jedisPoolConfig,
-                new RedisAdditionalDataAAAMapper(RedisCommand.SETEX));
+                new RedisCommandMapperWithTTL(RedisCommand.SETEX));
 
         source.addSink(redisSink);
         env.execute("Test Redis Set Data Type With TTL");
 
         assertEquals(TEST_MESSAGE_LENGTH, jedis.strlen(REDIS_KEY));
-        Thread.sleep(REDIS_TTL * 1000);
-        assertEquals(false, jedis.exists(REDIS_KEY));
+        assertEquals(REDIS_TTL_IN_SECS, jedis.ttl(REDIS_KEY));
 
-        jedis.del(REDIS_ADDITIONAL_KEY);
+        jedis.del(REDIS_KEY);
     }
 
     @Test
@@ -146,8 +149,7 @@ public class RedisSinkITCase extends RedisITCaseBase {
         env.execute("Test Redis Hash Data Type");
 
         assertEquals(NUM_ELEMENTS, jedis.hlen(REDIS_ADDITIONAL_KEY));
-        Thread.sleep(REDIS_TTL * 1000);
-        assertEquals(true, jedis.exists(REDIS_ADDITIONAL_KEY));
+        assertEquals(REDIS_NOT_ASSOCIATED_EXPIRE_FLAG, jedis.ttl(REDIS_ADDITIONAL_KEY));
 
         jedis.del(REDIS_ADDITIONAL_KEY);
     }
@@ -162,8 +164,22 @@ public class RedisSinkITCase extends RedisITCaseBase {
         env.execute("Test Redis Hash Data Type");
 
         assertEquals(NUM_ELEMENTS, jedis.hlen(REDIS_ADDITIONAL_KEY));
-        Thread.sleep(REDIS_TTL * 1000);
-        assertEquals(false, jedis.exists(REDIS_ADDITIONAL_KEY));
+        assertEquals(REDIS_TTL_IN_SECS, jedis.ttl(REDIS_ADDITIONAL_KEY));
+
+        jedis.del(REDIS_ADDITIONAL_KEY);
+    }
+
+    @Test
+    public void testRedisHashDataTypeWithTTLFromOpt() throws Exception {
+        DataStreamSource<Tuple2<String, String>> source = env.addSource(new TestSourceFunctionHash());
+        RedisSink<Tuple2<String, String>> redisSink = new RedisSink<>(jedisPoolConfig,
+                new RedisAdditionalTTLMapperFromOpt(RedisCommand.HSET));
+
+        source.addSink(redisSink);
+        env.execute("Test Redis Hash Data Type 2");
+
+        assertEquals(NUM_ELEMENTS, jedis.hlen(REDIS_ADDITIONAL_KEY));
+        assertEquals(REDIS_TTL_IN_SECS, jedis.ttl(REDIS_ADDITIONAL_KEY));
 
         jedis.del(REDIS_ADDITIONAL_KEY);
     }
@@ -271,6 +287,30 @@ public class RedisSinkITCase extends RedisITCaseBase {
         }
     }
 
+    public static class RedisCommandMapperWithTTL implements RedisMapper<Tuple2<String, String>> {
+
+        private RedisCommand redisCommand;
+
+        RedisCommandMapperWithTTL(RedisCommand redisCommand){
+            this.redisCommand = redisCommand;
+        }
+
+        @Override
+        public RedisCommandDescription getCommandDescription() {
+            return new RedisCommandDescription(redisCommand, REDIS_TTL_IN_SECS.intValue());
+        }
+
+        @Override
+        public String getKeyFromData(Tuple2<String, String> data) {
+            return data.f0;
+        }
+
+        @Override
+        public String getValueFromData(Tuple2<String, String> data) {
+            return data.f1;
+        }
+    }
+
     public static class RedisAdditionalDataMapper implements RedisMapper<Tuple2<String, String>> {
 
         private RedisCommand redisCommand;
@@ -295,17 +335,17 @@ public class RedisSinkITCase extends RedisITCaseBase {
         }
     }
 
-    public static class RedisAdditionalDataAAAMapper implements RedisMapper<Tuple2<String, String>> {
+    public static class RedisAdditionalTTLMapper implements RedisMapper<Tuple2<String, String>> {
 
         private RedisCommand redisCommand;
 
-        RedisAdditionalDataAAAMapper(RedisCommand redisCommand){
+        RedisAdditionalTTLMapper(RedisCommand redisCommand){
             this.redisCommand = redisCommand;
         }
 
         @Override
         public RedisCommandDescription getCommandDescription() {
-            return new RedisCommandDescription(redisCommand, REDIS_TTL);
+            return new RedisCommandDescription(redisCommand, REDIS_ADDITIONAL_KEY, REDIS_TTL_IN_SECS.intValue());
         }
 
         @Override
@@ -319,17 +359,17 @@ public class RedisSinkITCase extends RedisITCaseBase {
         }
     }
 
-    public static class RedisAdditionalTTLMapper implements RedisMapper<Tuple2<String, String>> {
+    public static class RedisAdditionalTTLMapperFromOpt implements RedisMapper<Tuple2<String, String>> {
 
         private RedisCommand redisCommand;
 
-        RedisAdditionalTTLMapper(RedisCommand redisCommand){
+        RedisAdditionalTTLMapperFromOpt(RedisCommand redisCommand){
             this.redisCommand = redisCommand;
         }
 
         @Override
         public RedisCommandDescription getCommandDescription() {
-            return new RedisCommandDescription(redisCommand, REDIS_ADDITIONAL_KEY, REDIS_TTL);
+            return new RedisCommandDescription(redisCommand, REDIS_ADDITIONAL_KEY, null);
         }
 
         @Override
@@ -340,6 +380,11 @@ public class RedisSinkITCase extends RedisITCaseBase {
         @Override
         public String getValueFromData(Tuple2<String, String> data) {
             return data.f1;
+        }
+
+        @Override
+        public Optional<Integer> getAdditionalTTL(Tuple2<String, String> data) {
+            return Optional.of(REDIS_TTL_IN_SECS.intValue());
         }
     }
 }
