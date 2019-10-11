@@ -46,6 +46,12 @@ public enum RedisCommand {
     SET(RedisDataType.STRING),
 
     /**
+     * Set key to hold the string value, with a time to live (TTL). If key already holds a value,
+     * it is overwritten, regardless of its type.
+     */
+    SETEX(RedisDataType.STRING),
+
+    /**
      * Adds the element to the HyperLogLog data structure stored at the variable name specified as first argument.
      */
     PFADD(RedisDataType.HYPER_LOG_LOG),

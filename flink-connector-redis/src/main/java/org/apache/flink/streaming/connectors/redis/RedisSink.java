@@ -92,6 +92,13 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
      * {@code additionalKey} used as set name for {@link RedisDataType#SORTED_SET}
      */
     private String additionalKey;
+
+    /**
+     * This additional time to live is optional for {@link RedisDataType#HASH} and required for {@link RedisCommand#SETEX}.
+     * It sets the TTL for a specific key.
+     */
+    private Integer additionalTTL;
+
     private RedisMapper<IN> redisSinkMapper;
     private RedisCommand redisCommand;
 
@@ -113,7 +120,9 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
 
         this.redisSinkMapper = redisSinkMapper;
         RedisCommandDescription redisCommandDescription = redisSinkMapper.getCommandDescription();
+
         this.redisCommand = redisCommandDescription.getCommand();
+        this.additionalTTL = redisCommandDescription.getAdditionalTTL();
         this.additionalKey = redisCommandDescription.getAdditionalKey();
     }
 
@@ -121,7 +130,7 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
      * Called when new data arrives to the sink, and forwards it to Redis channel.
      * Depending on the specified Redis data type (see {@link RedisDataType}),
      * a different Redis command will be applied.
-     * Available commands are RPUSH, LPUSH, SADD, PUBLISH, SET, PFADD, HSET, ZADD.
+     * Available commands are RPUSH, LPUSH, SADD, PUBLISH, SET, SETEX, PFADD, HSET, ZADD.
      *
      * @param input The incoming data
      */
@@ -129,7 +138,9 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
     public void invoke(IN input, Context context) throws Exception {
         String key = redisSinkMapper.getKeyFromData(input);
         String value = redisSinkMapper.getValueFromData(input);
+
         Optional<String> optAdditionalKey = redisSinkMapper.getAdditionalKey(input);
+        Optional<Integer> optAdditionalTTL = redisSinkMapper.getAdditionalTTL(input);
 
         switch (redisCommand) {
             case RPUSH:
@@ -144,6 +155,9 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
             case SET:
                 this.redisCommandsContainer.set(key, value);
                 break;
+            case SETEX:
+                this.redisCommandsContainer.setex(key, value, optAdditionalTTL.orElse(this.additionalTTL));
+                break;
             case PFADD:
                 this.redisCommandsContainer.pfadd(key, value);
                 break;
@@ -157,7 +171,8 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
                 this.redisCommandsContainer.zrem(optAdditionalKey.orElse(this.additionalKey), key);
                 break;
             case HSET:
-                this.redisCommandsContainer.hset(optAdditionalKey.orElse(this.additionalKey), key, value);
+                this.redisCommandsContainer.hset(optAdditionalKey.orElse(this.additionalKey), key, value,
+                        optAdditionalTTL.orElse(this.additionalTTL));
                 break;
             default:
                 throw new IllegalArgumentException("Cannot process such data type: " + redisCommand);

@@ -32,15 +32,17 @@ public interface RedisCommandsContainer extends Serializable {
     void open() throws Exception;
 
     /**
-     * Sets field in the hash stored at key to value.
+     * Sets field in the hash stored at key to value, with TTL, if needed.
+     * Setting expire time to key is optional.
      * If key does not exist, a new key holding a hash is created.
      * If field already exists in the hash, it is overwritten.
      *
      * @param key Hash name
      * @param hashField Hash field
      * @param value Hash value
+     * @param ttl Hash expire time
      */
-    void hset(String key, String hashField, String value);
+    void hset(String key, String hashField, String value, Integer ttl);
 
     /**
      * Insert the specified value at the tail of the list stored at key.
@@ -87,6 +89,17 @@ public interface RedisCommandsContainer extends Serializable {
      * @param value the value
      */
     void set(String key, String value);
+
+    /**
+     * Set key to hold the string value, with a time to live (TTL). If key already holds a value,
+     * it is overwritten, regardless of its type. Any previous time to live associated with the key is
+     * reset on successful SETEX operation.
+     *
+     * @param key the key name in which value to be set
+     * @param value the value
+     * @param ttl time to live (TTL)
+     */
+    void setex(String key, String value, Integer ttl);
 
     /**
      * Adds all the element arguments to the HyperLogLog data structure

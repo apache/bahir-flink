@@ -31,6 +31,12 @@ public class RedisDataTypeDescriptionTest extends TestLogger {
         redisCommandMapper.getCommandDescription();
     }
 
+    @Test(expected=IllegalArgumentException.class)
+    public void shouldThrowExceptionIfAdditionalTTLIsNotGivenForStringDataTypeWithTTL(){
+        RedisSinkITCase.RedisCommandMapper redisCommandMapper = new RedisSinkITCase.RedisCommandMapper(RedisCommand.SETEX);
+        redisCommandMapper.getCommandDescription();
+    }
+
     @Test
     public void shouldReturnNullForAdditionalDataType(){
         RedisSinkITCase.RedisCommandMapper redisCommandMapper = new RedisSinkITCase.RedisCommandMapper(RedisCommand.LPUSH);

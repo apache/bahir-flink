@@ -57,9 +57,12 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
     }
 
     @Override
-    public void hset(final String key, final String hashField, final String value) {
+    public void hset(final String key, final String hashField, final String value, final Integer ttl) {
         try {
             jedisCluster.hset(key, hashField, value);
+            if (ttl != null) {
+                jedisCluster.expire(key, ttl);
+            }
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
                 LOG.error("Cannot send Redis message with command HSET to hash {} of key {} error message {}",
@@ -129,6 +132,19 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
             if (LOG.isErrorEnabled()) {
                 LOG.error("Cannot send Redis message with command SET to key {} error message {}",
                     key, e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public void setex(final String key, final String value, final Integer ttl) {
+        try {
+            jedisCluster.setex(key, ttl, value);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command SETEX to key {} error message {}",
+                        key, e.getMessage());
             }
             throw e;
         }
