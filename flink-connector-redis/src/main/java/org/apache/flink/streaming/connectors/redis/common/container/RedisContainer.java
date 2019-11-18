@@ -286,4 +286,78 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
             LOG.error("Failed to close (return) instance to pool", e);
         }
     }
+
+    @Override
+    public void incrByEx(String key, Long value, Integer ttl) {
+        Jedis jedis = null;
+        try {
+            jedis = getInstance();
+            jedis.incrBy(key, value);
+            if (ttl != null) {
+                jedis.expire(key, ttl);
+            }
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis with incrby command with increment {}  with ttl {} error message {}",
+                        key, value, ttl, e.getMessage());
+            }
+            throw e;
+        } finally {
+            releaseInstance(jedis);
+        }
+    }
+
+    @Override
+    public void decrByEx(String key, Long value, Integer ttl) {
+        Jedis jedis = null;
+        try {
+            jedis = getInstance();
+            jedis.decrBy(key, value);
+            if (ttl != null) {
+                jedis.expire(key, ttl);
+            }
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis with decrBy command with decrement {}  with ttl {} error message {}",
+                        key, value, ttl, e.getMessage());
+            }
+            throw e;
+        } finally {
+            releaseInstance(jedis);
+        }
+    }
+
+    @Override
+    public void incrBy(String key, Long value) {
+        Jedis jedis = null;
+        try {
+            jedis = getInstance();
+            jedis.incrBy(key, value);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis with incrby command with increment {}  error message {}",
+                        key, value, e.getMessage());
+            }
+            throw e;
+        } finally {
+            releaseInstance(jedis);
+        }
+    }
+
+    @Override
+    public void decrBy(String key, Long value) {
+        Jedis jedis = null;
+        try {
+            jedis = getInstance();
+            jedis.decrBy(key, value);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis with decrBy command with increment {}  error message {}",
+                        key, value, e.getMessage());
+            }
+            throw e;
+        } finally {
+            releaseInstance(jedis);
+        }
+    }
 }

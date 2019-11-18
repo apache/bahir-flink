@@ -174,6 +174,18 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
                 this.redisCommandsContainer.hset(optAdditionalKey.orElse(this.additionalKey), key, value,
                         optAdditionalTTL.orElse(this.additionalTTL));
                 break;
+            case INCRBY:
+                this.redisCommandsContainer.incrBy(key, Long.valueOf(value));
+                break;
+            case INCRBY_EX:
+                this.redisCommandsContainer.incrByEx(key, Long.valueOf(value), optAdditionalTTL.orElse(this.additionalTTL));
+                break;
+            case DECRBY:
+                this.redisCommandsContainer.decrBy(key, Long.valueOf(value));
+                break;
+            case DESCRBY_EX:
+                this.redisCommandsContainer.decrByEx(key, Long.valueOf(value), optAdditionalTTL.orElse(this.additionalTTL));
+                break;
             default:
                 throw new IllegalArgumentException("Cannot process such data type: " + redisCommand);
         }

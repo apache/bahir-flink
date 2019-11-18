@@ -1,2 +1,14 @@
-org.apache.flink.streaming.connectors.redis.mapper.SetExMapper
-org.apache.flink.streaming.connectors.redis.ClusterRedisFactory
+org.apache.flink.streaming.connectors.redis.common.mapper.row.SetExMapper
+org.apache.flink.streaming.connectors.redis.common.mapper.row.DecrByMapper
+org.apache.flink.streaming.connectors.redis.common.mapper.row.DecrByExMapper
+org.apache.flink.streaming.connectors.redis.common.mapper.row.HSetMapper
+org.apache.flink.streaming.connectors.redis.common.mapper.row.IncrByMapper
+org.apache.flink.streaming.connectors.redis.common.mapper.row.IncrByExMapper
+org.apache.flink.streaming.connectors.redis.common.mapper.row.LPushMapper
+org.apache.flink.streaming.connectors.redis.common.mapper.row.PfAddMapper
+org.apache.flink.streaming.connectors.redis.common.mapper.row.RPushMapper
+org.apache.flink.streaming.connectors.redis.common.mapper.row.SAddMapper
+org.apache.flink.streaming.connectors.redis.common.mapper.row.SetMapper
+org.apache.flink.streaming.connectors.redis.common.mapper.row.ZAddMapper
+org.apache.flink.streaming.connectors.redis.common.config.handler.FlinkJedisClusterConfigHandler
+org.apache.flink.streaming.connectors.redis.common.config.handler.FlinkJedisSentinelConfigHandler

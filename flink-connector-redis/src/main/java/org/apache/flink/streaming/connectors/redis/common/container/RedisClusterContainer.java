@@ -188,6 +188,66 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
         }
     }
 
+    @Override
+    public void incrByEx(String key, Long value, Integer ttl) {
+        try {
+            jedisCluster.incrBy(key, value);
+            if (ttl != null) {
+                jedisCluster.expire(key, ttl);
+            }
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command incrby and ttl to key {} with increment {} and tll {} error message {}",
+                        key, value, ttl, e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public void decrByEx(String key, Long value, Integer ttl) {
+        try {
+            jedisCluster.decrBy(key, value);
+            if (ttl != null) {
+                jedisCluster.expire(key, ttl);
+            }
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command descry and ttl to key {} with increment {} and tll {} error message {}",
+                        key, value, ttl, e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+
+    @Override
+    public void incrBy(String key, Long value) {
+        try {
+            jedisCluster.incrBy(key, value);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command incrby to key {} with increment {} and tll {} error message {}",
+                        key, value, e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public void decrBy(String key, Long value) {
+        try {
+            jedisCluster.decrBy(key, value);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command descry to key {} with decrement {} error message {}",
+                        key, value, e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+
     /**
      * Closes the {@link JedisCluster}.
      */

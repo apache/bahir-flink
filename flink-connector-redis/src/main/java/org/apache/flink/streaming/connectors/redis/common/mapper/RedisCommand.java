@@ -75,7 +75,28 @@ public enum RedisCommand {
      * Sets field in the hash stored at key to value. If key does not exist,
      * a new key holding a hash is created. If field already exists in the hash, it is overwritten.
      */
-    HSET(RedisDataType.HASH);
+    HSET(RedisDataType.HASH),
+
+    /**
+     * Delta plus for specified key.
+     */
+    INCRBY(RedisDataType.STRING),
+
+    /**
+     * Delta plus for specified key and expire the key with fixed time.
+     */
+    INCRBY_EX(RedisDataType.STRING),
+
+    /**
+     * decrease with fixed num for specified key.
+     */
+    DECRBY(RedisDataType.STRING),
+
+    /**
+     * decrease with fixed num for specified key and expire the key with fixed time.
+     */
+    DESCRBY_EX(RedisDataType.STRING);
+
 
     /**
      * The {@link RedisDataType} this command belongs to.

@@ -2,15 +2,18 @@ package org.apache.flink.streaming.connectors.redis.common.mapper.row;
 
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommand;
 
-public class DecrByTtlMapper extends RowRedisMapper {
+/**
+ * @author Ameng .
+ * decrease with expire operation redis mapper.
+ */
+public class DecrByExMapper extends RowRedisMapper {
 
-    public DecrByTtlMapper() {
-        super();
+    public DecrByExMapper() {
+        super(RedisCommand.DESCRBY_EX);
     }
 
-    public DecrByTtlMapper(int ttl) {
-        super(ttl, RedisCommand.DESCRBY_TTL);
+    public DecrByExMapper(Integer ttl) {
+        super(ttl, RedisCommand.DESCRBY_EX);
     }
-
 
 }

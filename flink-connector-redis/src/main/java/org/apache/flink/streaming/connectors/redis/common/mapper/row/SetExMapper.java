@@ -1,18 +1,19 @@
-package org.apache.flink.streaming.connectors.redis.mapper;
+package org.apache.flink.streaming.connectors.redis.common.mapper.row;
 
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommand;
-import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommandDescription;
 
+/**
+ * @author Ameng.
+ * SET with expire key operation redis mapper.
+ */
 public class SetExMapper extends RowRedisMapper {
 
     public SetExMapper() {
+        super(RedisCommand.SETEX);
     }
 
     public SetExMapper(Integer ttl) {
-        super(ttl);
+        super(ttl, RedisCommand.SETEX);
     }
 
-    public RedisCommandDescription getCommandDescription() {
-        return new RedisCommandDescription(RedisCommand.SETEX, getTtl());
-    }
 }

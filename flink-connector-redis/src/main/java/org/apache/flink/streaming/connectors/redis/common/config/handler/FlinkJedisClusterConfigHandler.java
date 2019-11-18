@@ -1,4 +1,4 @@
-package org.apache.flink.streaming.connectors.redis;
+package org.apache.flink.streaming.connectors.redis.common.config.handler;
 
 import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_CLUSTER;
 import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_MODE;
@@ -8,7 +8,6 @@ import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisClusterConfig;
@@ -16,7 +15,11 @@ import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisConfi
 import org.apache.flink.streaming.connectors.redis.common.hanlder.FlinkJedisConfigHandler;
 import org.apache.flink.util.Preconditions;
 
-public class ClusterRedisFactory implements FlinkJedisConfigHandler {
+/**
+ * @author Ameng .
+ * jedis cluster config handler to find and create jedis cluster config use meta.
+ */
+public class FlinkJedisClusterConfigHandler implements FlinkJedisConfigHandler {
 
     @Override
     public FlinkJedisConfigBase createFlinkJedisConfig(Map<String, String> properties) {
@@ -37,6 +40,6 @@ public class ClusterRedisFactory implements FlinkJedisConfigHandler {
         return require;
     }
 
-    public ClusterRedisFactory() {
+    public FlinkJedisClusterConfigHandler() {
     }
 }

@@ -83,6 +83,18 @@ public class RedisCommandDescription implements Serializable {
                 throw new IllegalArgumentException("SETEX command should have time to live (TTL)");
             }
         }
+
+        if (redisCommand.equals(RedisCommand.INCRBY_EX)) {
+            if (additionalTTL == null) {
+                throw new IllegalArgumentException("INCRBY_EX command should have time to live (TTL)");
+            }
+        }
+
+        if (redisCommand.equals(RedisCommand.DESCRBY_EX)) {
+            if (additionalTTL == null) {
+                throw new IllegalArgumentException("INCRBY_EX command should have time to live (TTL)");
+            }
+        }
     }
 
     /**

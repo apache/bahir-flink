@@ -127,6 +127,27 @@ public interface RedisCommandsContainer extends Serializable {
      */
     void zrem(String key, String element);
 
+
+    /**
+     *
+     * @param key
+     * @param value
+     * @param ttl
+     */
+    void incrByEx(String key, Long value, Integer ttl);
+
+    /**
+     *
+     * @param key
+     * @param value
+     * @param ttl
+     */
+    void decrByEx(String key, Long value, Integer ttl);
+
+    void incrBy(String key, Long value);
+
+    void decrBy(String key, Long value);
+
     /**
      * Close the Jedis container.
      *

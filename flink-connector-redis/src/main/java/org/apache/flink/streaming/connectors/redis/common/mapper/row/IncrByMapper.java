@@ -1,4 +1,15 @@
 package org.apache.flink.streaming.connectors.redis.common.mapper.row;
 
-public class IncrByMapper {
+import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommand;
+
+/**
+ * @author Ameng .
+ * Delta plus operation
+ */
+public class IncrByMapper extends RowRedisMapper {
+
+    public IncrByMapper() {
+        super(RedisCommand.INCRBY);
+    }
+
 }
