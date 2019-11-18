@@ -127,6 +127,37 @@ public interface RedisCommandsContainer extends Serializable {
      */
     void zrem(String key, String element);
 
+
+    /**
+     *  increase value to specified key and expire the key with fixed time.
+     * @param key the key name in which value to be set
+     * @param value the value
+     * @param ttl time to live (TTL)
+     */
+    void incrByEx(String key, Long value, Integer ttl);
+
+    /**
+     * decrease value from specified key and expire the key.
+     * @param key the key name in which value to be set
+     * @param value value the value
+     * @param ttl time to live (TTL)
+     */
+    void decrByEx(String key, Long value, Integer ttl);
+
+    /**
+     *  increase value to specified key.
+     * @param key the key name in which value to be set
+     * @param value the value
+     */
+    void incrBy(String key, Long value);
+
+    /**
+     * decrease value from specified key.
+     * @param key the key name in which value to be set
+     * @param value value the value
+     */
+    void decrBy(String key, Long value);
+
     /**
      * Close the Jedis container.
      *
