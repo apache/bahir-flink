@@ -56,14 +56,16 @@ public class KuduDatabase {
                 .addColumn(KuduColumnInfo.Builder.create("id", Type.INT32).key(true).hashKey(true).build())
                 .addColumn(KuduColumnInfo.Builder.create("title", Type.STRING).build())
                 .addColumn(KuduColumnInfo.Builder.create("author", Type.STRING).build())
-                .addColumn(KuduColumnInfo.Builder.create("price", Type.DOUBLE).build())
-                .addColumn(KuduColumnInfo.Builder.create("quantity", Type.INT32).build())
+                .addColumn(KuduColumnInfo.Builder.create("price", Type.DOUBLE).asNullable().build())
+                .addColumn(KuduColumnInfo.Builder.create("quantity", Type.INT32).asNullable().build())
                 .build();
     }
 
     protected static List<KuduRow> booksDataRow() {
         return Arrays.stream(booksTableData)
                 .map(row -> {
+                    Integer rowId = (Integer)row[0];
+                    if (rowId % 2 == 1) {
                         KuduRow values = new KuduRow(5);
                         values.setField(0, "id", row[0]);
                         values.setField(1, "title", row[1]);
@@ -71,6 +73,13 @@ public class KuduDatabase {
                         values.setField(3, "price", row[3]);
                         values.setField(4, "quantity", row[4]);
                         return values;
+                    } else {
+                        KuduRow values = new KuduRow(3);
+                        values.setField(0, "id", row[0]);
+                        values.setField(1, "title", row[1]);
+                        values.setField(2, "author", row[2]);
+                        return values;
+                    }
                 })
                 .collect(Collectors.toList());
     }
@@ -126,4 +135,17 @@ public class KuduDatabase {
         return rows;
     }
 
+    protected void kuduRowsTest(List<KuduRow> rows) {
+        for (KuduRow row: rows) {
+            Integer rowId = (Integer)row.getField("id");
+            if (rowId % 2 == 1) {
+                Assertions.assertNotEquals(null, row.getField("price"));
+                Assertions.assertNotEquals(null, row.getField("quantity"));
+            }
+            else {
+                Assertions.assertNull(row.getField("price"));
+                Assertions.assertNull(row.getField("quantity"));
+            }
+        }
+    }
 }

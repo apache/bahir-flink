@@ -88,7 +88,7 @@ class KuduSinkTest extends KuduDatabase {
 
         List<KuduRow> rows = readRows(tableInfo);
         Assertions.assertEquals(5, rows.size());
-
+        kuduRowsTest(rows);
     }
 
     @Test
@@ -116,6 +116,7 @@ class KuduSinkTest extends KuduDatabase {
 
         List<KuduRow> rows = readRows(tableInfo);
         Assertions.assertEquals(5, rows.size());
+        kuduRowsTest(rows);
     }
 
 
