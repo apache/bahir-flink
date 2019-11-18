@@ -1,0 +1,2 @@
+org.apache.flink.streaming.connectors.redis.mapper.SetExMapper
+org.apache.flink.streaming.connectors.redis.ClusterRedisFactory
