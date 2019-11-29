@@ -152,7 +152,10 @@ public class KuduWriter implements AutoCloseable {
 
         table.getSchema().getColumns().forEach(column -> {
             String columnName = column.getName();
-            Object value = row.getField(column.getName());
+            if (!row.hasField(columnName)) {
+                return;
+            }
+            Object value = row.getField(columnName);
 
             if (value == null) {
                 partialRow.setNull(columnName);

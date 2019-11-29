@@ -41,6 +41,10 @@ public class KuduRow extends Row {
         return super.getField(rowNames.get(name));
     }
 
+    public boolean hasField(String name) {
+        return rowNames.get(name) != null;
+    }
+
     public void setField(int pos, String name, Object value) {
         super.setField(pos, value);
         this.rowNames.put(name, pos);

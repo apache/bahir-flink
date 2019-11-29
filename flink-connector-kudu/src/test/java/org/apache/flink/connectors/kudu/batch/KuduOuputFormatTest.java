@@ -71,6 +71,7 @@ class KuduOuputFormatTest extends KuduDatabase {
 
         List<KuduRow> rows = readRows(tableInfo);
         Assertions.assertEquals(5, rows.size());
+        kuduRowsTest(rows);
 
         cleanDatabase(tableInfo);
     }
@@ -99,6 +100,7 @@ class KuduOuputFormatTest extends KuduDatabase {
 
         List<KuduRow> rows = readRows(tableInfo);
         Assertions.assertEquals(5, rows.size());
+        kuduRowsTest(rows);
 
         cleanDatabase(tableInfo);
     }
