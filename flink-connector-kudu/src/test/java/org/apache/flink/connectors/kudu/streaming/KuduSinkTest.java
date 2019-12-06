@@ -143,8 +143,8 @@ class KuduSinkTest extends KuduDatabase {
         int totalRecords = 100000;
         for (int i=0; i < totalRecords; i++) {
             KuduRow kuduRow = new KuduRow(2);
-            kuduRow.setField(0, "id", i);
-            kuduRow.setField(1, "uuid", UUID.randomUUID().toString());
+            kuduRow.setField("id", i);
+            kuduRow.setField("uuid", UUID.randomUUID().toString());
             sink.invoke(kuduRow);
         }
 

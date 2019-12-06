@@ -68,39 +68,39 @@ public class KuduReaderIterator {
             String name = column.getName();
             int pos = schema.getColumnIndex(name);
             if(row.isNull(name)) {
-                values.setField(pos, name, null);
+                values.setField(name, null);
             } else {
                 Type type = column.getType();
                 switch (type) {
                     case BINARY:
-                        values.setField(pos, name, row.getBinary(name));
+                        values.setField(name, row.getBinary(name));
                         break;
                     case STRING:
-                        values.setField(pos, name, row.getString(name));
+                        values.setField(name, row.getString(name));
                         break;
                     case BOOL:
-                        values.setField(pos, name, row.getBoolean(name));
+                        values.setField(name, row.getBoolean(name));
                         break;
                     case DOUBLE:
-                        values.setField(pos, name, row.getDouble(name));
+                        values.setField(name, row.getDouble(name));
                         break;
                     case FLOAT:
-                        values.setField(pos, name, row.getFloat(name));
+                        values.setField(name, row.getFloat(name));
                         break;
                     case INT8:
-                        values.setField(pos, name, row.getByte(name));
+                        values.setField(name, row.getByte(name));
                         break;
                     case INT16:
-                        values.setField(pos, name, row.getShort(name));
+                        values.setField(name, row.getShort(name));
                         break;
                     case INT32:
-                        values.setField(pos, name, row.getInt(name));
+                        values.setField(name, row.getInt(name));
                         break;
                     case INT64:
-                        values.setField(pos, name, row.getLong(name));
+                        values.setField(name, row.getLong(name));
                         break;
                     case UNIXTIME_MICROS:
-                        values.setField(pos, name, row.getLong(name) / 1000);
+                        values.setField(name, row.getLong(name) / 1000);
                         break;
                     default:
                         throw new IllegalArgumentException("Illegal var type: " + type);

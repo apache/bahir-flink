@@ -32,6 +32,8 @@ public class KuduRow extends Row {
 
     private Map<String, Integer> rowNames;
 
+    private int curRowPos = 0;
+
     public KuduRow(Integer arity) {
         super(arity);
         rowNames = new LinkedHashMap<>();
@@ -45,9 +47,10 @@ public class KuduRow extends Row {
         return rowNames.get(name) != null;
     }
 
-    public void setField(int pos, String name, Object value) {
-        super.setField(pos, value);
-        this.rowNames.put(name, pos);
+    public void setField(String name, Object value) {
+        super.setField(curRowPos, value);
+        this.rowNames.put(name, curRowPos);
+        curRowPos++;
     }
 
     public boolean isNull(String name) {

@@ -62,7 +62,7 @@ public class PojoSerDe<P> implements KuduSerialization<P>, KuduDeserialization<P
                     .forEach(cField -> {
                         try {
                             cField.setAccessible(true);
-                            row.setField(schema.getColumnIndex(cField.getName()), cField.getName(), cField.get(object));
+                            row.setField(cField.getName(), cField.get(object));
                         } catch (IllegalAccessException e) {
                             String error = String.format("Cannot get value for %s", cField.getName());
                             throw new IllegalArgumentException(error, e);

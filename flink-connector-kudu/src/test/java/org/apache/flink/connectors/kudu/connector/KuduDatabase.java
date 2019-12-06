@@ -67,17 +67,17 @@ public class KuduDatabase {
                     Integer rowId = (Integer)row[0];
                     if (rowId % 2 == 1) {
                         KuduRow values = new KuduRow(5);
-                        values.setField(0, "id", row[0]);
-                        values.setField(1, "title", row[1]);
-                        values.setField(2, "author", row[2]);
-                        values.setField(3, "price", row[3]);
-                        values.setField(4, "quantity", row[4]);
+                        values.setField("id", row[0]);
+                        values.setField("title", row[1]);
+                        values.setField("author", row[2]);
+                        values.setField("price", row[3]);
+                        values.setField("quantity", row[4]);
                         return values;
                     } else {
                         KuduRow values = new KuduRow(3);
-                        values.setField(0, "id", row[0]);
-                        values.setField(1, "title", row[1]);
-                        values.setField(2, "author", row[2]);
+                        values.setField("id", row[0]);
+                        values.setField("title", row[1]);
+                        values.setField("author", row[2]);
                         return values;
                     }
                 })
