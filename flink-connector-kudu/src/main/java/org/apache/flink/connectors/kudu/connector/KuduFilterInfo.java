@@ -21,10 +21,11 @@ import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
 import org.apache.kudu.client.KuduPredicate;
 
+import java.io.Serializable;
 import java.util.List;
 
 @PublicEvolving
-public class KuduFilterInfo {
+public class KuduFilterInfo implements Serializable {
 
     private String column;
     private FilterType type;
