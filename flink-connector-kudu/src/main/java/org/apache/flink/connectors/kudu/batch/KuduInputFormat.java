@@ -98,6 +98,7 @@ public class KuduInputFormat<OUT> extends RichInputFormat<OUT, KuduInputSplit> {
         }
         if (kuduReader != null) {
             kuduReader.close();
+            kuduReader = null;
         }
     }
 
