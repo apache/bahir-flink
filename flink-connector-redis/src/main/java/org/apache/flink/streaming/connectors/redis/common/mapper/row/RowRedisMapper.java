@@ -43,7 +43,7 @@ public abstract class RowRedisMapper implements RedisMapper<Tuple2<Boolean, Row>
 
     private RedisCommand redisCommand;
 
-    public int getTtl() {
+    public Integer getTtl() {
         return ttl;
     }
 
