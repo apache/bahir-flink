@@ -38,10 +38,10 @@ jdk:
   - openjdk8
 
 env:
-  - FLINK_VERSION="1.9.0" SCALA_VERSION="2.11"
-  - FLINK_VERSION="1.9.0" SCALA_VERSION="2.11" PROJECT="flink-connector-flume" DOCKER="true"
-  - FLINK_VERSION="1.9.0" SCALA_VERSION="2.12"
-  - FLINK_VERSION="1.9.0" SCALA_VERSION="2.12" PROJECT="flink-connector-flume" DOCKER="true"
+  - FLINK_VERSION="1.10.0" SCALA_VERSION="2.11"
+  - FLINK_VERSION="1.10.0" SCALA_VERSION="2.11" PROJECT="flink-connector-flume" DOCKER="true"
+  - FLINK_VERSION="1.10.0" SCALA_VERSION="2.12"
+  - FLINK_VERSION="1.10.0" SCALA_VERSION="2.12" PROJECT="flink-connector-flume" DOCKER="true"
 
 before_install:
   - ./dev/change-scala-version.sh $SCALA_VERSION
