@@ -14,29 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.connectors.kudu.connector.reader;
 
-import org.apache.flink.annotation.Internal;
-import org.apache.flink.core.io.LocatableInputSplit;
+package org.apache.flink.connectors.kudu.connector;
 
-@Internal
-public class KuduInputSplit extends LocatableInputSplit {
+import org.apache.flink.annotation.PublicEvolving;
 
-    private byte[] scanToken;
+import org.apache.kudu.ColumnSchema;
+
+import java.io.Serializable;
+import java.util.List;
+
+/**
+ * Factory for creating {@link ColumnSchema}s to be used when creating a table that
+ * does not currently exist in Kudu. Usable through {@link KuduTableInfo#createTableIfNotExists}.
+ *
+ * <p> This factory implementation must be Serializable as it will be used directly in the Flink sources
+ * and sinks.
+ */
+@PublicEvolving
+public interface ColumnSchemasFactory extends Serializable {
 
     /**
-     * Creates a new KuduInputSplit
+     * Creates the columns of the Kudu table that will be used during the createTable operation.
      *
-     * @param splitNumber the number of the input split
-     * @param hostnames   The names of the hosts storing the data this input split refers to.
+     * @return List of columns.
      */
-    public KuduInputSplit(byte[] scanToken, final int splitNumber, final String[] hostnames) {
-        super(splitNumber, hostnames);
+    List<ColumnSchema> getColumnSchemas();
 
-        this.scanToken = scanToken;
-    }
-
-    public byte[] getScanToken() {
-        return scanToken;
-    }
 }

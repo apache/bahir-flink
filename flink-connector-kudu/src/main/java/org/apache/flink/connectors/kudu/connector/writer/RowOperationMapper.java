@@ -16,17 +16,22 @@
  */
 package org.apache.flink.connectors.kudu.connector.writer;
 
-import static org.apache.kudu.client.SessionConfiguration.*;
+import org.apache.flink.annotation.PublicEvolving;
+import org.apache.flink.types.Row;
 
-public enum KuduWriterConsistency {
-    EVENTUAL(FlushMode.AUTO_FLUSH_BACKGROUND),
-    STRONG(FlushMode.AUTO_FLUSH_SYNC),
-    //CHECKPOINT(FlushMode.MANUAL_FLUSH)
-    ;
+@PublicEvolving
+public class RowOperationMapper extends AbstractSingleOperationMapper<Row> {
 
-    public final FlushMode flushMode;
+    protected RowOperationMapper(String[] columnNames) {
+        super(columnNames);
+    }
 
-    KuduWriterConsistency(FlushMode flushMode) {
-        this.flushMode = flushMode;
+    public RowOperationMapper(String[] columnNames, KuduOperation operation) {
+        super(columnNames, operation);
+    }
+
+    @Override
+    public Object getField(Row input, int i) {
+        return input.getField(i);
     }
 }

@@ -22,12 +22,18 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Default failure handling logic that doesn't do any handling but throws
+ * an error.
+ */
 public class DefaultKuduFailureHandler implements KuduFailureHandler {
+
     @Override
     public void onFailure(List<RowError> failure) throws IOException {
         String errors = failure.stream()
                 .map(error -> error.toString() + System.lineSeparator())
                 .collect(Collectors.joining());
+
         throw new IOException("Error while sending value. \n " + errors);
     }
 }

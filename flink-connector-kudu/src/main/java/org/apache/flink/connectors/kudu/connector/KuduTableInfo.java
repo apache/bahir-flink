@@ -17,119 +17,90 @@
 package org.apache.flink.connectors.kudu.connector;
 
 import org.apache.flink.annotation.PublicEvolving;
-import org.apache.kudu.ColumnSchema;
+
+import org.apache.commons.lang3.Validate;
 import org.apache.kudu.Schema;
 import org.apache.kudu.client.CreateTableOptions;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
+/**
+ * Describes which table should be used in sources and sinks along with specifications
+ * on how to create it if it does not exist.
+ *
+ * <p> For sources and sinks reading from already existing tables, simply use @{@link KuduTableInfo#forTable(String)}
+ * and if you want the system to create the table if it does not exist you need to specify the column and options
+ * factories through {@link KuduTableInfo#createTableIfNotExists}
+ */
 @PublicEvolving
 public class KuduTableInfo implements Serializable {
 
-    private static final Integer DEFAULT_REPLICAS = 1;
-    private static final boolean DEFAULT_CREATE_IF_NOT_EXIST = false;
-
-    private Integer replicas;
     private String name;
-    private boolean createIfNotExist;
-    private List<KuduColumnInfo> columns;
+    private CreateTableOptionsFactory createTableOptionsFactory = null;
+    private ColumnSchemasFactory schemasFactory = null;
 
-    private KuduTableInfo(String name){
-        this.name = name;
-        this.replicas = DEFAULT_REPLICAS;
-        this.createIfNotExist = DEFAULT_CREATE_IF_NOT_EXIST;
-        this.columns = new ArrayList<>();
+    private KuduTableInfo(String name) {
+        this.name = Validate.notNull(name);
     }
 
+    /**
+     * Creates a new {@link KuduTableInfo} that is sufficient for reading/writing to existing Kudu Tables.
+     * For creating new tables call {@link #createTableIfNotExists} afterwards.
+     *
+     * @param name Table name in Kudu
+     * @return KuduTableInfo for the given table name
+     */
+    public static KuduTableInfo forTable(String name) {
+        return new KuduTableInfo(name);
+    }
+
+    /**
+     * Defines table parameters to be used when creating the Kudu table if it does not exist (read or write)
+     *
+     * @param schemasFactory            factory for defining columns
+     * @param createTableOptionsFactory factory for defining create table options
+     * @return KuduTableInfo that will create tables that does not exist with the given settings.
+     */
+    public KuduTableInfo createTableIfNotExists(ColumnSchemasFactory schemasFactory, CreateTableOptionsFactory createTableOptionsFactory) {
+        this.createTableOptionsFactory = Validate.notNull(createTableOptionsFactory);
+        this.schemasFactory = Validate.notNull(schemasFactory);
+        return this;
+    }
+
+    /**
+     * Returns the {@link Schema} of the table. Only works if {@link #createTableIfNotExists} was specified otherwise throws an error.
+     *
+     * @return Schema of the target table.
+     */
+    public Schema getSchema() {
+        if (!getCreateTableIfNotExists()) {
+            throw new RuntimeException("Cannot access schema for KuduTableInfo. Use createTableIfNotExists to specify the columns.");
+        }
+
+        return new Schema(schemasFactory.getColumnSchemas());
+    }
+
+    /**
+     * @return Name of the table.
+     */
     public String getName() {
         return name;
     }
 
-    public Schema getSchema() {
-        if(hasNotColumns()) return null;
-        List<ColumnSchema> schemaColumns = new ArrayList<>();
-        for(KuduColumnInfo column : columns){
-            schemaColumns.add(column.columnSchema());
-        }
-        return new Schema(schemaColumns);
+    /**
+     * @return True if table creation is enabled if target table does not exist.
+     */
+    public boolean getCreateTableIfNotExists() {
+        return createTableOptionsFactory != null;
     }
 
-    public boolean createIfNotExist() {
-        return createIfNotExist;
-    }
-
+    /**
+     * @return CreateTableOptions if {@link #createTableIfNotExists} was specified.
+     */
     public CreateTableOptions getCreateTableOptions() {
-        CreateTableOptions options = new CreateTableOptions();
-        if(replicas!=null){
-            options.setNumReplicas(replicas);
+        if (!getCreateTableIfNotExists()) {
+            throw new RuntimeException("Cannot access CreateTableOptions for KuduTableInfo. Use createTableIfNotExists to specify.");
         }
-        if(hasColummns()) {
-            List<String> rangeKeys = new ArrayList<>();
-            List<String> hashKeys = new ArrayList<>();
-            for(KuduColumnInfo column : columns){
-                if(column.isRangeKey()){
-                    rangeKeys.add(column.name());
-                }
-                if(column.isHashKey()){
-                    hashKeys.add(column.name());
-                }
-            }
-            options.setRangePartitionColumns(rangeKeys);
-            options.addHashPartitions(hashKeys, replicas*2);
-        }
-
-        return options;
-    }
-
-    public boolean hasNotColumns(){
-        return !hasColummns();
-    }
-    public boolean hasColummns(){
-        return (columns!=null && columns.size()>0);
-    }
-
-    public static class Builder {
-        KuduTableInfo table;
-
-        private Builder(String name) {
-            table = new KuduTableInfo(name);
-        }
-
-        public static Builder create(String name) {
-            return new Builder(name);
-        }
-
-        public static Builder open(String name) {
-            return new Builder(name);
-        }
-
-        public Builder createIfNotExist(boolean createIfNotExist) {
-            this.table.createIfNotExist = createIfNotExist;
-            return this;
-        }
-
-        public Builder replicas(int replicas) {
-            if (replicas == 0) return this;
-            this.table.replicas = replicas;
-            return this;
-        }
-
-        public Builder columns(List<KuduColumnInfo> columns) {
-            if(columns==null) return this;
-            this.table.columns.addAll(columns);
-            return this;
-        }
-
-        public Builder addColumn(KuduColumnInfo column) {
-            if(column==null) return this;
-            this.table.columns.add(column);
-            return this;
-        }
-
-        public KuduTableInfo build() {
-            return table;
-        }
+        return createTableOptionsFactory.getCreateTableOptions();
     }
 }

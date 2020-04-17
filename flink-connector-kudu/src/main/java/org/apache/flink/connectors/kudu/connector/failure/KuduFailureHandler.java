@@ -17,12 +17,17 @@
 package org.apache.flink.connectors.kudu.connector.failure;
 
 import org.apache.flink.annotation.PublicEvolving;
+
 import org.apache.kudu.client.RowError;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Custom handling logic for errors resulting from trying to execute Kudu operations in the
+ * {@link org.apache.flink.connectors.kudu.connector.writer.KuduWriter}
+ */
 @PublicEvolving
 public interface KuduFailureHandler extends Serializable {
 
@@ -34,4 +39,13 @@ public interface KuduFailureHandler extends Serializable {
      */
     void onFailure(List<RowError> failure) throws IOException;
 
+    /**
+     * Handle a ClassCastException. Default implementation rethrows the exception.
+     *
+     * @param e the cause of failure
+     * @throws IOException if the casting failed
+     */
+    default void onTypeMismatch(ClassCastException e) throws IOException {
+        throw new IOException("Class casting failed \n", e);
+    }
 }

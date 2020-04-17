@@ -30,8 +30,7 @@
   <packaging>jar</packaging>
 
   <properties>
-    <kudu.version>1.10.0</kudu.version>
-
+    <kudu.version>1.11.1</kudu.version>
     <mockito.version>1.10.19</mockito.version>
     <junit.groups>!DockerTest</junit.groups>
   </properties>
@@ -39,15 +38,30 @@
   <dependencies>
 
     <dependency>
-      <groupId>org.apache.flink</groupId>
-      <artifactId>flink-streaming-scala_${scala.binary.version}</artifactId>
-      <version>${flink.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.kudu</groupId>
       <artifactId>kudu-client</artifactId>
       <version>${kudu.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-planner-blink_2.11</artifactId>
+      <version>${flink.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-common</artifactId>
+      <version>${flink.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!--test dependencies-->
@@ -65,6 +79,7 @@
       <classifier>${os.detected.classifier}</classifier>
       <scope>test</scope>
     </dependency>
+
     <!-- this is added because test cluster use @Rule from junit4 -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -72,13 +87,28 @@
       <version>${junit.jupiter.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
-  </dependencies>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>${log4j.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+</dependencies>
 
   <build>
     <extensions>

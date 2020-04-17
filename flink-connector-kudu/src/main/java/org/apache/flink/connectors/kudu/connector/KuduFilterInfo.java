@@ -17,6 +17,7 @@
 package org.apache.flink.connectors.kudu.connector;
 
 import org.apache.flink.annotation.PublicEvolving;
+
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
 import org.apache.kudu.client.KuduPredicate;
@@ -36,6 +37,7 @@ public class KuduFilterInfo implements Serializable {
     public KuduPredicate toPredicate(Schema schema) {
         return toPredicate(schema.getColumn(this.column));
     }
+
     public KuduPredicate toPredicate(ColumnSchema column) {
         KuduPredicate predicate;
         switch (this.type) {
@@ -63,40 +65,58 @@ public class KuduFilterInfo implements Serializable {
 
         switch (column.getType()) {
             case STRING:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (String)this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (String) this.value);
                 break;
             case FLOAT:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (Float)this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
                 break;
             case INT8:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (Byte)this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
                 break;
             case INT16:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (Short)this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
                 break;
             case INT32:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (Integer)this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
                 break;
             case INT64:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (Long)this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
                 break;
             case DOUBLE:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (Double)this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
                 break;
             case BOOL:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (Boolean)this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
                 break;
             case UNIXTIME_MICROS:
-                Long time = (Long)this.value;
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, time*1000);
+                Long time = (Long) this.value;
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, time * 1000);
                 break;
             case BINARY:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (byte[])this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (byte[]) this.value);
                 break;
             default:
                 throw new IllegalArgumentException("Illegal var type: " + column.getType());
         }
         return predicate;
+    }
+
+    public enum FilterType {
+        GREATER(KuduPredicate.ComparisonOp.GREATER),
+        GREATER_EQUAL(KuduPredicate.ComparisonOp.GREATER_EQUAL),
+        EQUAL(KuduPredicate.ComparisonOp.EQUAL),
+        LESS(KuduPredicate.ComparisonOp.LESS),
+        LESS_EQUAL(KuduPredicate.ComparisonOp.LESS_EQUAL),
+        IS_NOT_NULL(null),
+        IS_NULL(null),
+        IS_IN(null);
+
+        final KuduPredicate.ComparisonOp comparator;
+
+        FilterType(KuduPredicate.ComparisonOp comparator) {
+            this.comparator = comparator;
+        }
+
     }
 
     public static class Builder {
@@ -152,24 +172,6 @@ public class KuduFilterInfo implements Serializable {
         public KuduFilterInfo build() {
             return filter;
         }
-    }
-
-    public enum FilterType {
-        GREATER(KuduPredicate.ComparisonOp.GREATER),
-        GREATER_EQUAL(KuduPredicate.ComparisonOp.GREATER_EQUAL),
-        EQUAL(KuduPredicate.ComparisonOp.EQUAL),
-        LESS(KuduPredicate.ComparisonOp.LESS),
-        LESS_EQUAL(KuduPredicate.ComparisonOp.LESS_EQUAL),
-        IS_NOT_NULL(null),
-        IS_NULL(null),
-        IS_IN(null);
-
-        final KuduPredicate.ComparisonOp comparator;
-
-        FilterType(KuduPredicate.ComparisonOp comparator) {
-            this.comparator = comparator;
-        }
-
     }
 
 }
