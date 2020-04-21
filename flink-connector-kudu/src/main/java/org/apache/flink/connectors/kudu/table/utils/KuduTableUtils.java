@@ -51,7 +51,7 @@ public class KuduTableUtils {
     private static final Logger LOG = LoggerFactory.getLogger(KuduTableUtils.class);
 
     public static KuduTableInfo createTableInfo(String tableName, TableSchema schema, Map<String, String> props) {
-
+        // Since KUDU_HASH_COLS is a required property for table creation, we use it to infer whether to create table
         boolean createIfMissing = props.containsKey(KUDU_HASH_COLS);
         List<Tuple2<String, DataType>> columns = TableSchemaUtils
                 .getPhysicalSchema(schema)
