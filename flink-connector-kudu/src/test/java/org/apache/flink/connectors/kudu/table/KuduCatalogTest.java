@@ -207,6 +207,25 @@ public class KuduCatalogTest extends KuduTestBase {
     }
 
     @Test
+    public void testTimestamp() throws Exception {
+        tableEnv.sqlUpdate("CREATE TABLE TestTableTsC (`first` STRING, `second` TIMESTAMP(3)) " +
+                "WITH ('kudu.hash-columns'='first', 'kudu.primary-key-columns'='first')");
+        tableEnv.sqlUpdate("INSERT INTO TestTableTsC values ('f', TIMESTAMP '2020-01-01 12:12:12.123456')");
+        tableEnv.execute("test");
+
+        KuduTable kuduTable = harness.getClient().openTable("TestTableTsC");
+        assertEquals(Type.UNIXTIME_MICROS, kuduTable.getSchema().getColumn("second").getType());
+
+        KuduScanner scanner = harness.getClient().newScannerBuilder(kuduTable).build();
+        List<RowResult> rows = new ArrayList<>();
+        scanner.forEach(rows::add);
+
+        assertEquals(1, rows.size());
+        assertEquals("f", rows.get(0).getString(0));
+        assertEquals(Timestamp.valueOf("2020-01-01 12:12:12.123"), rows.get(0).getTimestamp(1));
+    }
+
+    @Test
     public void testDatatypes() throws Exception {
         tableEnv.sqlUpdate("CREATE TABLE TestTable8 (`first` STRING, `second` BOOLEAN, `third` BYTES," +
                 "`fourth` TINYINT, `fifth` SMALLINT, `sixth` INT, `seventh` BIGINT, `eighth` FLOAT, `ninth` DOUBLE, " +

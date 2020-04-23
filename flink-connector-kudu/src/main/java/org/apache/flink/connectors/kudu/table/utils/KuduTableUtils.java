@@ -25,6 +25,7 @@ import org.apache.flink.connectors.kudu.table.KuduTableFactory;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.DecimalType;
+import org.apache.flink.table.types.logical.TimestampType;
 import org.apache.flink.table.utils.TableSchemaUtils;
 
 import org.apache.flink.shaded.guava18.com.google.common.collect.Lists;
@@ -36,6 +37,7 @@ import org.apache.kudu.client.CreateTableOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -53,16 +55,17 @@ public class KuduTableUtils {
     public static KuduTableInfo createTableInfo(String tableName, TableSchema schema, Map<String, String> props) {
         // Since KUDU_HASH_COLS is a required property for table creation, we use it to infer whether to create table
         boolean createIfMissing = props.containsKey(KUDU_HASH_COLS);
-        List<Tuple2<String, DataType>> columns = TableSchemaUtils
-                .getPhysicalSchema(schema)
-                .getTableColumns()
-                .stream()
-                .map(tc -> Tuple2.of(tc.getName(), tc.getType()))
-                .collect(Collectors.toList());
 
         KuduTableInfo tableInfo = KuduTableInfo.forTable(tableName);
 
         if (createIfMissing) {
+
+            List<Tuple2<String, DataType>> columns = getSchemaWithSqlTimestamp(schema)
+                    .getTableColumns()
+                    .stream()
+                    .map(tc -> Tuple2.of(tc.getName(), tc.getType()))
+                    .collect(Collectors.toList());
+
             List<String> keyColumns = getPrimaryKeyColumns(props, schema);
             ColumnSchemasFactory schemasFactory = () -> toKuduConnectorColumns(columns, keyColumns);
             List<String> hashColumns = getHashColumns(props);
@@ -116,5 +119,18 @@ public class KuduTableUtils {
 
     public static List<String> getHashColumns(Map<String, String> tableProperties) {
         return Lists.newArrayList(tableProperties.get(KUDU_HASH_COLS).split(","));
+    }
+
+    public static TableSchema getSchemaWithSqlTimestamp(TableSchema schema) {
+        TableSchema.Builder builder = new TableSchema.Builder();
+        TableSchemaUtils.getPhysicalSchema(schema).getTableColumns().forEach(
+                tableColumn -> {
+                    if (tableColumn.getType().getLogicalType() instanceof TimestampType) {
+                        builder.field(tableColumn.getName(), tableColumn.getType().bridgedTo(Timestamp.class));
+                    } else {
+                        builder.field(tableColumn.getName(), tableColumn.getType());
+                    }
+                });
+        return builder.build();
     }
 }

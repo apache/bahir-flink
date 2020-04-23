@@ -19,13 +19,17 @@ package org.apache.flink.connectors.kudu.table;
 import org.apache.flink.connectors.kudu.connector.KuduTestBase;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.java.StreamTableEnvironment;
+import org.apache.kudu.Type;
 import org.apache.kudu.client.KuduScanner;
 import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.RowResult;
+import org.apache.kudu.shaded.com.google.common.collect.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,7 +41,7 @@ public class KuduTableFactoryTest extends KuduTestBase {
 
     @BeforeEach
     public void init() {
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment().setParallelism(1);
         tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerBatchMode(env);
         kuduMasters = harness.getMasterAddressesAsString();
     }
@@ -76,6 +80,36 @@ public class KuduTableFactoryTest extends KuduTestBase {
         tableEnv.execute("test");
 
         validateSingleKey("TestTable11");
+    }
+    @Test
+    public void testTimestamp() throws Exception {
+        // Timestamp should be bridged to sql.Timestamp
+        // Test it when creating the table...
+        tableEnv.sqlUpdate("CREATE TABLE TestTableTs (`first` STRING, `second` TIMESTAMP(3)) " +
+                "WITH ('connector.type'='kudu', 'kudu.table'='TestTableTs', 'kudu.masters'='" + kuduMasters + "', " +
+                "'kudu.hash-columns'='first', 'kudu.primary-key-columns'='first')");
+        tableEnv.sqlUpdate("INSERT INTO TestTableTs values ('f', TIMESTAMP '2020-01-01 12:12:12.123456')");
+        tableEnv.execute("test");
+
+        // And also when inserting into existing table
+        tableEnv.sqlUpdate("CREATE TABLE TestTableTsE (`first` STRING, `second` TIMESTAMP(3)) " +
+                "WITH ('connector.type'='kudu', 'kudu.table'='TestTableTs', 'kudu.masters'='" + kuduMasters + "')");
+
+        tableEnv.sqlUpdate("INSERT INTO TestTableTsE values ('s', TIMESTAMP '2020-02-02 23:23:23')");
+        tableEnv.execute("test");
+
+        KuduTable kuduTable = harness.getClient().openTable("TestTableTs");
+        assertEquals(Type.UNIXTIME_MICROS, kuduTable.getSchema().getColumn("second").getType());
+
+        KuduScanner scanner = harness.getClient().newScannerBuilder(kuduTable).build();
+        HashSet<Timestamp> results = new HashSet<>();
+        scanner.forEach(sc -> results.add(sc.getTimestamp("second")));
+
+        assertEquals(2, results.size());
+        List<Timestamp> expected = Lists.newArrayList(
+                Timestamp.valueOf("2020-01-01 12:12:12.123"),
+                Timestamp.valueOf("2020-02-02 23:23:23"));
+        assertEquals(new HashSet<>(expected), results);
     }
 
     @Test

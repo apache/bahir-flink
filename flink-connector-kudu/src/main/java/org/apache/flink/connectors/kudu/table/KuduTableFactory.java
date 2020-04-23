@@ -29,7 +29,6 @@ import org.apache.flink.table.descriptors.DescriptorProperties;
 import org.apache.flink.table.descriptors.SchemaValidator;
 import org.apache.flink.table.factories.TableSinkFactory;
 import org.apache.flink.table.factories.TableSourceFactory;
-import org.apache.flink.table.utils.TableSchemaUtils;
 import org.apache.flink.types.Row;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
@@ -133,7 +132,7 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
 
     private KuduTableSource createTableSource(String tableName, TableSchema schema, Map<String, String> props) {
         String masterAddresses = props.get(KUDU_MASTERS);
-        TableSchema physicalSchema = TableSchemaUtils.getPhysicalSchema(schema);
+        TableSchema physicalSchema = KuduTableUtils.getSchemaWithSqlTimestamp(schema);
         KuduTableInfo tableInfo = KuduTableUtils.createTableInfo(tableName, schema, props);
 
         KuduReaderConfig.Builder configBuilder = KuduReaderConfig.Builder
@@ -158,7 +157,7 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
 
     private KuduTableSink createTableSink(String tableName, TableSchema schema, Map<String, String> props) {
         String masterAddresses = props.get(KUDU_MASTERS);
-        TableSchema physicalSchema = TableSchemaUtils.getPhysicalSchema(schema);
+        TableSchema physicalSchema = KuduTableUtils.getSchemaWithSqlTimestamp(schema);
         KuduTableInfo tableInfo = KuduTableUtils.createTableInfo(tableName, schema, props);
 
         KuduWriterConfig.Builder configBuilder = KuduWriterConfig.Builder
