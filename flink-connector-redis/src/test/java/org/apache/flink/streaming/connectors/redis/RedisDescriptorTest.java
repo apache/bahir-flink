@@ -24,7 +24,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommand;
 import org.apache.flink.streaming.connectors.redis.descriptor.Redis;
-import org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator;
+import org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.java.StreamTableEnvironment;
 import org.apache.flink.table.descriptors.Schema;
@@ -57,10 +57,10 @@ public class RedisDescriptorTest extends  RedisITCaseBase{
         tableEnvironment.registerDataStream("t1", source, "k, v");
 
         Redis redis = new Redis()
-                .mode(RedisVadidator.REDIS_CLUSTER)
+                .mode(RedisValidator.REDIS_CLUSTER)
                 .command(RedisCommand.INCRBY_EX.name())
                 .ttl(100000)
-                .property(RedisVadidator.REDIS_NODES, REDIS_HOST+ ":" + REDIS_PORT);
+                .property(RedisValidator.REDIS_NODES, REDIS_HOST+ ":" + REDIS_PORT);
 
         tableEnvironment
                 .connect(redis).withSchema(new Schema()

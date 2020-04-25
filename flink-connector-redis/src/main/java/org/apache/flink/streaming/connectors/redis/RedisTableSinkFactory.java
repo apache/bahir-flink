@@ -17,13 +17,13 @@
 
 package org.apache.flink.streaming.connectors.redis;
 
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_COMMAND;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_KEY_TTL;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_MASTER_NAME;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_MODE;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_NODES;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_SENTINEL;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_COMMAND;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_KEY_TTL;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_MASTER_NAME;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_MODE;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_NODES;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_SENTINEL;
 import static org.apache.flink.table.descriptors.ConnectorDescriptorValidator.CONNECTOR;
 import static org.apache.flink.table.descriptors.ConnectorDescriptorValidator.CONNECTOR_TYPE;
 import static org.apache.flink.table.descriptors.FormatDescriptorValidator.FORMAT;

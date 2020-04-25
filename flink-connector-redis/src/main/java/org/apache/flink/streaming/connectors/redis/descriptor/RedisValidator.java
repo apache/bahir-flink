@@ -21,7 +21,7 @@ package org.apache.flink.streaming.connectors.redis.descriptor;
  * @author Ameng .
  * redis validator for validate redis descriptor.
  */
-public class RedisVadidator {
+public class RedisValidator {
     public static final String REDIS = "redis";
     public static final String REDIS_MODE = "redis-mode";
     public static final String REDIS_NODES = "cluster-nodes";

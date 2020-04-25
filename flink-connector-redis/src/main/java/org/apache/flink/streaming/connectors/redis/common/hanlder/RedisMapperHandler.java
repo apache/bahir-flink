@@ -17,7 +17,7 @@
 
 package org.apache.flink.streaming.connectors.redis.common.hanlder;
 
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_KEY_TTL;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_KEY_TTL;
 
 import java.lang.reflect.Constructor;
 import java.util.Map;

@@ -16,9 +16,9 @@
  */
 package org.apache.flink.streaming.connectors.redis.common.config.handler;
 
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_CLUSTER;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_MODE;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_NODES;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_CLUSTER;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_MODE;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_NODES;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;

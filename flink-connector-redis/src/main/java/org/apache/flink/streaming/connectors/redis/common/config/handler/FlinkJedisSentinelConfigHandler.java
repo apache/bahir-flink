@@ -17,11 +17,11 @@
 
 package org.apache.flink.streaming.connectors.redis.common.config.handler;
 
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_MASTER_NAME;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_MODE;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_SENTINEL;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.SENTINELS_INFO;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.SENTINELS_PASSWORD;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_MASTER_NAME;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_MODE;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_SENTINEL;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.SENTINELS_INFO;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.SENTINELS_PASSWORD;
 
 import java.util.Arrays;
 import java.util.HashMap;
