@@ -43,7 +43,7 @@ When using the SQL CLI you can easily add the Kudu catalog to your environment y
 catalogs:
   - name: kudu
     type: kudu
-    kudu.masters: bvarga-kudu-1.gce.cloudera.com:7051
+    kudu.masters: <host>:7051
 ```
 
 Once the SQL CLI is started you can simply switch to the Kudu catalog by calling `USE CATALOG kudu;`
@@ -191,28 +191,21 @@ with Kudu data.
 ### Reading tables into a DataStreams
 
 There are 2 main ways of reading a Kudu Table into a DataStream
- 1. Using the `KuduCatalog` and `KuduTableFactory`
+ 1. Using the `KuduCatalog` and the Table API
  2. Using the `KuduRowInputFormat` directly
 
-Using the `KuduCatalog` and `KuduTableFactory`is the recommended way of reading tables as it automatically
+Using the `KuduCatalog` and Table API is the recommended way of reading tables as it automatically
 guarantees type safety and takes care of configuration of our readers.
 
 This is how it works in practice:
 ```java
-KuduCatalog catalog = new KuduCatalog("master:port");
-KuduTableFactory tableFactory = catalog.getKuduTableFactory();
+StreamTableEnvironment tableEnv = StreamTableEnvironment.create(streamEnv, tableSettings);
 
-ObjectPath path = catalog.getObjectPath("TestTable");
-CatalogTable table = catalog.getTable(path);
+tableEnv.registerCatalog("kudu", new KuduCatalog("master:port"));
+tableEnv.useCatalog("kudu");
 
-KuduTableSource tableSource = tableFactory.createTableSource(path, table);
-```
-
-The table source can then be used to read the DataStream:
-
-```java
-DataStream<Row> rows = tableSource.getDataStream(env)
-// Process rows further
+Table table = tableEnv.sqlQuery("SELECT * FROM MyKuduTable");
+DataStream<Row> rows = tableEnv.toAppendStream(table, Row.class);
 ```
 
 The second way of achieving the same thing is by using the `KuduRowInputFormat` directly.
