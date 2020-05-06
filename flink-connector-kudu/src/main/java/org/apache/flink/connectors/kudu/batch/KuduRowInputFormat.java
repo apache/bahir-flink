@@ -65,7 +65,7 @@ public class KuduRowInputFormat extends RichInputFormat<Row, KuduInputSplit> {
     private transient KuduReaderIterator resultIterator;
 
     public KuduRowInputFormat(KuduReaderConfig readerConfig, KuduTableInfo tableInfo) {
-        this(readerConfig, tableInfo, new ArrayList<>(), new ArrayList<>());
+        this(readerConfig, tableInfo, new ArrayList<>(), null);
     }
 
     public KuduRowInputFormat(KuduReaderConfig readerConfig, KuduTableInfo tableInfo, List<String> tableProjections) {
@@ -77,7 +77,7 @@ public class KuduRowInputFormat extends RichInputFormat<Row, KuduInputSplit> {
         this.readerConfig = checkNotNull(readerConfig, "readerConfig could not be null");
         this.tableInfo = checkNotNull(tableInfo, "tableInfo could not be null");
         this.tableFilters = checkNotNull(tableFilters, "tableFilters could not be null");
-        this.tableProjections = checkNotNull(tableProjections, "tableProjections could not be null");
+        this.tableProjections = tableProjections;
 
         this.endReached = false;
     }

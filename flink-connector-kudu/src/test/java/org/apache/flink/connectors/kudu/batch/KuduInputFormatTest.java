@@ -73,7 +73,8 @@ class KuduInputFormatTest extends KuduTestBase {
     private List<Row> readRows(KuduTableInfo tableInfo, String... fieldProjection) throws Exception {
         String masterAddresses = harness.getMasterAddressesAsString();
         KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
-        KuduRowInputFormat inputFormat = new KuduRowInputFormat(readerConfig, tableInfo, new ArrayList<>(), Arrays.asList(fieldProjection));
+        KuduRowInputFormat inputFormat = new KuduRowInputFormat(readerConfig, tableInfo, new ArrayList<>(),
+                fieldProjection == null ? null : Arrays.asList(fieldProjection));
 
         KuduInputSplit[] splits = inputFormat.createInputSplits(1);
         List<Row> rows = new ArrayList<>();

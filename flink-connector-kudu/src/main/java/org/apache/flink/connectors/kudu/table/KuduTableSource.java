@@ -56,7 +56,7 @@ public class KuduTableSource implements StreamTableSource<Row>, LimitableTableSo
     @Override
     public DataStream<Row> getDataStream(StreamExecutionEnvironment env) {
 
-        KuduRowInputFormat inputFormat = new KuduRowInputFormat(configBuilder.build(), tableInfo, Lists.newArrayList(projectedFields));
+        KuduRowInputFormat inputFormat = new KuduRowInputFormat(configBuilder.build(), tableInfo, projectedFields == null ? null : Lists.newArrayList(projectedFields));
 
         return env.createInput(inputFormat, (TypeInformation<Row>) TypeConversions.fromDataTypeToLegacyInfo(getProducedDataType())).name(explainSource());
     }
@@ -68,7 +68,7 @@ public class KuduTableSource implements StreamTableSource<Row>, LimitableTableSo
 
     @Override
     public DataType getProducedDataType() {
-        if (projectedFields.length == 0) {
+        if (projectedFields == null) {
             return flinkSchema.toRowDataType();
         } else {
             DataTypes.Field[] fields = new DataTypes.Field[projectedFields.length];
@@ -115,6 +115,6 @@ public class KuduTableSource implements StreamTableSource<Row>, LimitableTableSo
     @Override
     public String explainSource() {
         return "KuduStreamTableSource[schema=" + Arrays.toString(getTableSchema().getFieldNames())
-                + ", projectFields=" + Arrays.toString(projectedFields) + "]";
+                + (projectedFields != null ?", projectFields=" + Arrays.toString(projectedFields) + "]" : "]");
     }
 }

@@ -48,11 +48,11 @@ public class KuduReader implements AutoCloseable {
     private transient KuduTable table;
 
     public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig) throws IOException {
-        this(tableInfo, readerConfig, new ArrayList<>(), new ArrayList<>());
+        this(tableInfo, readerConfig, new ArrayList<>(), null);
     }
 
     public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig, List<KuduFilterInfo> tableFilters) throws IOException {
-        this(tableInfo, readerConfig, tableFilters, new ArrayList<>());
+        this(tableInfo, readerConfig, tableFilters, null);
     }
 
     public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig, List<KuduFilterInfo> tableFilters, List<String> tableProjections) throws IOException {
@@ -92,7 +92,7 @@ public class KuduReader implements AutoCloseable {
     public List<KuduScanToken> scanTokens(List<KuduFilterInfo> tableFilters, List<String> tableProjections, Integer rowLimit) {
         KuduScanToken.KuduScanTokenBuilder tokenBuilder = client.newScanTokenBuilder(table);
 
-        if (CollectionUtils.isNotEmpty(tableProjections)) {
+        if (tableProjections != null) {
             tokenBuilder.setProjectedColumnNames(tableProjections);
         }
 

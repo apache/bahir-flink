@@ -17,14 +17,13 @@
 package org.apache.flink.connectors.kudu.table;
 
 import org.apache.flink.connectors.kudu.connector.KuduTestBase;
-import org.apache.flink.table.api.TableEnvironment;
-
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.table.api.java.StreamTableEnvironment;
 import org.apache.kudu.client.KuduScanner;
 import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.RowResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +32,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class KuduTableFactoryTest extends KuduTestBase {
-    private TableEnvironment tableEnv;
+    private StreamTableEnvironment tableEnv;
     private String kuduMasters;
 
     @BeforeEach
     public void init() {
-        tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerBatchMode();
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerBatchMode(env);
         kuduMasters = harness.getMasterAddressesAsString();
     }
 
@@ -46,18 +46,16 @@ public class KuduTableFactoryTest extends KuduTestBase {
     public void testMissingTable() throws Exception {
         tableEnv.sqlUpdate("CREATE TABLE TestTable11 (`first` STRING, `second` INT) " +
                 "WITH ('connector.type'='kudu', 'kudu.masters'='" + kuduMasters + "')");
-        tableEnv.sqlUpdate("INSERT INTO TestTable11 values ('f', 1)");
         assertThrows(NullPointerException.class,
-                () -> tableEnv.execute("test"));
+                () -> tableEnv.sqlUpdate("INSERT INTO TestTable11 values ('f', 1)"));
     }
 
     @Test
     public void testMissingMasters() throws Exception {
         tableEnv.sqlUpdate("CREATE TABLE TestTable11 (`first` STRING, `second` INT) " +
                 "WITH ('connector.type'='kudu', 'kudu.table'='TestTable11')");
-        tableEnv.sqlUpdate("INSERT INTO TestTable11 values ('f', 1)");
         assertThrows(NullPointerException.class,
-                () -> tableEnv.execute("test"));
+                () -> tableEnv.sqlUpdate("INSERT INTO TestTable11 values ('f', 1)"));
     }
 
     @Test

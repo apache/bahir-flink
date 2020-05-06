@@ -16,16 +16,17 @@
  */
 package org.apache.flink.connectors.kudu.table;
 
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
-import org.apache.flink.table.api.TableEnvironment;
+import org.apache.flink.table.api.java.StreamTableEnvironment;
 
 import static org.apache.flink.table.api.config.ExecutionConfigOptions.TABLE_EXEC_RESOURCE_DEFAULT_PARALLELISM;
 
 public class KuduTableTestUtils {
 
-    public static TableEnvironment createTableEnvWithBlinkPlannerBatchMode() {
+    public static StreamTableEnvironment createTableEnvWithBlinkPlannerBatchMode(StreamExecutionEnvironment env) {
         EnvironmentSettings settings = EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build();
-        TableEnvironment tableEnv = TableEnvironment.create(settings);
+        StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env, settings);
         tableEnv.getConfig().getConfiguration().setInteger(TABLE_EXEC_RESOURCE_DEFAULT_PARALLELISM.key(), 1);
         return tableEnv;
     }

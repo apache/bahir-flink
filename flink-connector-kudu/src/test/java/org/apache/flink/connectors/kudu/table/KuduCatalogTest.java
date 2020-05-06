@@ -17,6 +17,7 @@
 package org.apache.flink.connectors.kudu.table;
 
 import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.connectors.kudu.connector.KuduTestBase;
@@ -24,13 +25,16 @@ import org.apache.flink.connectors.kudu.connector.writer.AbstractSingleOperation
 import org.apache.flink.connectors.kudu.connector.writer.KuduWriterConfig;
 import org.apache.flink.connectors.kudu.connector.writer.TupleOperationMapper;
 import org.apache.flink.connectors.kudu.streaming.KuduSink;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-import org.apache.flink.table.api.TableEnvironment;
+import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.TableException;
+import org.apache.flink.table.api.java.StreamTableEnvironment;
 import org.apache.flink.table.catalog.CatalogTable;
 import org.apache.flink.table.catalog.ObjectPath;
 
+import org.apache.flink.types.Row;
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
 import org.apache.kudu.Type;
@@ -55,12 +59,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class KuduCatalogTest extends KuduTestBase {
 
     private KuduCatalog catalog;
-    private TableEnvironment tableEnv;
+    private StreamTableEnvironment tableEnv;
 
     @BeforeEach
     public void init() {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         catalog = new KuduCatalog(harness.getMasterAddressesAsString());
-        tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerBatchMode();
+        tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerBatchMode(env);
         tableEnv.registerCatalog("kudu", catalog);
         tableEnv.useCatalog("kudu");
     }
@@ -115,6 +120,33 @@ public class KuduCatalogTest extends KuduTestBase {
     }
 
     @Test
+    public void testEmptyProjection() throws Exception {
+        tableEnv.sqlUpdate("CREATE TABLE TestTableEP (`first` STRING, `second` STRING) WITH ('kudu.hash-columns' = 'first', 'kudu.primary-key-columns' = 'first')");
+        tableEnv.sqlUpdate("INSERT INTO TestTableEP VALUES ('f','s')");
+        tableEnv.sqlUpdate("INSERT INTO TestTableEP VALUES ('f2','s2')");
+        tableEnv.execute("test");
+
+        Table result = tableEnv.sqlQuery("SELECT COUNT(*) FROM TestTableEP");
+
+        DataStream<Tuple2<Boolean, Row>> resultDataStream = tableEnv.toRetractStream(result, Types.ROW(Types.LONG));
+
+        CollectionSink.output.clear();
+
+        resultDataStream
+                .map(t -> Tuple2.of(t.f0, t.f1.getField(0)))
+                .returns(Types.TUPLE(Types.BOOLEAN, Types.LONG))
+                .addSink(new CollectionSink<>()).setParallelism(1);
+
+        tableEnv.execute("test");
+
+        List<Tuple2<Boolean, Long>> expected = Lists.newArrayList(Tuple2.of(true, 1L), Tuple2.of(false, 1L), Tuple2.of(true, 2L));
+
+        assertEquals(new HashSet<>(expected), new HashSet<>(CollectionSink.output));
+        CollectionSink.output.clear();
+
+    }
+
+    @Test
     public void dataStreamEndToEstTest() throws Exception {
         KuduCatalog catalog = new KuduCatalog(harness.getMasterAddressesAsString());
         // Creating table through catalog
@@ -160,15 +192,18 @@ public class KuduCatalogTest extends KuduTestBase {
         env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(2);
 
+        CollectionSink.output.clear();
         tableFactory.createTableSource(path, table)
                 .getDataStream(env)
                 .map(row -> Tuple2.of((int) row.getField(0), (String) row.getField(1)))
-                .returns(new TypeHint<Tuple2<Integer, String>>() {})
+                .returns(new TypeHint<Tuple2<Integer, String>>() {
+                })
                 .addSink(new CollectionSink<>()).setParallelism(1);
         env.execute();
 
         List<Tuple2<Integer, String>> expected = Lists.newArrayList(Tuple2.of(1, "one"), Tuple2.of(2, "two"), Tuple2.of(3, "three"));
         assertEquals(new HashSet<>(expected), new HashSet<>(CollectionSink.output));
+        CollectionSink.output.clear();
     }
 
     @Test

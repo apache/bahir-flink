@@ -55,7 +55,6 @@ public class KuduSinkTest extends KuduTestBase {
     void testInvalidKuduMaster() {
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), false);
         Assertions.assertThrows(NullPointerException.class, () -> new KuduSink<>(null, tableInfo, new RowOperationMapper(columns, AbstractSingleOperationMapper.KuduOperation.INSERT)));
-        System.out.println("asd");
     }
 
     @Test
