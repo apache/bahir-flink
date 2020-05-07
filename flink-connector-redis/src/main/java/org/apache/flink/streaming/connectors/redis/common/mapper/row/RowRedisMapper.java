@@ -17,7 +17,7 @@
 
 package org.apache.flink.streaming.connectors.redis.common.mapper.row;
 
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisVadidator.REDIS_COMMAND;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_COMMAND;
 
 import java.util.HashMap;
 import java.util.Map;
