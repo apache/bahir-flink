@@ -14,29 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.connectors.kudu.connector.reader;
+package org.apache.flink.connectors.kudu.table;
 
 import org.apache.flink.annotation.Internal;
-import org.apache.flink.core.io.LocatableInputSplit;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.connectors.kudu.connector.writer.AbstractSingleOperationMapper;
+import org.apache.flink.types.Row;
+
+import org.apache.kudu.client.KuduTable;
+import org.apache.kudu.client.Operation;
+
+import java.util.Optional;
 
 @Internal
-public class KuduInputSplit extends LocatableInputSplit {
+public class UpsertOperationMapper extends AbstractSingleOperationMapper<Tuple2<Boolean, Row>> {
 
-    private byte[] scanToken;
-
-    /**
-     * Creates a new KuduInputSplit
-     *
-     * @param splitNumber the number of the input split
-     * @param hostnames   The names of the hosts storing the data this input split refers to.
-     */
-    public KuduInputSplit(byte[] scanToken, final int splitNumber, final String[] hostnames) {
-        super(splitNumber, hostnames);
-
-        this.scanToken = scanToken;
+    public UpsertOperationMapper(String[] columnNames) {
+        super(columnNames);
     }
 
-    public byte[] getScanToken() {
-        return scanToken;
+    @Override
+    public Object getField(Tuple2<Boolean, Row> input, int i) {
+        return input.f1.getField(i);
+    }
+
+    @Override
+    public Optional<Operation> createBaseOperation(Tuple2<Boolean, Row> input, KuduTable table) {
+        return Optional.of(input.f0 ? table.newUpsert() : table.newDelete());
     }
 }

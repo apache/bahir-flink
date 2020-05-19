@@ -16,19 +16,20 @@
  */
 package org.apache.flink.connectors.kudu.batch;
 
+import org.apache.flink.annotation.PublicEvolving;
 import org.apache.flink.api.common.io.LocatableInputSplitAssigner;
 import org.apache.flink.api.common.io.RichInputFormat;
 import org.apache.flink.api.common.io.statistics.BaseStatistics;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.core.io.InputSplitAssigner;
 import org.apache.flink.connectors.kudu.connector.KuduFilterInfo;
-import org.apache.flink.connectors.kudu.connector.KuduRow;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.connectors.kudu.connector.reader.KuduInputSplit;
 import org.apache.flink.connectors.kudu.connector.reader.KuduReader;
 import org.apache.flink.connectors.kudu.connector.reader.KuduReaderConfig;
 import org.apache.flink.connectors.kudu.connector.reader.KuduReaderIterator;
-import org.apache.flink.connectors.kudu.connector.serde.KuduDeserialization;
+import org.apache.flink.core.io.InputSplitAssigner;
+import org.apache.flink.types.Row;
+
 import org.apache.kudu.client.KuduException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,13 +40,21 @@ import java.util.List;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
-public class KuduInputFormat<OUT> extends RichInputFormat<OUT, KuduInputSplit> {
+/**
+ * Input format for reading the contents of a Kudu table (defined by the provided {@link KuduTableInfo}) in both batch
+ * and stream programs. Rows of the Kudu table are mapped to {@link Row} instances that can converted to other data
+ * types by the user later if necessary.
+ *
+ * <p> For programmatic access to the schema of the input rows users can use the {@link org.apache.flink.connectors.kudu.table.KuduCatalog}
+ * or overwrite the column order manually by providing a list of projected column names.
+ */
+@PublicEvolving
+public class KuduRowInputFormat extends RichInputFormat<Row, KuduInputSplit> {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final KuduReaderConfig readerConfig;
     private final KuduTableInfo tableInfo;
-    private final KuduDeserialization<OUT> deserializer;
 
     private List<KuduFilterInfo> tableFilters;
     private List<String> tableProjections;
@@ -55,16 +64,20 @@ public class KuduInputFormat<OUT> extends RichInputFormat<OUT, KuduInputSplit> {
     private transient KuduReader kuduReader;
     private transient KuduReaderIterator resultIterator;
 
-    public KuduInputFormat(KuduReaderConfig readerConfig, KuduTableInfo tableInfo, KuduDeserialization<OUT> deserializer) {
-        this(readerConfig, tableInfo, deserializer, new ArrayList<>(), new ArrayList<>());
+    public KuduRowInputFormat(KuduReaderConfig readerConfig, KuduTableInfo tableInfo) {
+        this(readerConfig, tableInfo, new ArrayList<>(), null);
     }
-    public KuduInputFormat(KuduReaderConfig readerConfig, KuduTableInfo tableInfo, KuduDeserialization<OUT> deserializer, List<KuduFilterInfo> tableFilters, List<String> tableProjections) {
 
-        this.readerConfig = checkNotNull(readerConfig,"readerConfig could not be null");
-        this.tableInfo = checkNotNull(tableInfo,"tableInfo could not be null");
-        this.deserializer = checkNotNull(deserializer,"deserializer could not be null");
-        this.tableFilters = checkNotNull(tableFilters,"tableFilters could not be null");
-        this.tableProjections = checkNotNull(tableProjections,"tableProjections could not be null");
+    public KuduRowInputFormat(KuduReaderConfig readerConfig, KuduTableInfo tableInfo, List<String> tableProjections) {
+        this(readerConfig, tableInfo, new ArrayList<>(), tableProjections);
+    }
+
+    public KuduRowInputFormat(KuduReaderConfig readerConfig, KuduTableInfo tableInfo, List<KuduFilterInfo> tableFilters, List<String> tableProjections) {
+
+        this.readerConfig = checkNotNull(readerConfig, "readerConfig could not be null");
+        this.tableInfo = checkNotNull(tableInfo, "tableInfo could not be null");
+        this.tableFilters = checkNotNull(tableFilters, "tableFilters could not be null");
+        this.tableProjections = tableProjections;
 
         this.endReached = false;
     }
@@ -124,11 +137,10 @@ public class KuduInputFormat<OUT> extends RichInputFormat<OUT, KuduInputSplit> {
     }
 
     @Override
-    public OUT nextRecord(OUT reuse) throws IOException {
+    public Row nextRecord(Row reuse) throws IOException {
         // check that current iterator has next rows
         if (this.resultIterator.hasNext()) {
-            KuduRow row = resultIterator.next();
-            return deserializer.deserialize(row);
+            return resultIterator.next();
         } else {
             endReached = true;
             return null;

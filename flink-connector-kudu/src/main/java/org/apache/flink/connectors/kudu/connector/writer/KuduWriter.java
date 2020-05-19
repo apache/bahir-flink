@@ -18,13 +18,17 @@ package org.apache.flink.connectors.kudu.connector.writer;
 
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.annotation.VisibleForTesting;
-import org.apache.flink.connectors.kudu.connector.KuduRow;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.connectors.kudu.connector.failure.DefaultKuduFailureHandler;
 import org.apache.flink.connectors.kudu.connector.failure.KuduFailureHandler;
-import org.apache.kudu.Schema;
-import org.apache.kudu.Type;
-import org.apache.kudu.client.*;
+
+import org.apache.kudu.client.DeleteTableResponse;
+import org.apache.kudu.client.KuduClient;
+import org.apache.kudu.client.KuduSession;
+import org.apache.kudu.client.KuduTable;
+import org.apache.kudu.client.Operation;
+import org.apache.kudu.client.OperationResponse;
+import org.apache.kudu.client.RowError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,23 +37,24 @@ import java.util.Arrays;
 import java.util.List;
 
 @Internal
-public class KuduWriter implements AutoCloseable {
+public class KuduWriter<T> implements AutoCloseable {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final KuduTableInfo tableInfo;
     private final KuduWriterConfig writerConfig;
     private final KuduFailureHandler failureHandler;
+    private final KuduOperationMapper<T> operationMapper;
 
     private transient KuduClient client;
     private transient KuduSession session;
     private transient KuduTable table;
 
-
-    public KuduWriter(KuduTableInfo tableInfo, KuduWriterConfig writerConfig) throws IOException {
-        this (tableInfo, writerConfig, new DefaultKuduFailureHandler());
+    public KuduWriter(KuduTableInfo tableInfo, KuduWriterConfig writerConfig, KuduOperationMapper<T> operationMapper) throws IOException {
+        this(tableInfo, writerConfig, operationMapper, new DefaultKuduFailureHandler());
     }
-    public KuduWriter(KuduTableInfo tableInfo, KuduWriterConfig writerConfig, KuduFailureHandler failureHandler) throws IOException {
+
+    public KuduWriter(KuduTableInfo tableInfo, KuduWriterConfig writerConfig, KuduOperationMapper<T> operationMapper, KuduFailureHandler failureHandler) throws IOException {
         this.tableInfo = tableInfo;
         this.writerConfig = writerConfig;
         this.failureHandler = failureHandler;
@@ -57,6 +62,7 @@ public class KuduWriter implements AutoCloseable {
         this.client = obtainClient();
         this.session = obtainSession();
         this.table = obtainTable();
+        this.operationMapper = operationMapper;
     }
 
     private KuduClient obtainClient() {
@@ -74,23 +80,18 @@ public class KuduWriter implements AutoCloseable {
         if (client.tableExists(tableName)) {
             return client.openTable(tableName);
         }
-        if (tableInfo.createIfNotExist()) {
+        if (tableInfo.getCreateTableIfNotExists()) {
             return client.createTable(tableName, tableInfo.getSchema(), tableInfo.getCreateTableOptions());
         }
         throw new UnsupportedOperationException("table not exists and is marketed to not be created");
     }
 
-    public Schema getSchema() {
-        return table.getSchema();
-    }
-
-    public void write(KuduRow row) throws IOException {
+    public void write(T input) throws IOException {
         checkAsyncErrors();
 
-        final Operation operation = mapToOperation(row);
-        final OperationResponse response = session.apply(operation);
-
-        checkErrors(response);
+        for (Operation operation : operationMapper.createOperations(input, table)) {
+            checkErrors(session.apply(operation));
+        }
     }
 
     public void flushAndCheckErrors() throws IOException {
@@ -140,73 +141,9 @@ public class KuduWriter implements AutoCloseable {
     }
 
     private void checkAsyncErrors() throws IOException {
-        if (session.countPendingErrors() == 0) return;
+        if (session.countPendingErrors() == 0) { return; }
 
         List<RowError> errors = Arrays.asList(session.getPendingErrors().getRowErrors());
         failureHandler.onFailure(errors);
-    }
-
-    private Operation mapToOperation(KuduRow row) {
-        final Operation operation = obtainOperation();
-        final PartialRow partialRow = operation.getRow();
-
-        table.getSchema().getColumns().forEach(column -> {
-            String columnName = column.getName();
-            if (!row.hasField(columnName)) {
-                return;
-            }
-            Object value = row.getField(columnName);
-
-            if (value == null) {
-                partialRow.setNull(columnName);
-            } else {
-                Type type = column.getType();
-                switch (type) {
-                    case STRING:
-                        partialRow.addString(columnName, (String) value);
-                        break;
-                    case FLOAT:
-                        partialRow.addFloat(columnName, (Float) value);
-                        break;
-                    case INT8:
-                        partialRow.addByte(columnName, (Byte) value);
-                        break;
-                    case INT16:
-                        partialRow.addShort(columnName, (Short) value);
-                        break;
-                    case INT32:
-                        partialRow.addInt(columnName, (Integer) value);
-                        break;
-                    case INT64:
-                        partialRow.addLong(columnName, (Long) value);
-                        break;
-                    case DOUBLE:
-                        partialRow.addDouble(columnName, (Double) value);
-                        break;
-                    case BOOL:
-                        partialRow.addBoolean(columnName, (Boolean) value);
-                        break;
-                    case UNIXTIME_MICROS:
-                        //*1000 to correctly create date on kudu
-                        partialRow.addLong(columnName, ((Long) value) * 1000);
-                        break;
-                    case BINARY:
-                        partialRow.addBinary(columnName, (byte[]) value);
-                        break;
-                    default:
-                        throw new IllegalArgumentException("Illegal var type: " + type);
-                }
-            }
-        });
-        return operation;
-    }
-
-    private Operation obtainOperation() {
-        switch (writerConfig.getWriteMode()) {
-            case INSERT: return table.newInsert();
-            case UPDATE: return table.newUpdate();
-            case UPSERT: return table.newUpsert();
-        }
-        return table.newUpsert();
     }
 }

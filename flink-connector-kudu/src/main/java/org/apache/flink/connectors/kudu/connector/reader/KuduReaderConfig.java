@@ -16,32 +16,36 @@
  */
 package org.apache.flink.connectors.kudu.connector.reader;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.flink.annotation.PublicEvolving;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
+/**
+ * Configuration used by {@link org.apache.flink.connectors.kudu.batch.KuduRowInputFormat}. Specifies connection and other necessary properties.
+ */
 @PublicEvolving
 public class KuduReaderConfig implements Serializable {
 
     private final String masters;
-    private final Integer rowLimit;
+    private final int rowLimit;
 
     private KuduReaderConfig(
             String masters,
-            Integer rowLimit) {
+            int rowLimit) {
 
         this.masters = checkNotNull(masters, "Kudu masters cannot be null");
-        this.rowLimit = checkNotNull(rowLimit, "Kudu rowLimit cannot be null");;
+        this.rowLimit = checkNotNull(rowLimit, "Kudu rowLimit cannot be null");
     }
 
     public String getMasters() {
         return masters;
     }
 
-    public Integer getRowLimit() {
+    public int getRowLimit() {
         return rowLimit;
     }
 
@@ -57,20 +61,26 @@ public class KuduReaderConfig implements Serializable {
      * Builder for the {@link KuduReaderConfig}.
      */
     public static class Builder {
-        private String masters;
-        private Integer rowLimit = 0;
+        private static final int DEFAULT_ROW_LIMIT = 0;
+
+        private final String masters;
+        private final int rowLimit;
 
         private Builder(String masters) {
+            this(masters, DEFAULT_ROW_LIMIT);
+        }
+
+        private Builder(String masters, Integer rowLimit) {
             this.masters = masters;
+            this.rowLimit = rowLimit;
         }
 
         public static Builder setMasters(String masters) {
             return new Builder(masters);
         }
 
-        public Builder setRowLimit(Integer rowLimit) {
-            this.rowLimit = rowLimit;
-            return this;
+        public Builder setRowLimit(int rowLimit) {
+            return new Builder(masters, rowLimit);
         }
 
         public KuduReaderConfig build() {

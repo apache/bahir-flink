@@ -16,18 +16,19 @@
  */
 package org.apache.flink.connectors.kudu.batch;
 
+import org.apache.flink.annotation.PublicEvolving;
 import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.runtime.state.FunctionInitializationContext;
-import org.apache.flink.runtime.state.FunctionSnapshotContext;
-import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
-import org.apache.flink.connectors.kudu.connector.KuduRow;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.connectors.kudu.connector.failure.DefaultKuduFailureHandler;
 import org.apache.flink.connectors.kudu.connector.failure.KuduFailureHandler;
+import org.apache.flink.connectors.kudu.connector.writer.KuduOperationMapper;
 import org.apache.flink.connectors.kudu.connector.writer.KuduWriter;
 import org.apache.flink.connectors.kudu.connector.writer.KuduWriterConfig;
-import org.apache.flink.connectors.kudu.connector.serde.KuduSerialization;
+import org.apache.flink.runtime.state.FunctionInitializationContext;
+import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,11 @@ import java.io.IOException;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
+/**
+ * Output format for writing data into a Kudu table (defined by the provided {@link KuduTableInfo}) in both batch
+ * and stream programs.
+ */
+@PublicEvolving
 public class KuduOutputFormat<IN> extends RichOutputFormat<IN> implements CheckpointedFunction {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -42,19 +48,19 @@ public class KuduOutputFormat<IN> extends RichOutputFormat<IN> implements Checkp
     private final KuduTableInfo tableInfo;
     private final KuduWriterConfig writerConfig;
     private final KuduFailureHandler failureHandler;
-    private final KuduSerialization<IN> serializer;
+    private final KuduOperationMapper<IN> opsMapper;
 
     private transient KuduWriter kuduWriter;
 
-    public KuduOutputFormat(KuduWriterConfig writerConfig, KuduTableInfo tableInfo, KuduSerialization<IN> serializer) {
-        this(writerConfig, tableInfo, serializer, new DefaultKuduFailureHandler());
+    public KuduOutputFormat(KuduWriterConfig writerConfig, KuduTableInfo tableInfo, KuduOperationMapper<IN> opsMapper) {
+        this(writerConfig, tableInfo, opsMapper, new DefaultKuduFailureHandler());
     }
 
-    public KuduOutputFormat(KuduWriterConfig writerConfig, KuduTableInfo tableInfo, KuduSerialization<IN> serializer, KuduFailureHandler failureHandler) {
-        this.tableInfo = checkNotNull(tableInfo,"tableInfo could not be null");
-        this.writerConfig = checkNotNull(writerConfig,"config could not be null");
-        this.serializer = checkNotNull(serializer,"serializer could not be null");
-        this.failureHandler = checkNotNull(failureHandler,"failureHandler could not be null");
+    public KuduOutputFormat(KuduWriterConfig writerConfig, KuduTableInfo tableInfo, KuduOperationMapper<IN> opsMapper, KuduFailureHandler failureHandler) {
+        this.tableInfo = checkNotNull(tableInfo, "tableInfo could not be null");
+        this.writerConfig = checkNotNull(writerConfig, "config could not be null");
+        this.opsMapper = checkNotNull(opsMapper, "opsMapper could not be null");
+        this.failureHandler = checkNotNull(failureHandler, "failureHandler could not be null");
     }
 
     @Override
@@ -63,15 +69,12 @@ public class KuduOutputFormat<IN> extends RichOutputFormat<IN> implements Checkp
 
     @Override
     public void open(int taskNumber, int numTasks) throws IOException {
-        kuduWriter = new KuduWriter(tableInfo, writerConfig, failureHandler);
-
-        serializer.withSchema(kuduWriter.getSchema());
+        kuduWriter = new KuduWriter(tableInfo, writerConfig, opsMapper, failureHandler);
     }
 
     @Override
     public void writeRecord(IN row) throws IOException {
-        final KuduRow kuduRow = serializer.serialize(row);
-        kuduWriter.write(kuduRow);
+        kuduWriter.write(row);
     }
 
     @Override

@@ -16,60 +16,62 @@
  */
 package org.apache.flink.connectors.kudu.batch;
 
-import org.apache.flink.connectors.kudu.connector.KuduDatabase;
-import org.apache.flink.connectors.kudu.connector.KuduRow;
+import org.apache.flink.connectors.kudu.connector.KuduTestBase;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
+import org.apache.flink.connectors.kudu.connector.writer.AbstractSingleOperationMapper;
 import org.apache.flink.connectors.kudu.connector.writer.KuduWriterConfig;
-import org.apache.flink.connectors.kudu.connector.serde.DefaultSerDe;
+import org.apache.flink.connectors.kudu.connector.writer.RowOperationMapper;
+import org.apache.flink.types.Row;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.UUID;
 
-class KuduOuputFormatTest extends KuduDatabase {
+class KuduOuputFormatTest extends KuduTestBase {
 
     @Test
     void testInvalidKuduMaster() {
-        KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),false);
-        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(null, tableInfo, new DefaultSerDe()));
+        KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), false);
+        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(null, tableInfo, null));
     }
 
     @Test
     void testInvalidTableInfo() {
         String masterAddresses = harness.getMasterAddressesAsString();
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
-        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(writerConfig, null, new DefaultSerDe()));
+        Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(writerConfig, null, null));
     }
 
     @Test
     void testNotTableExist() {
         String masterAddresses = harness.getMasterAddressesAsString();
-        KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),false);
+        KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), false);
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
-        KuduOutputFormat<KuduRow> outputFormat = new KuduOutputFormat<>(writerConfig, tableInfo, new DefaultSerDe());
-        Assertions.assertThrows(UnsupportedOperationException.class, () -> outputFormat.open(0,1));
+        KuduOutputFormat<Row> outputFormat = new KuduOutputFormat<>(writerConfig, tableInfo, new RowOperationMapper(KuduTestBase.columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
+        Assertions.assertThrows(UnsupportedOperationException.class, () -> outputFormat.open(0, 1));
     }
 
     @Test
     void testOutputWithStrongConsistency() throws Exception {
         String masterAddresses = harness.getMasterAddressesAsString();
 
-        KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
+        KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), true);
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder
                 .setMasters(masterAddresses)
                 .setStrongConsistency()
                 .build();
-        KuduOutputFormat<KuduRow> outputFormat = new KuduOutputFormat<>(writerConfig, tableInfo, new DefaultSerDe());
+        KuduOutputFormat<Row> outputFormat = new KuduOutputFormat<>(writerConfig, tableInfo, new RowOperationMapper(KuduTestBase.columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
 
-        outputFormat.open(0,1);
+        outputFormat.open(0, 1);
 
-        for (KuduRow kuduRow : booksDataRow()) {
+        for (Row kuduRow : booksDataRow()) {
             outputFormat.writeRecord(kuduRow);
         }
         outputFormat.close();
 
-        List<KuduRow> rows = readRows(tableInfo);
+        List<Row> rows = readRows(tableInfo);
         Assertions.assertEquals(5, rows.size());
         kuduRowsTest(rows);
 
@@ -80,16 +82,16 @@ class KuduOuputFormatTest extends KuduDatabase {
     void testOutputWithEventualConsistency() throws Exception {
         String masterAddresses = harness.getMasterAddressesAsString();
 
-        KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(),true);
+        KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), true);
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder
                 .setMasters(masterAddresses)
                 .setEventualConsistency()
                 .build();
-        KuduOutputFormat<KuduRow> outputFormat = new KuduOutputFormat<>(writerConfig, tableInfo, new DefaultSerDe());
+        KuduOutputFormat<Row> outputFormat = new KuduOutputFormat<>(writerConfig, tableInfo, new RowOperationMapper(KuduTestBase.columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
 
-        outputFormat.open(0,1);
+        outputFormat.open(0, 1);
 
-        for (KuduRow kuduRow : booksDataRow()) {
+        for (Row kuduRow : booksDataRow()) {
             outputFormat.writeRecord(kuduRow);
         }
 
@@ -98,7 +100,7 @@ class KuduOuputFormatTest extends KuduDatabase {
 
         outputFormat.close();
 
-        List<KuduRow> rows = readRows(tableInfo);
+        List<Row> rows = readRows(tableInfo);
         Assertions.assertEquals(5, rows.size());
         kuduRowsTest(rows);
 

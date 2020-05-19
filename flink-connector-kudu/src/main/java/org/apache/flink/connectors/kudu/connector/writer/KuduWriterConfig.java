@@ -16,37 +16,35 @@
  */
 package org.apache.flink.connectors.kudu.connector.writer;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.flink.annotation.PublicEvolving;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.kudu.client.SessionConfiguration.FlushMode;
 
+/**
+ * Configuration used by {@link org.apache.flink.connectors.kudu.streaming.KuduSink} and {@link org.apache.flink.connectors.kudu.batch.KuduOutputFormat}.
+ * Specifies connection and other necessary properties.
+ */
 @PublicEvolving
 public class KuduWriterConfig implements Serializable {
 
     private final String masters;
     private final FlushMode flushMode;
-    private final KuduWriterMode writeMode;
 
     private KuduWriterConfig(
             String masters,
-            FlushMode flushMode,
-            KuduWriterMode writeMode) {
+            FlushMode flushMode) {
 
         this.masters = checkNotNull(masters, "Kudu masters cannot be null");
         this.flushMode = checkNotNull(flushMode, "Kudu flush mode cannot be null");
-        this.writeMode = checkNotNull(writeMode, "Kudu write mode cannot be null");
     }
 
     public String getMasters() {
         return masters;
-    }
-
-    public KuduWriterMode getWriteMode() {
-        return writeMode;
     }
 
     public FlushMode getFlushMode() {
@@ -58,7 +56,6 @@ public class KuduWriterConfig implements Serializable {
         return new ToStringBuilder(this)
                 .append("masters", masters)
                 .append("flushMode", flushMode)
-                .append("writeMode", writeMode)
                 .toString();
     }
 
@@ -67,7 +64,6 @@ public class KuduWriterConfig implements Serializable {
      */
     public static class Builder {
         private String masters;
-        private KuduWriterMode writeMode = KuduWriterMode.UPSERT;
         private FlushMode flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
 
         private Builder(String masters) {
@@ -78,27 +74,15 @@ public class KuduWriterConfig implements Serializable {
             return new Builder(masters);
         }
 
-        public Builder setWriteMode(KuduWriterMode writeMode) {
-            this.writeMode = writeMode;
-            return this;
-        }
-        public Builder setUpsertWrite() {
-            return setWriteMode(KuduWriterMode.UPSERT);
-        }
-        public Builder setInsertWrite() {
-            return setWriteMode(KuduWriterMode.INSERT);
-        }
-        public Builder setUpdateWrite() {
-            return setWriteMode(KuduWriterMode.UPDATE);
-        }
-
         public Builder setConsistency(FlushMode flushMode) {
             this.flushMode = flushMode;
             return this;
         }
+
         public Builder setEventualConsistency() {
             return setConsistency(FlushMode.AUTO_FLUSH_BACKGROUND);
         }
+
         public Builder setStrongConsistency() {
             return setConsistency(FlushMode.AUTO_FLUSH_SYNC);
         }
@@ -106,8 +90,7 @@ public class KuduWriterConfig implements Serializable {
         public KuduWriterConfig build() {
             return new KuduWriterConfig(
                     masters,
-                    flushMode,
-                    writeMode);
+                    flushMode);
         }
     }
 }

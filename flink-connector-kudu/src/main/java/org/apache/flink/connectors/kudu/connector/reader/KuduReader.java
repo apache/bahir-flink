@@ -16,11 +16,16 @@
  */
 package org.apache.flink.connectors.kudu.connector.reader;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.connectors.kudu.connector.KuduFilterInfo;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
-import org.apache.kudu.client.*;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.kudu.client.KuduClient;
+import org.apache.kudu.client.KuduScanToken;
+import org.apache.kudu.client.KuduSession;
+import org.apache.kudu.client.KuduTable;
+import org.apache.kudu.client.LocatedTablet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,13 +47,15 @@ public class KuduReader implements AutoCloseable {
     private transient KuduSession session;
     private transient KuduTable table;
 
-    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig)  throws IOException {
-        this(tableInfo, readerConfig, new ArrayList<>(), new ArrayList<>());
+    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig) throws IOException {
+        this(tableInfo, readerConfig, new ArrayList<>(), null);
     }
-    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig, List<KuduFilterInfo> tableFilters)  throws IOException {
-        this(tableInfo, readerConfig, tableFilters, new ArrayList<>());
+
+    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig, List<KuduFilterInfo> tableFilters) throws IOException {
+        this(tableInfo, readerConfig, tableFilters, null);
     }
-    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig, List<KuduFilterInfo> tableFilters, List<String> tableProjections)  throws IOException {
+
+    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig, List<KuduFilterInfo> tableFilters, List<String> tableProjections) throws IOException {
         this.tableInfo = tableInfo;
         this.readerConfig = readerConfig;
         this.tableFilters = tableFilters;
@@ -72,7 +79,7 @@ public class KuduReader implements AutoCloseable {
         if (client.tableExists(tableName)) {
             return client.openTable(tableName);
         }
-        if (tableInfo.createIfNotExist()) {
+        if (tableInfo.getCreateTableIfNotExists()) {
             return client.createTable(tableName, tableInfo.getSchema(), tableInfo.getCreateTableOptions());
         }
         throw new UnsupportedOperationException("table not exists and is marketed to not be created");
@@ -85,7 +92,7 @@ public class KuduReader implements AutoCloseable {
     public List<KuduScanToken> scanTokens(List<KuduFilterInfo> tableFilters, List<String> tableProjections, Integer rowLimit) {
         KuduScanToken.KuduScanTokenBuilder tokenBuilder = client.newScanTokenBuilder(table);
 
-        if (CollectionUtils.isNotEmpty(tableProjections)) {
+        if (tableProjections != null) {
             tokenBuilder.setProjectedColumnNames(tableProjections);
         }
 
@@ -95,7 +102,7 @@ public class KuduReader implements AutoCloseable {
                     .forEach(tokenBuilder::addPredicate);
         }
 
-        if (rowLimit !=null && rowLimit > 0) {
+        if (rowLimit != null && rowLimit > 0) {
             tokenBuilder.limit(rowLimit);
         }
 

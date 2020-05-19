@@ -16,12 +16,12 @@
  */
 package org.apache.flink.connectors.kudu.batch;
 
-import org.apache.flink.connectors.kudu.connector.KuduDatabase;
-import org.apache.flink.connectors.kudu.connector.KuduRow;
+import org.apache.flink.connectors.kudu.connector.KuduTestBase;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.connectors.kudu.connector.reader.KuduInputSplit;
 import org.apache.flink.connectors.kudu.connector.reader.KuduReaderConfig;
-import org.apache.flink.connectors.kudu.connector.serde.DefaultSerDe;
+import org.apache.flink.types.Row;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -29,27 +29,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class KuduInputFormatTest extends KuduDatabase {
+class KuduInputFormatTest extends KuduTestBase {
 
     @Test
     void testInvalidKuduMaster() {
-        KuduTableInfo tableInfo = booksTableInfo("books",false);
-        Assertions.assertThrows(NullPointerException.class, () -> new KuduInputFormat<>(null, tableInfo, new DefaultSerDe()));
+        KuduTableInfo tableInfo = booksTableInfo("books", false);
+        Assertions.assertThrows(NullPointerException.class, () -> new KuduRowInputFormat(null, tableInfo));
     }
 
     @Test
     void testInvalidTableInfo() {
         String masterAddresses = harness.getMasterAddressesAsString();
         KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
-        Assertions.assertThrows(NullPointerException.class, () -> new KuduInputFormat<>(readerConfig, null, new DefaultSerDe()));
+        Assertions.assertThrows(NullPointerException.class, () -> new KuduRowInputFormat(readerConfig, null));
     }
 
     @Test
     void testInputFormat() throws Exception {
-        KuduTableInfo tableInfo = booksTableInfo("books",true);
+        KuduTableInfo tableInfo = booksTableInfo("books", true);
         setUpDatabase(tableInfo);
 
-        List<KuduRow> rows = readRows(tableInfo);
+        List<Row> rows = readRows(tableInfo);
         Assertions.assertEquals(5, rows.size());
 
         cleanDatabase(tableInfo);
@@ -57,32 +57,32 @@ class KuduInputFormatTest extends KuduDatabase {
 
     @Test
     void testInputFormatWithProjection() throws Exception {
-        KuduTableInfo tableInfo = booksTableInfo("books",true);
+        KuduTableInfo tableInfo = booksTableInfo("books", true);
         setUpDatabase(tableInfo);
 
-        List<KuduRow> rows = readRows(tableInfo,"title","id");
+        List<Row> rows = readRows(tableInfo, "title", "id");
         Assertions.assertEquals(5, rows.size());
 
-        for (KuduRow row: rows) {
+        for (Row row : rows) {
             Assertions.assertEquals(2, row.getArity());
         }
 
         cleanDatabase(tableInfo);
     }
 
-
-    private List<KuduRow> readRows(KuduTableInfo tableInfo, String... fieldProjection) throws Exception {
+    private List<Row> readRows(KuduTableInfo tableInfo, String... fieldProjection) throws Exception {
         String masterAddresses = harness.getMasterAddressesAsString();
         KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
-        KuduInputFormat<KuduRow> inputFormat = new KuduInputFormat<>(readerConfig, tableInfo, new DefaultSerDe(), new ArrayList<>(), Arrays.asList(fieldProjection));
+        KuduRowInputFormat inputFormat = new KuduRowInputFormat(readerConfig, tableInfo, new ArrayList<>(),
+                fieldProjection == null ? null : Arrays.asList(fieldProjection));
 
         KuduInputSplit[] splits = inputFormat.createInputSplits(1);
-        List<KuduRow> rows = new ArrayList<>();
+        List<Row> rows = new ArrayList<>();
         for (KuduInputSplit split : splits) {
             inputFormat.open(split);
-            while(!inputFormat.reachedEnd()) {
-                KuduRow row = inputFormat.nextRecord(new KuduRow(5));
-                if(row != null) {
+            while (!inputFormat.reachedEnd()) {
+                Row row = inputFormat.nextRecord(new Row(5));
+                if (row != null) {
                     rows.add(row);
                 }
             }
