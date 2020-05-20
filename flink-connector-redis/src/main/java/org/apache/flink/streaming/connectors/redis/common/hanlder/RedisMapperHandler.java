@@ -17,13 +17,14 @@
 
 package org.apache.flink.streaming.connectors.redis.common.hanlder;
 
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_KEY_TTL;
-
-import java.lang.reflect.Constructor;
-import java.util.Map;
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Constructor;
+import java.util.Map;
+
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_KEY_TTL;
 
 /**
  * @author Ameng .
