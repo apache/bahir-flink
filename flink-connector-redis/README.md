@@ -78,7 +78,7 @@ This example code does the same, but for Redis Cluster:
 
 **Java:**
 
-    FlinkJedisPoolConfig conf = new FlinkJedisPoolConfig.Builder()
+    FlinkJedisPoolConfig conf = new FlinkJedisClusterConfig.Builder()
         .setNodes(new HashSet<InetSocketAddress>(Arrays.asList(new InetSocketAddress(5601)))).build();
 
     DataStream<String> stream = ...;
@@ -87,7 +87,7 @@ This example code does the same, but for Redis Cluster:
 **Scala:**
 
 
-    val conf = new FlinkJedisPoolConfig.Builder().setNodes(...).build()
+    val conf = new FlinkJedisClusterConfig.Builder().setNodes(...).build()
     stream.addSink(new RedisSink[(String, String)](conf, new RedisExampleMapper))
 
 
