@@ -68,25 +68,25 @@ public class KuduFilterInfo implements Serializable {
                 predicate = KuduPredicate.newComparisonPredicate(column, comparison, (String) this.value);
                 break;
             case FLOAT:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (float) this.value);
                 break;
             case INT8:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (byte) this.value);
                 break;
             case INT16:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (short) this.value);
                 break;
             case INT32:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (int) this.value);
                 break;
             case INT64:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (long) this.value);
                 break;
             case DOUBLE:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (double) this.value);
                 break;
             case BOOL:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (boolean) this.value);
                 break;
             case UNIXTIME_MICROS:
                 Long time = (Long) this.value;

@@ -65,7 +65,7 @@ public class KuduCatalogTest extends KuduTestBase {
     public void init() {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         catalog = new KuduCatalog(harness.getMasterAddressesAsString());
-        tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerBatchMode(env);
+        tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerStreamingMode(env);
         tableEnv.registerCatalog("kudu", catalog);
         tableEnv.useCatalog("kudu");
     }

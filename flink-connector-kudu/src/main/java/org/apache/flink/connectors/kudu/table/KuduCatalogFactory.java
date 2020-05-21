@@ -62,14 +62,14 @@ public class KuduCatalogFactory implements CatalogFactory {
     @Override
     public Catalog createCatalog(String name, Map<String, String> properties) {
         final DescriptorProperties descriptorProperties = getValidatedProperties(properties);
-        return new KuduCatalog(name, descriptorProperties.getString(KuduTableFactory.KUDU_MASTERS));
+        return new KuduCatalog(name,
+            descriptorProperties.getString(KuduTableFactory.KUDU_MASTERS));
     }
 
     private DescriptorProperties getValidatedProperties(Map<String, String> properties) {
         final DescriptorProperties descriptorProperties = new DescriptorProperties(true);
         descriptorProperties.putProperties(properties);
         descriptorProperties.validateString(KuduTableFactory.KUDU_MASTERS, false);
-
         return descriptorProperties;
     }
 
