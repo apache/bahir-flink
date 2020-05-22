@@ -21,9 +21,14 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.api.common.state.KeyedStateStore;
+import org.apache.flink.api.common.state.OperatorStateStore;
 import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.TaskManagerOptions;
+import org.apache.flink.core.fs.CloseableRegistry;
+import org.apache.flink.runtime.state.DefaultOperatorStateBackend;
+import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -37,11 +42,14 @@ import org.junit.Test;
 import scala.concurrent.duration.Deadline;
 import scala.concurrent.duration.FiniteDuration;
 
+import javax.jms.JMSException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 
 import static org.apache.flink.test.util.TestUtils.tryExecute;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -82,7 +90,16 @@ public class ActiveMQConnectorITCase {
             .build();
         createConsumerTopology(env, sourceConfig);
 
-        tryExecute(env, "AMQTest");
+        try {
+            env.execute("AMQTest");
+        } catch (Throwable e) {
+            // we have to use a specific exception to indicate the job is finished,
+            // because the activemq source is infinite.
+            if (!isCausedByJobFinished(e)) {
+                // re-throw
+                throw e;
+            }
+        }
     }
 
     @Test
@@ -105,13 +122,23 @@ public class ActiveMQConnectorITCase {
             .build();
         createConsumerTopology(env, sourceConfig);
 
-        tryExecute(env, "AMQTest");
+        try {
+            env.execute("AMQTest");
+        } catch (Throwable e) {
+            // we have to use a specific exception to indicate the job is finished,
+            // because the activemq source is infinite.
+            if (!isCausedByJobFinished(e)) {
+                // re-throw
+                throw e;
+            }
+        }
     }
 
     private StreamExecutionEnvironment createExecutionEnvironment() {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
         env.setRestartStrategy(RestartStrategies.noRestart());
         env.getConfig().disableSysoutLogging();
+        env.setParallelism(1);
         return env;
     }
 
@@ -180,6 +207,19 @@ public class ActiveMQConnectorITCase {
         RuntimeContext runtimeContext = createMockRuntimeContext();
         source.setRuntimeContext(runtimeContext);
         source.open(new Configuration());
+        source.initializeState(new FunctionInitializationContext() {
+            @Override
+            public boolean isRestored() {
+                return false;
+            }
+            @Override
+            public OperatorStateStore getOperatorStateStore() {
+                return new DefaultOperatorStateBackend(null, new CloseableRegistry(),
+                        new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), null);
+            }
+            @Override
+            public KeyedStateStore getKeyedStateStore() { throw new UnsupportedOperationException();}
+        });
 
         final TestSourceContext sourceContext = new TestSourceContext();
         Thread thread = new Thread(new Runnable() {
@@ -188,7 +228,8 @@ public class ActiveMQConnectorITCase {
                 try {
                     source.run(sourceContext);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    // this exception means all the messages are consumed
+                    assertTrue(e instanceof JMSException);
                 }
             }
         });
@@ -257,5 +298,15 @@ public class ActiveMQConnectorITCase {
                 return ids.size();
             }
         }
-    };
+    }
+
+    private static boolean isCausedByJobFinished(Throwable e) {
+        if (e instanceof SuccessException) {
+            return true;
+        } else if (e.getCause() != null) {
+            return isCausedByJobFinished(e.getCause());
+        } else {
+            return false;
+        }
+    }
 }
