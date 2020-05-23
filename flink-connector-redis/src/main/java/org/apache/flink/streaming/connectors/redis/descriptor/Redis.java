@@ -108,4 +108,3 @@ public class Redis extends ConnectorDescriptor {
         }
     }
 }
-
