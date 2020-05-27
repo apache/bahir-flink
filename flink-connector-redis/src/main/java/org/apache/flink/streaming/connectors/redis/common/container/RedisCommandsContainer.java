@@ -44,6 +44,8 @@ public interface RedisCommandsContainer extends Serializable {
      */
     void hset(String key, String hashField, String value, Integer ttl);
 
+    void hincrBy(String key, String hashField, Long value, Integer ttl);
+
     /**
      * Insert the specified value at the tail of the list stored at key.
      * If key does not exist, it is created as empty list before performing the push operation.

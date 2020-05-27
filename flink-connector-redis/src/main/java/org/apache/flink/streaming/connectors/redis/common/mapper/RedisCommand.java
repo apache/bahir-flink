@@ -77,6 +77,8 @@ public enum RedisCommand {
      */
     HSET(RedisDataType.HASH),
 
+    HINCRBY(RedisDataType.HINCRBY),
+
     /**
      * Delta plus for specified key.
      */

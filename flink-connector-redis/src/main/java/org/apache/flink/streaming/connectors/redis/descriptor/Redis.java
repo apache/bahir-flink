@@ -17,19 +17,13 @@
 
 package org.apache.flink.streaming.connectors.redis.descriptor;
 
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_CLUSTER;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_COMMAND;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_KEY_TTL;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_MASTER_NAME;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_MODE;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_NODES;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_SENTINEL;
+import org.apache.flink.table.descriptors.ConnectorDescriptor;
+import org.apache.flink.util.Preconditions;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.flink.table.descriptors.ConnectorDescriptor;
-import org.apache.flink.util.Preconditions;
+
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.*;
 
 /**
  * @author Ameng .

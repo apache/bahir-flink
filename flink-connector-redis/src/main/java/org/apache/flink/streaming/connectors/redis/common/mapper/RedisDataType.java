@@ -33,6 +33,8 @@ public enum RedisDataType {
      */
     HASH,
 
+    HINCRBY,
+
     /**
      * Redis Lists are simply lists of strings, sorted by insertion order.
      */

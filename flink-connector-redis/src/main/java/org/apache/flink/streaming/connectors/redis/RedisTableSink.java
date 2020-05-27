@@ -17,9 +17,6 @@
 
 package org.apache.flink.streaming.connectors.redis;
 
-import static org.apache.flink.table.descriptors.Schema.SCHEMA;
-
-import java.util.Map;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -36,6 +33,10 @@ import org.apache.flink.table.sinks.UpsertStreamTableSink;
 import org.apache.flink.table.utils.TableConnectorUtils;
 import org.apache.flink.types.Row;
 import org.apache.flink.util.Preconditions;
+
+import java.util.Map;
+
+import static org.apache.flink.table.descriptors.Schema.SCHEMA;
 
 /**
  * @author Ameng .
