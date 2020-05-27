@@ -39,7 +39,6 @@ import java.util.Map;
 import static org.apache.flink.table.descriptors.Schema.SCHEMA;
 
 /**
- * @author Ameng .
  * redis table sink to use redis in sql env.
  */
 public class RedisTableSink implements UpsertStreamTableSink<Row> {

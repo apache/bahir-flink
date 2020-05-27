@@ -26,7 +26,6 @@ import java.util.Map;
 import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.*;
 
 /**
- * @author Ameng .
  * redis descriptor for create redis connector.
  */
 public class Redis extends ConnectorDescriptor {

@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Ameng.
  * Unified class to search for a {@link RedisHandler} of provided type and properties.
  * for find correct redis handler.
  * @param <T> redis handler type.
