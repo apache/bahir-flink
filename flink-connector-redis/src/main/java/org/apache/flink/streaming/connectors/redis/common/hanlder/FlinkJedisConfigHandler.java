@@ -21,7 +21,6 @@ import java.util.Map;
 import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisConfigBase;
 
 /**
- * @author Ameng .
  * handler to create flink jedis config.
  */
 public interface FlinkJedisConfigHandler extends RedisHandler  {

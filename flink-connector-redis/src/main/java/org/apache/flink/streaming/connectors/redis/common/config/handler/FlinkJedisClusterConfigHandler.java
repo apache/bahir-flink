@@ -32,7 +32,6 @@ import org.apache.flink.streaming.connectors.redis.common.hanlder.FlinkJedisConf
 import org.apache.flink.util.Preconditions;
 
 /**
- * @author Ameng .
  * jedis cluster config handler to find and create jedis cluster config use meta.
  */
 public class FlinkJedisClusterConfigHandler implements FlinkJedisConfigHandler {

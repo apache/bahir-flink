@@ -34,7 +34,6 @@ import static org.apache.flink.table.descriptors.FormatDescriptorValidator.FORMA
 import static org.apache.flink.table.descriptors.Schema.*;
 
 /**
- * @author Ameng .
  * redis table sink factory for creare redis table sink.
  */
 public class RedisTableSinkFactory implements StreamTableSinkFactory<Tuple2<Boolean, Row>> {

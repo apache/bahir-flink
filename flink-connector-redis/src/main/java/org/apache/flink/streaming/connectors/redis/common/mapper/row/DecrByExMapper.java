@@ -20,7 +20,6 @@ package org.apache.flink.streaming.connectors.redis.common.mapper.row;
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommand;
 
 /**
- * @author Ameng .
  * decrease with expire operation redis mapper.
  */
 public class DecrByExMapper extends RowRedisMapper {
