@@ -24,7 +24,4 @@ public class SetNxMapper extends RowRedisMapper{
         super(RedisCommand.SETNX);
     }
 
-    public SetNxMapper(Integer ttl) {
-        super(ttl, RedisCommand.SETNX);
-    }
 }
