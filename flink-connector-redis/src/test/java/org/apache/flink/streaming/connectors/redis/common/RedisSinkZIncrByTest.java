@@ -37,7 +37,7 @@ import java.util.Optional;
 
 public class RedisSinkZIncrByTest extends RedisITCaseBase {
 
-    private static final String REDIS_CLUSTER_HOSTS = "bigdata-dev-redis-01:7000,bigdata-dev-redis-02:7000,bigdata-dev-redis-03:7000";
+    private static final String REDIS_CLUSTER_HOSTS = "redis-01:7000,redis-02:7000,redis-03:7000";
 
     private static final HashSet<InetSocketAddress> NODES = new HashSet<InetSocketAddress>();
 
