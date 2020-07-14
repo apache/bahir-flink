@@ -184,7 +184,7 @@ are described as being nullable, and not being primary keys.
 
 ## DataStream API
 
-It is also possible to use the the Kudu connector directly from the DataStream API however we
+It is also possible to use the Kudu connector directly from the DataStream API however we
 encourage all users to explore the Table API as it provides a lot of useful tooling when working
 with Kudu data.
 

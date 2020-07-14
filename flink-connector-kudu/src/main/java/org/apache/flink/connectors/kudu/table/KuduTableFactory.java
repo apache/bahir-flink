@@ -138,7 +138,7 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
         KuduReaderConfig.Builder configBuilder = KuduReaderConfig.Builder
                 .setMasters(masterAddresses);
 
-        return new KuduTableSource(configBuilder, tableInfo, physicalSchema, null);
+        return new KuduTableSource(configBuilder, tableInfo, physicalSchema, null, null);
     }
 
     @Override

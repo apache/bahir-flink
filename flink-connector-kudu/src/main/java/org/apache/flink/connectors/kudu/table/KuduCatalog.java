@@ -64,7 +64,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.apache.flink.connectors.kudu.table.KuduTableFactory.KUDU_HASH_COLS;
-import static org.apache.flink.connectors.kudu.table.KuduTableFactory.KUDU_MASTERS;
 import static org.apache.flink.connectors.kudu.table.KuduTableFactory.KUDU_PRIMARY_KEY_COLS;
 import static org.apache.flink.connectors.kudu.table.KuduTableFactory.KUDU_REPLICAS;
 import static org.apache.flink.util.Preconditions.checkArgument;
@@ -183,9 +182,9 @@ public class KuduCatalog extends AbstractReadOnlyCatalog {
 
     protected Map<String, String> createTableProperties(String tableName, List<ColumnSchema> primaryKeyColumns) {
         Map<String, String> props = new HashMap<>();
-        props.put(KUDU_MASTERS, kuduMasters);
+        props.put(KuduTableFactory.KUDU_MASTERS, kuduMasters);
         String primaryKeyNames = primaryKeyColumns.stream().map(ColumnSchema::getName).collect(Collectors.joining(","));
-        props.put(KUDU_PRIMARY_KEY_COLS, primaryKeyNames);
+        props.put(KuduTableFactory.KUDU_PRIMARY_KEY_COLS, primaryKeyNames);
         props.put(KuduTableFactory.KUDU_TABLE, tableName);
         return props;
     }

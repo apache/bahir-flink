@@ -42,7 +42,7 @@ public class KuduTableFactoryTest extends KuduTestBase {
     @BeforeEach
     public void init() {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment().setParallelism(1);
-        tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerBatchMode(env);
+        tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerStreamingMode(env);
         kuduMasters = harness.getMasterAddressesAsString();
     }
 
