@@ -33,7 +33,6 @@ import java.util.Optional;
 import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_COMMAND;
 
 /**
- * @author Ameng .
  * base row redis mapper implement.
  */
 public abstract class RowRedisMapper implements RedisMapper<Tuple2<Boolean, Row>>, RedisMapperHandler {

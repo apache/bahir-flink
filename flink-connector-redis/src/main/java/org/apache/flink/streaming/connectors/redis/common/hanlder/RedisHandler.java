@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 /***
- * @author Ameng.
  * redis handler to create redis mapper and flink jedis config.
  */
 public interface RedisHandler extends Serializable {

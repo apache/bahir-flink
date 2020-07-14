@@ -27,7 +27,6 @@ import java.util.Map;
 import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_KEY_TTL;
 
 /**
- * @author Ameng .
  * handler for create redis mapper.
  */
 public interface RedisMapperHandler extends RedisHandler {
