@@ -115,7 +115,7 @@ public class KuduTableUtils {
         TableSchema.Builder builder = TableSchema.builder();
 
         for (ColumnSchema column : schema.getColumns()) {
-            DataType flinkType = KuduTypeUtils.toFlinkType(column.getType(), column.getTypeAttributes()).nullable();
+            DataType flinkType = KuduTypeUtils.toFlinkType(column.getType(), column.getTypeAttributes());
             builder.field(column.getName(), flinkType);
         }
 
