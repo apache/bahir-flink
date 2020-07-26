@@ -32,7 +32,6 @@
   <properties>
     <kudu.version>1.11.1</kudu.version>
     <mockito.version>1.10.19</mockito.version>
-    <junit.groups>!DockerTest</junit.groups>
   </properties>
 
   <dependencies>
