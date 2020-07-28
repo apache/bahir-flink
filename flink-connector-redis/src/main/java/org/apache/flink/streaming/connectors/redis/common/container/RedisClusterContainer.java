@@ -193,6 +193,20 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
     }
 
     @Override
+    public void zincrBy(final String key, final String score, final String element) {
+
+        try {
+            jedisCluster.zincrby(key, Double.valueOf(score), element);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command ZINCRBY to set {} error message {}",
+                        key, e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    @Override
     public void zrem(final String key, final String element) {
         try {
             jedisCluster.zrem(key, element);

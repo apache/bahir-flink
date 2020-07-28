@@ -66,6 +66,8 @@ public enum RedisCommand {
      */
     ZADD(RedisDataType.SORTED_SET),
 
+    ZINCRBY(RedisDataType.SORTED_SET),
+
     /**
      * Removes the specified members from the sorted set stored at key.
      */
