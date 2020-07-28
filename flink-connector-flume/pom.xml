@@ -36,7 +36,7 @@ under the License.
 	<!-- Allow users to pass custom connector versions -->
 	<properties>
 		<flume-ng.version>1.9.0</flume-ng.version>
-        <junit.groups>!DockerTest</junit.groups>
+		<testcontainers.version>1.14.3</testcontainers.version>
 	</properties>
 
 	<dependencies>
@@ -61,16 +61,14 @@ under the License.
             <scope>test</scope>
         </dependency>
 
-	</dependencies>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers</artifactId>
+			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-    <profiles>
-        <profile>
-            <id>docker-test</id>
-            <properties>
-                <junit.groups>DockerTest</junit.groups>
-            </properties>
-        </profile>
-    </profiles>
+	</dependencies>
 
 	<build>
 		<plugins>

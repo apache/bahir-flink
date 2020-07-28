@@ -20,13 +20,12 @@ import org.apache.flume.api.RpcClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-@DockerTest
-public class FlumeUtilsTest {
+public class FlumeUtilsTest extends FlumeServerTest {
     private RpcClient client;
 
     @Test
     public void testGetRpcClient() {
-        client = FlumeUtils.getRpcClient("default","172.25.0.3", 44444, 1);
+        client = FlumeUtils.getRpcClient("default",getHost(), getPort(), 1);
         Assertions.assertNotNull(client);
     }
 

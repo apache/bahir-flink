@@ -98,7 +98,6 @@
     <flink.version>1.10.0</flink.version>
 
     <junit.jupiter.version>5.4.1</junit.jupiter.version>
-    <junit.groups></junit.groups>
 
     <scalatest.version>3.0.5</scalatest.version>
     <scalacheck.version>1.14.0</scalacheck.version>
@@ -346,7 +345,6 @@
           <version>2.22.1</version>
           <!-- Note config is repeated in scalatest config -->
           <configuration>
-            <groups>${junit.groups}</groups>
             <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
             <argLine>-Xmx3g -Xss4096k -XX:MaxPermSize=${MaxPermGen} -XX:ReservedCodeCacheSize=512m</argLine>
             <systemProperties>
