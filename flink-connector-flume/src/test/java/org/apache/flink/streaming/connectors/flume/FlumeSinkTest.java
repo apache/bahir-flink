@@ -26,8 +26,7 @@ import java.nio.charset.Charset;
 
 import static org.apache.flink.test.util.TestUtils.tryExecute;
 
-@DockerTest
-public class FlumeSinkTest {
+public class FlumeSinkTest extends FlumeServerTest {
 
     @Test
     public void testSink() throws Exception {
@@ -40,7 +39,7 @@ public class FlumeSinkTest {
             }
         };
 
-        FlumeSink<String> flumeSink = new FlumeSink<>("default", "172.25.0.3", 44444, flumeEventBuilder, 1, 1, 1);
+        FlumeSink<String> flumeSink = new FlumeSink<>("default", getHost(), getPort(), flumeEventBuilder, 1, 1, 1);
 
         environment.fromElements("string1", "string2").addSink(flumeSink);
 

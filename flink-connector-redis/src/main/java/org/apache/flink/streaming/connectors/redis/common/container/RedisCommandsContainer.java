@@ -122,6 +122,15 @@ public interface RedisCommandsContainer extends Serializable {
     void zadd(String key, String score, String element);
 
     /**
+     * increase the specified member with the specified scores to the sorted set stored at key.
+     * @param key The name of the Sorted Set
+     * @param score Score of the element
+     * @param element  element to be added
+     * @return void
+     */
+    void zincrBy(String key, String score, String element);
+
+    /**
      * Removes the specified member from the sorted set stored at key.
      *
      * @param key The name of the Sorted Set

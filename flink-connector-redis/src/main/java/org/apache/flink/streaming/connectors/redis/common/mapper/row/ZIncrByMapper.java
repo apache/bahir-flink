@@ -14,18 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.flume;
 
-import org.junit.jupiter.api.Tag;
+package org.apache.flink.streaming.connectors.redis.common.mapper.row;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
-@Target({ ElementType.TYPE, ElementType.METHOD })
-@Retention(RetentionPolicy.RUNTIME)
-@Tag("DockerTest")
-public @interface DockerTest {
+import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommand;
+
+/**
+ * ZINCRBY operation redis mapper.
+ */
+public class ZIncrByMapper extends RowRedisMapper {
+
+    public ZIncrByMapper() {
+        super(RedisCommand.ZINCRBY);
+    }
 }
-

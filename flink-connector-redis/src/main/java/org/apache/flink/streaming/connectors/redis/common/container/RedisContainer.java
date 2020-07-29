@@ -262,6 +262,23 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
     }
 
     @Override
+    public void zincrBy(final String key, final String score, final String element) {
+        Jedis jedis = null;
+        try {
+            jedis = getInstance();
+            jedis.zincrby(key, Double.valueOf(score), element);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command ZINCRBY to set {} error message {}",
+                        key, e.getMessage());
+            }
+            throw e;
+        } finally {
+            releaseInstance(jedis);
+        }
+    }
+
+    @Override
     public void zrem(final String key, final String element) {
         Jedis jedis = null;
         try {

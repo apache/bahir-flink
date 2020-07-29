@@ -30,27 +30,16 @@ cache:
 
 install: true
 
-services:
-  - docker
-
 jdk:
   - oraclejdk8
   - openjdk8
 
 env:
-  - FLINK_VERSION="1.11.0" SCALA_VERSION="2.11"
-  - FLINK_VERSION="1.11.0" SCALA_VERSION="2.11" PROJECT="flink-connector-flume" DOCKER="true"
-  - FLINK_VERSION="1.11.0" SCALA_VERSION="2.12"
-  - FLINK_VERSION="1.11.0" SCALA_VERSION="2.12" PROJECT="flink-connector-flume" DOCKER="true"
+  - FLINK_VERSION="1.10.0" SCALA_VERSION="2.11"
+  - FLINK_VERSION="1.10.0" SCALA_VERSION="2.12"
 
 before_install:
   - ./dev/change-scala-version.sh $SCALA_VERSION
 
 script:
-  - if [[ $DOCKER == "true" ]]; then
-    docker-compose -f "$PROJECT/dockers/docker-compose.yml" up -d;
-    mvn -q clean verify -pl $PROJECT -Dscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION ;
-    docker-compose -f "$PROJECT/dockers/docker-compose.yml" down;
-    else
-    mvn -q clean verify -Dscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION ;
-    fi
+  - mvn -q clean verify -Dscala-$SCALA_VERSION -Dflink.version=$FLINK_VERSION ;
