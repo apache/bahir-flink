@@ -128,7 +128,7 @@ This section gives a description of all the available data types and what Redis 
             </td>
         </tr>
         <tr>
-            <td>SET</td><td><a href="http://redis.io/commands/rpush">SADD</a></td>
+            <td>SET</td><td><a href="http://redis.io/commands/sadd">SADD</a></td>
         </tr>
         <tr>
             <td>PUBSUB</td><td><a href="http://redis.io/commands/publish">PUBLISH</a></td>
