@@ -26,22 +26,21 @@ import org.apache.flink.connectors.kudu.connector.writer.KuduWriter;
 import org.apache.flink.connectors.kudu.connector.writer.KuduWriterConfig;
 import org.apache.flink.connectors.kudu.connector.writer.RowOperationMapper;
 import org.apache.flink.types.Row;
-
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
 import org.apache.kudu.Type;
-import org.apache.kudu.client.CreateTableOptions;
-import org.apache.kudu.client.KuduScanner;
-import org.apache.kudu.client.KuduTable;
-import org.apache.kudu.client.RowResult;
+import org.apache.kudu.client.*;
 import org.apache.kudu.shaded.com.google.common.collect.Lists;
-import org.apache.kudu.test.KuduTestHarness;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.migrationsupport.rules.ExternalResourceSupport;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+import org.testcontainers.shaded.com.google.common.io.Closer;
+import org.testcontainers.shaded.com.google.common.net.HostAndPort;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,8 +50,17 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ExtendWith(ExternalResourceSupport.class)
 public class KuduTestBase {
+
+    private static final Integer KUDU_MASTER_PORT = 7051;
+    private static final Integer KUDU_TSERVER_PORT = 7050;
+    private static final Integer NUMBER_OF_REPLICA = 3;
+
+    private static GenericContainer<?> master;
+    private static List<GenericContainer<?>> tServers;
+
+    private static String masterAddress;
+    private static KuduClient kuduClient;
 
     private static final Object[][] booksTableData = {
             {1001, "Java for dummies", "Tan Ah Teck", 11.11, 11},
@@ -61,19 +69,58 @@ public class KuduTestBase {
             {1004, "A Cup of Java", "Kumar", 44.44, 44},
             {1005, "A Teaspoon of Java", "Kevin Jones", 55.55, 55}};
 
-    public static KuduTestHarness harness;
     public static String[] columns = new String[]{"id", "title", "author", "price", "quantity"};
 
     @BeforeAll
     public static void beforeClass() throws Exception {
-        harness = new KuduTestHarness();
-        harness.before();
+        Network network = Network.newNetwork();
+        ImmutableList.Builder<GenericContainer<?>> tServersBuilder = ImmutableList.builder();
+        master = new GenericContainer<>("apache/kudu:1.11.1")
+                .withExposedPorts(KUDU_MASTER_PORT)
+                .withCommand("master")
+                .withNetwork(network)
+                .withNetworkAliases("kudu-master");
+
+        for (int instance = 1; instance <= NUMBER_OF_REPLICA; instance++) {
+            String instanceName = "kudu-tserver-" + instance;
+            GenericContainer<?> tableServer = new GenericContainer<>("apache/kudu:1.11.1")
+                    .withExposedPorts(KUDU_TSERVER_PORT)
+                    .withCommand("tserver")
+                    .withEnv("KUDU_MASTERS", "kudu-master:" + KUDU_MASTER_PORT)
+                    .withNetwork(network)
+                    .withNetworkAliases("kudu-tserver-" + instance)
+                    .dependsOn(master)
+                    .withEnv("TSERVER_ARGS", "--fs_wal_dir=/var/lib/kudu/tserver --use_hybrid_clock=false --rpc_advertised_addresses=" + instanceName);
+            tServersBuilder.add(tableServer);
+        }
+        tServers = tServersBuilder.build();
+
+        master.start();
+        tServers.forEach(GenericContainer::start);
+
+        masterAddress = HostAndPort.fromParts(master.getContainerIpAddress(), master.getMappedPort(KUDU_MASTER_PORT)).toString();
+        kuduClient = new KuduClient.KuduClientBuilder(masterAddress).build();
     }
 
     @AfterAll
     public static void afterClass() throws Exception {
-        harness.after();
+        kuduClient.close();
+        try (Closer closer = Closer.create()) {
+            closer.register(master::stop);
+            tServers.forEach(tabletServer -> closer.register(tabletServer::stop));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
+
+    public String getMasterAddress() {
+        return masterAddress;
+    }
+
+    public KuduClient getClient() {
+        return kuduClient;
+    }
+
 
     public static KuduTableInfo booksTableInfo(String tableName, boolean createIfNotExist) {
 
@@ -159,7 +206,7 @@ public class KuduTestBase {
 
     protected void setUpDatabase(KuduTableInfo tableInfo) {
         try {
-            String masterAddresses = harness.getMasterAddressesAsString();
+            String masterAddresses = getMasterAddress();
             KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
             KuduWriter kuduWriter = new KuduWriter(tableInfo, writerConfig, new RowOperationMapper(columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
             booksDataRow().forEach(row -> {
@@ -177,7 +224,7 @@ public class KuduTestBase {
 
     protected void cleanDatabase(KuduTableInfo tableInfo) {
         try {
-            String masterAddresses = harness.getMasterAddressesAsString();
+            String masterAddresses = getMasterAddress();
             KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
             KuduWriter kuduWriter = new KuduWriter(tableInfo, writerConfig, new RowOperationMapper(columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
             kuduWriter.deleteTable();
@@ -188,7 +235,7 @@ public class KuduTestBase {
     }
 
     protected List<Row> readRows(KuduTableInfo tableInfo) throws Exception {
-        String masterAddresses = harness.getMasterAddressesAsString();
+        String masterAddresses = getMasterAddress();
         KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
         KuduReader reader = new KuduReader(tableInfo, readerConfig);
 
@@ -222,7 +269,7 @@ public class KuduTestBase {
     }
 
     protected void validateSingleKey(String tableName) throws Exception {
-        KuduTable kuduTable = harness.getClient().openTable(tableName);
+        KuduTable kuduTable = getClient().openTable(tableName);
         Schema schema = kuduTable.getSchema();
 
         assertEquals(1, schema.getPrimaryKeyColumnCount());
@@ -231,7 +278,7 @@ public class KuduTestBase {
         assertTrue(schema.getColumn("first").isKey());
         assertFalse(schema.getColumn("second").isKey());
 
-        KuduScanner scanner = harness.getClient().newScannerBuilder(kuduTable).build();
+        KuduScanner scanner = getClient().newScannerBuilder(kuduTable).build();
         List<RowResult> rows = new ArrayList<>();
         scanner.forEach(rows::add);
 

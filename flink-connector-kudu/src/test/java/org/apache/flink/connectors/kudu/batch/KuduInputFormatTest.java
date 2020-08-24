@@ -39,7 +39,7 @@ class KuduInputFormatTest extends KuduTestBase {
 
     @Test
     void testInvalidTableInfo() {
-        String masterAddresses = harness.getMasterAddressesAsString();
+        String masterAddresses = getMasterAddress();
         KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
         Assertions.assertThrows(NullPointerException.class, () -> new KuduRowInputFormat(readerConfig, null));
     }
@@ -71,7 +71,7 @@ class KuduInputFormatTest extends KuduTestBase {
     }
 
     private List<Row> readRows(KuduTableInfo tableInfo, String... fieldProjection) throws Exception {
-        String masterAddresses = harness.getMasterAddressesAsString();
+        String masterAddresses = getMasterAddress();
         KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
         KuduRowInputFormat inputFormat = new KuduRowInputFormat(readerConfig, tableInfo, new ArrayList<>(),
                 fieldProjection == null ? null : Arrays.asList(fieldProjection));

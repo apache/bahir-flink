@@ -98,6 +98,7 @@
     <flink.version>1.10.0</flink.version>
 
     <junit.jupiter.version>5.4.1</junit.jupiter.version>
+    <testcontainers.version>1.14.3</testcontainers.version>
 
     <scalatest.version>3.0.5</scalatest.version>
     <scalacheck.version>1.14.0</scalacheck.version>
@@ -200,6 +201,13 @@
         <groupId>org.scalacheck</groupId>
         <artifactId>scalacheck_${scala.binary.version}</artifactId>
         <version>${scalacheck.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers</artifactId>
+        <version>${testcontainers.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>

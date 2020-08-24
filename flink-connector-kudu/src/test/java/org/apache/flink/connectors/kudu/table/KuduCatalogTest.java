@@ -64,7 +64,7 @@ public class KuduCatalogTest extends KuduTestBase {
     @BeforeEach
     public void init() {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        catalog = new KuduCatalog(harness.getMasterAddressesAsString());
+        catalog = new KuduCatalog(getMasterAddress());
         tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerStreamingMode(env);
         tableEnv.registerCatalog("kudu", catalog);
         tableEnv.useCatalog("kudu");
@@ -88,7 +88,7 @@ public class KuduCatalogTest extends KuduTestBase {
         validateSingleKey("TestTable1R");
 
         tableEnv.sqlUpdate("DROP TABLE TestTable1R");
-        assertFalse(harness.getClient().tableExists("TestTable1R"));
+        assertFalse(getClient().tableExists("TestTable1R"));
     }
 
     @Test
@@ -148,7 +148,7 @@ public class KuduCatalogTest extends KuduTestBase {
 
     @Test
     public void dataStreamEndToEstTest() throws Exception {
-        KuduCatalog catalog = new KuduCatalog(harness.getMasterAddressesAsString());
+        KuduCatalog catalog = new KuduCatalog(getMasterAddress());
         // Creating table through catalog
         KuduTableFactory tableFactory = catalog.getKuduTableFactory();
 
@@ -177,7 +177,7 @@ public class KuduCatalogTest extends KuduTestBase {
         // Writing with simple sink
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(2);
-        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(harness.getMasterAddressesAsString()).build();
+        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(getMasterAddress()).build();
         env.fromCollection(input).addSink(
                 new KuduSink<>(
                         writerConfig,
@@ -213,10 +213,10 @@ public class KuduCatalogTest extends KuduTestBase {
         tableEnv.sqlUpdate("INSERT INTO TestTableTsC values ('f', TIMESTAMP '2020-01-01 12:12:12.123456')");
         tableEnv.execute("test");
 
-        KuduTable kuduTable = harness.getClient().openTable("TestTableTsC");
+        KuduTable kuduTable = getClient().openTable("TestTableTsC");
         assertEquals(Type.UNIXTIME_MICROS, kuduTable.getSchema().getColumn("second").getType());
 
-        KuduScanner scanner = harness.getClient().newScannerBuilder(kuduTable).build();
+        KuduScanner scanner = getClient().newScannerBuilder(kuduTable).build();
         List<RowResult> rows = new ArrayList<>();
         scanner.forEach(rows::add);
 
@@ -254,7 +254,7 @@ public class KuduCatalogTest extends KuduTestBase {
     }
 
     private void validateManyTypes(String tableName) throws Exception {
-        KuduTable kuduTable = harness.getClient().openTable(tableName);
+        KuduTable kuduTable = getClient().openTable(tableName);
         Schema schema = kuduTable.getSchema();
 
         assertEquals(Type.STRING, schema.getColumn("first").getType());
@@ -268,7 +268,7 @@ public class KuduCatalogTest extends KuduTestBase {
         assertEquals(Type.DOUBLE, schema.getColumn("ninth").getType());
         assertEquals(Type.UNIXTIME_MICROS, schema.getColumn("tenth").getType());
 
-        KuduScanner scanner = harness.getClient().newScannerBuilder(kuduTable).build();
+        KuduScanner scanner = getClient().newScannerBuilder(kuduTable).build();
         List<RowResult> rows = new ArrayList<>();
         scanner.forEach(rows::add);
 
@@ -286,7 +286,7 @@ public class KuduCatalogTest extends KuduTestBase {
     }
 
     private void validateMultiKey(String tableName) throws Exception {
-        KuduTable kuduTable = harness.getClient().openTable(tableName);
+        KuduTable kuduTable = getClient().openTable(tableName);
         Schema schema = kuduTable.getSchema();
 
         assertEquals(2, schema.getPrimaryKeyColumnCount());
@@ -297,7 +297,7 @@ public class KuduCatalogTest extends KuduTestBase {
 
         assertFalse(schema.getColumn("third").isKey());
 
-        KuduScanner scanner = harness.getClient().newScannerBuilder(kuduTable).build();
+        KuduScanner scanner = getClient().newScannerBuilder(kuduTable).build();
         List<RowResult> rows = new ArrayList<>();
         scanner.forEach(rows::add);
 
