@@ -18,7 +18,7 @@ package org.apache.flink.connectors.kudu.table;
 
 import org.apache.flink.connectors.kudu.connector.KuduTestBase;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.table.api.java.StreamTableEnvironment;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.kudu.Type;
 import org.apache.kudu.client.KuduScanner;
 import org.apache.kudu.client.KuduTable;

@@ -92,10 +92,10 @@
     <scala.binary.version>2.11</scala.binary.version>
 
     <slf4j.version>1.7.16</slf4j.version>
-    <log4j.version>1.2.17</log4j.version>
+    <log4j.version>2.12.1</log4j.version>
 
     <!-- Flink version -->
-    <flink.version>1.10.0</flink.version>
+    <flink.version>1.11.1</flink.version>
 
     <junit.jupiter.version>5.4.1</junit.jupiter.version>
     <testcontainers.version>1.14.3</testcontainers.version>

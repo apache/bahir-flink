@@ -25,9 +25,11 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommand;
 import org.apache.flink.streaming.connectors.redis.descriptor.Redis;
 import org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator;
+import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.EnvironmentSettings;
-import org.apache.flink.table.api.java.StreamTableEnvironment;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.descriptors.Schema;
+import org.apache.flink.table.types.DataType;
 import org.apache.flink.types.Row;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,11 +64,13 @@ public class RedisDescriptorTest extends  RedisITCaseBase{
                 .ttl(100000)
                 .property(RedisValidator.REDIS_NODES, REDIS_HOST+ ":" + REDIS_PORT);
 
+
         tableEnvironment
-                .connect(redis).withSchema(new Schema()
-                .field("k", TypeInformation.of(String.class))
-                .field("v", TypeInformation.of(Long.class)))
-                .registerTableSink("redis");
+                .connect(redis)
+                .withSchema(new Schema()
+                    .field("k", DataTypes.STRING())
+                    .field("v", TypeInformation.of(Long.class)))
+                .createTemporaryTable("redis");
 
 
         tableEnvironment.sqlUpdate("insert into redis select k, v from t1");

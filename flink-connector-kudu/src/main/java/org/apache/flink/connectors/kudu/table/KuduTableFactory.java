@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.flink.table.descriptors.ConnectorDescriptorValidator.CONNECTOR_TYPE;
-import static org.apache.flink.table.descriptors.DescriptorProperties.TABLE_SCHEMA_EXPR;
+import static org.apache.flink.table.descriptors.DescriptorProperties.EXPR;
 import static org.apache.flink.table.descriptors.DescriptorProperties.WATERMARK;
 import static org.apache.flink.table.descriptors.DescriptorProperties.WATERMARK_ROWTIME;
 import static org.apache.flink.table.descriptors.DescriptorProperties.WATERMARK_STRATEGY_DATA_TYPE;
@@ -87,7 +87,7 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
         properties.add(SCHEMA + ".#." + SCHEMA_NAME);
         properties.add(SCHEMA + ".#." + SCHEMA_FROM);
         // computed column
-        properties.add(SCHEMA + ".#." + TABLE_SCHEMA_EXPR);
+        properties.add(SCHEMA + ".#." + EXPR);
 
         // time attributes
         properties.add(SCHEMA + ".#." + SCHEMA_PROCTIME);

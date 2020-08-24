@@ -52,9 +52,6 @@ public class KuduTableSink implements UpsertStreamTableSink<Row> {
     public TypeInformation<Row> getRecordType() { return flinkSchema.toRowType(); }
 
     @Override
-    public void emitDataStream(DataStream<Tuple2<Boolean, Row>> dataStreamTuple) { consumeDataStream(dataStreamTuple); }
-
-    @Override
     public DataStreamSink<?> consumeDataStream(DataStream<Tuple2<Boolean, Row>> dataStreamTuple) {
         KuduSink upsertKuduSink = new KuduSink(writerConfigBuilder.build(), tableInfo, new UpsertOperationMapper(getTableSchema().getFieldNames()));
 
