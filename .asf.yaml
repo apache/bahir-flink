@@ -1,0 +1,10 @@
+github:
+  enabled_merge_buttons:
+    squash: true
+    merge:  false
+    rebase: true
+notifications:
+  commits:      commits@bahir.apache.org
+  issues:       reviews@bahir.apache.org
+  pullrequests: reviews@bahir.apache.org
+  jira_options: link label
