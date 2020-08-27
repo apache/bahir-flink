@@ -16,7 +16,7 @@
 #
 
 sudo: required
-dist: trusty
+dist: bionic
 
 language: java
 
@@ -31,7 +31,6 @@ cache:
 install: true
 
 jdk:
-  - oraclejdk8
   - openjdk8
 
 env:
