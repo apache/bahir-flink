@@ -257,6 +257,7 @@
           </executions>
           <configuration>
             <excludes>
+              <exclude>.asf.yaml</exclude>
               <exclude>.gitignore</exclude>
               <exclude>.repository/</exclude>
               <exclude>.idea/</exclude>
