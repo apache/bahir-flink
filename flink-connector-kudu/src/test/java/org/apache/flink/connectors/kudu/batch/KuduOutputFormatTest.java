@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.UUID;
 
-class KuduOuputFormatTest extends KuduTestBase {
+class KuduOutputFormatTest extends KuduTestBase {
 
     @Test
     void testInvalidKuduMaster() {
@@ -50,7 +50,7 @@ class KuduOuputFormatTest extends KuduTestBase {
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), false);
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
         KuduOutputFormat<Row> outputFormat = new KuduOutputFormat<>(writerConfig, tableInfo, new RowOperationMapper(KuduTestBase.columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
-        Assertions.assertThrows(UnsupportedOperationException.class, () -> outputFormat.open(0, 1));
+        Assertions.assertThrows(RuntimeException.class, () -> outputFormat.open(0, 1));
     }
 
     @Test

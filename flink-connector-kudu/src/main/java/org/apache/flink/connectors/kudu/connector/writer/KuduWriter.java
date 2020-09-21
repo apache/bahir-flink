@@ -83,7 +83,7 @@ public class KuduWriter<T> implements AutoCloseable {
         if (tableInfo.getCreateTableIfNotExists()) {
             return client.createTable(tableName, tableInfo.getSchema(), tableInfo.getCreateTableOptions());
         }
-        throw new UnsupportedOperationException("table not exists and is marketed to not be created");
+        throw new RuntimeException("Table " + tableName + " does not exist.");
     }
 
     public void write(T input) throws IOException {
