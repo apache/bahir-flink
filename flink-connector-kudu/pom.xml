@@ -30,7 +30,7 @@
   <packaging>jar</packaging>
 
   <properties>
-    <kudu.version>1.11.1</kudu.version>
+    <kudu.version>1.13.0</kudu.version>
     <mockito.version>1.10.19</mockito.version>
   </properties>
 
@@ -79,6 +79,13 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+        <groupId>org.apache.flink</groupId>
+        <artifactId>flink-clients_${scala.binary.version}</artifactId>
+        <version>${flink.version}</version>
+        <scope>test</scope>
+    </dependency>
+
     <!-- this is added because test cluster use @Rule from junit4 -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -95,17 +102,22 @@
     </dependency>
 
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>${slf4j.version}</version>
-      <scope>runtime</scope>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${log4j2.version}</version>
+    	<scope>test</scope>
     </dependency>
-
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>${log4j.version}</version>
-      <scope>runtime</scope>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${log4j2.version}</version>
+    	<scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <version>${log4j2.version}</version>
+      <scope>test</scope>
     </dependency>
 </dependencies>
 

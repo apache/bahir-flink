@@ -73,7 +73,7 @@ public class KuduSinkTest extends KuduTestBase {
         KuduSink<Row> sink = new KuduSink<>(writerConfig, tableInfo, new RowOperationMapper(columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
 
         sink.setRuntimeContext(context);
-        Assertions.assertThrows(UnsupportedOperationException.class, () -> sink.open(new Configuration()));
+        Assertions.assertThrows(RuntimeException.class, () -> sink.open(new Configuration()));
     }
 
     @Test

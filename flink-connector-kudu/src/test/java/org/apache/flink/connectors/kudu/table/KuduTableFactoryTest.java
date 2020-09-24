@@ -17,8 +17,11 @@
 package org.apache.flink.connectors.kudu.table;
 
 import org.apache.flink.connectors.kudu.connector.KuduTestBase;
+import org.apache.flink.core.execution.JobClient;
+import org.apache.flink.runtime.client.JobExecutionException;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.table.api.java.StreamTableEnvironment;
+import org.apache.flink.table.api.TableException;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.kudu.Type;
 import org.apache.kudu.client.KuduScanner;
 import org.apache.kudu.client.KuduTable;
@@ -31,9 +34,10 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class KuduTableFactoryTest extends KuduTestBase {
     private StreamTableEnvironment tableEnv;
@@ -47,56 +51,59 @@ public class KuduTableFactoryTest extends KuduTestBase {
     }
 
     @Test
-    public void testMissingTable() throws Exception {
-        tableEnv.sqlUpdate("CREATE TABLE TestTable11 (`first` STRING, `second` INT) " +
-                "WITH ('connector.type'='kudu', 'kudu.masters'='" + kuduMasters + "')");
-        assertThrows(NullPointerException.class,
-                () -> tableEnv.sqlUpdate("INSERT INTO TestTable11 values ('f', 1)"));
-    }
-
-    @Test
     public void testMissingMasters() throws Exception {
-        tableEnv.sqlUpdate("CREATE TABLE TestTable11 (`first` STRING, `second` INT) " +
+        tableEnv.executeSql("CREATE TABLE TestTable11 (`first` STRING, `second` INT) " +
                 "WITH ('connector.type'='kudu', 'kudu.table'='TestTable11')");
-        assertThrows(NullPointerException.class,
-                () -> tableEnv.sqlUpdate("INSERT INTO TestTable11 values ('f', 1)"));
+        assertThrows(TableException.class,
+                () -> tableEnv.executeSql("INSERT INTO TestTable11 values ('f', 1)"));
     }
 
     @Test
     public void testNonExistingTable() throws Exception {
-        tableEnv.sqlUpdate("CREATE TABLE TestTable11 (`first` STRING, `second` INT) " +
+        tableEnv.executeSql("CREATE TABLE TestTable11 (`first` STRING, `second` INT) " +
                 "WITH ('connector.type'='kudu', 'kudu.table'='TestTable11', 'kudu.masters'='" + kuduMasters + "')");
-        tableEnv.sqlUpdate("INSERT INTO TestTable11 values ('f', 1)");
-        assertThrows(java.util.concurrent.ExecutionException.class,
-                () -> tableEnv.execute("test"));
+        JobClient jobClient = tableEnv.executeSql("INSERT INTO TestTable11 values ('f', 1)").getJobClient().get();
+        try {
+            jobClient.getJobExecutionResult(getClass().getClassLoader()).get();
+            fail();
+        } catch (ExecutionException ee) {
+            assertTrue(ee.getCause() instanceof JobExecutionException);
+        }
     }
 
     @Test
     public void testCreateTable() throws Exception {
-        tableEnv.sqlUpdate("CREATE TABLE TestTable11 (`first` STRING, `second` STRING) " +
+        tableEnv.executeSql("CREATE TABLE TestTable11 (`first` STRING, `second` STRING) " +
                 "WITH ('connector.type'='kudu', 'kudu.table'='TestTable11', 'kudu.masters'='" + kuduMasters + "', " +
                 "'kudu.hash-columns'='first', 'kudu.primary-key-columns'='first')");
-        tableEnv.sqlUpdate("INSERT INTO TestTable11 values ('f', 's')");
-        tableEnv.execute("test");
+
+        tableEnv.executeSql("INSERT INTO TestTable11 values ('f', 's')")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
         validateSingleKey("TestTable11");
     }
+
     @Test
     public void testTimestamp() throws Exception {
         // Timestamp should be bridged to sql.Timestamp
         // Test it when creating the table...
-        tableEnv.sqlUpdate("CREATE TABLE TestTableTs (`first` STRING, `second` TIMESTAMP(3)) " +
-                "WITH ('connector.type'='kudu', 'kudu.table'='TestTableTs', 'kudu.masters'='" + kuduMasters + "', " +
+        tableEnv.executeSql("CREATE TABLE TestTableTs (`first` STRING, `second` TIMESTAMP(3)) " +
+                "WITH ('connector.type'='kudu', 'kudu.masters'='" + kuduMasters + "', " +
                 "'kudu.hash-columns'='first', 'kudu.primary-key-columns'='first')");
-        tableEnv.sqlUpdate("INSERT INTO TestTableTs values ('f', TIMESTAMP '2020-01-01 12:12:12.123456')");
-        tableEnv.execute("test");
+        tableEnv.executeSql("INSERT INTO TestTableTs values ('f', TIMESTAMP '2020-01-01 12:12:12.123456')")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
-        // And also when inserting into existing table
-        tableEnv.sqlUpdate("CREATE TABLE TestTableTsE (`first` STRING, `second` TIMESTAMP(3)) " +
-                "WITH ('connector.type'='kudu', 'kudu.table'='TestTableTs', 'kudu.masters'='" + kuduMasters + "')");
-
-        tableEnv.sqlUpdate("INSERT INTO TestTableTsE values ('s', TIMESTAMP '2020-02-02 23:23:23')");
-        tableEnv.execute("test");
+        tableEnv.executeSql("INSERT INTO TestTableTs values ('s', TIMESTAMP '2020-02-02 23:23:23')")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
         KuduTable kuduTable = harness.getClient().openTable("TestTableTs");
         assertEquals(Type.UNIXTIME_MICROS, kuduTable.getSchema().getColumn("second").getType());
@@ -115,18 +122,24 @@ public class KuduTableFactoryTest extends KuduTestBase {
     @Test
     public void testExistingTable() throws Exception {
         // Creating a table
-        tableEnv.sqlUpdate("CREATE TABLE TestTable12 (`first` STRING, `second` STRING) " +
+        tableEnv.executeSql("CREATE TABLE TestTable12 (`first` STRING, `second` STRING) " +
                 "WITH ('connector.type'='kudu', 'kudu.table'='TestTable12', 'kudu.masters'='" + kuduMasters + "', " +
                 "'kudu.hash-columns'='first', 'kudu.primary-key-columns'='first')");
 
-        tableEnv.sqlUpdate("INSERT INTO TestTable12 values ('f', 's')");
-        tableEnv.execute("test");
+        tableEnv.executeSql("INSERT INTO TestTable12 values ('f', 's')")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
         // Then another one in SQL that refers to the previously created one
-        tableEnv.sqlUpdate("CREATE TABLE TestTable12b (`first` STRING, `second` STRING) " +
+        tableEnv.executeSql("CREATE TABLE TestTable12b (`first` STRING, `second` STRING) " +
                 "WITH ('connector.type'='kudu', 'kudu.table'='TestTable12', 'kudu.masters'='" + kuduMasters + "')");
-        tableEnv.sqlUpdate("INSERT INTO TestTable12b values ('f2','s2')");
-        tableEnv.execute("test2");
+        tableEnv.executeSql("INSERT INTO TestTable12b values ('f2','s2')")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
         // Validate that both insertions were into the same table
         KuduTable kuduTable = harness.getClient().openTable("TestTable12");

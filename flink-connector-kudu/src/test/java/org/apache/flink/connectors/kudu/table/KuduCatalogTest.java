@@ -30,7 +30,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.TableException;
-import org.apache.flink.table.api.java.StreamTableEnvironment;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.catalog.CatalogTable;
 import org.apache.flink.table.catalog.ObjectPath;
 
@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.*;
@@ -72,78 +73,89 @@ public class KuduCatalogTest extends KuduTestBase {
 
     @Test
     public void testCreateAlterDrop() throws Exception {
-        tableEnv.sqlUpdate("CREATE TABLE TestTable1 (`first` STRING, `second` String) WITH ('kudu.hash-columns' = 'first', 'kudu.primary-key-columns' = 'first')");
-        tableEnv.sqlUpdate("INSERT INTO TestTable1 VALUES ('f', 's')");
+        tableEnv.executeSql("CREATE TABLE TestTable1 (`first` STRING, `second` String) WITH ('kudu.hash-columns' = 'first', 'kudu.primary-key-columns' = 'first')");
+        tableEnv.executeSql("INSERT INTO TestTable1 VALUES ('f', 's')")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
         // Add this once Primary key support has been enabled
         // tableEnv.sqlUpdate("CREATE TABLE TestTable2 (`first` STRING, `second` String, PRIMARY KEY(`first`)) WITH ('kudu.hash-columns' = 'first')");
         // tableEnv.sqlUpdate("INSERT INTO TestTable2 VALUES ('f', 's')");
 
-        tableEnv.execute("test");
 
         validateSingleKey("TestTable1");
         // validateSingleKey("TestTable2");
 
-        tableEnv.sqlUpdate("ALTER TABLE TestTable1 RENAME TO TestTable1R");
+        tableEnv.executeSql("ALTER TABLE TestTable1 RENAME TO TestTable1R");
         validateSingleKey("TestTable1R");
 
-        tableEnv.sqlUpdate("DROP TABLE TestTable1R");
+        tableEnv.executeSql("DROP TABLE TestTable1R");
         assertFalse(harness.getClient().tableExists("TestTable1R"));
     }
 
     @Test
     public void testCreateAndInsertMultiKey() throws Exception {
-        tableEnv.sqlUpdate("CREATE TABLE TestTable3 (`first` STRING, `second` INT, third STRING) WITH ('kudu.hash-columns' = 'first,second', 'kudu.primary-key-columns' = 'first,second')");
-        tableEnv.sqlUpdate("INSERT INTO TestTable3 VALUES ('f', 2, 't')");
-
-        // Add this once Primary key support has been enabled
-        // tableEnv.sqlUpdate("CREATE TABLE TestTable4 (`first` STRING, `second` INT, `third` STRING) PRIMARY KEY (`first`, `second`) WITH ('kudu.hash-columns' = 'first,second')");
-        // tableEnv.sqlUpdate("INSERT INTO TestTable4 VALUES ('f', 2, 't')");
-
-        tableEnv.execute("test");
+        tableEnv.executeSql("CREATE TABLE TestTable3 (`first` STRING, `second` INT, third STRING) WITH ('kudu.hash-columns' = 'first,second', 'kudu.primary-key-columns' = 'first,second')");
+        tableEnv.executeSql("INSERT INTO TestTable3 VALUES ('f', 2, 't')")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
         validateMultiKey("TestTable3");
-        // validateMultiKey("TestTable4");
     }
 
     @Test
     public void testSourceProjection() throws Exception {
-        tableEnv.sqlUpdate("CREATE TABLE TestTable5 (`second` String, `first` STRING, `third` String) WITH ('kudu.hash-columns' = 'second', 'kudu.primary-key-columns' = 'second')");
-        tableEnv.sqlUpdate("INSERT INTO TestTable5 VALUES ('s', 'f', 't')");
-        tableEnv.execute("test");
+        tableEnv.executeSql("CREATE TABLE TestTable5 (`second` String, `first` STRING, `third` String) WITH ('kudu.hash-columns' = 'second', 'kudu.primary-key-columns' = 'second')");
+        tableEnv.executeSql("INSERT INTO TestTable5 VALUES ('s', 'f', 't')")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
-        tableEnv.sqlUpdate("CREATE TABLE TestTable6 (`first` STRING, `second` String) WITH ('kudu.hash-columns' = 'first', 'kudu.primary-key-columns' = 'first')");
-        tableEnv.sqlUpdate("INSERT INTO TestTable6 (SELECT `first`, `second` FROM  TestTable5)");
-        tableEnv.execute("test");
+        tableEnv.executeSql("CREATE TABLE TestTable6 (`first` STRING, `second` String) WITH ('kudu.hash-columns' = 'first', 'kudu.primary-key-columns' = 'first')");
+        tableEnv.executeSql("INSERT INTO TestTable6 (SELECT `first`, `second` FROM  TestTable5)")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
         validateSingleKey("TestTable6");
     }
 
     @Test
     public void testEmptyProjection() throws Exception {
-        tableEnv.sqlUpdate("CREATE TABLE TestTableEP (`first` STRING, `second` STRING) WITH ('kudu.hash-columns' = 'first', 'kudu.primary-key-columns' = 'first')");
-        tableEnv.sqlUpdate("INSERT INTO TestTableEP VALUES ('f','s')");
-        tableEnv.sqlUpdate("INSERT INTO TestTableEP VALUES ('f2','s2')");
-        tableEnv.execute("test");
+        CollectionSink.output.clear();
+        tableEnv.executeSql("CREATE TABLE TestTableEP (`first` STRING, `second` STRING) WITH ('kudu.hash-columns' = 'first', 'kudu.primary-key-columns' = 'first')");
+        tableEnv.executeSql("INSERT INTO TestTableEP VALUES ('f','s')")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
+        tableEnv.executeSql("INSERT INTO TestTableEP VALUES ('f2','s2')")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
         Table result = tableEnv.sqlQuery("SELECT COUNT(*) FROM TestTableEP");
 
         DataStream<Tuple2<Boolean, Row>> resultDataStream = tableEnv.toRetractStream(result, Types.ROW(Types.LONG));
-
-        CollectionSink.output.clear();
 
         resultDataStream
                 .map(t -> Tuple2.of(t.f0, t.f1.getField(0)))
                 .returns(Types.TUPLE(Types.BOOLEAN, Types.LONG))
                 .addSink(new CollectionSink<>()).setParallelism(1);
 
-        tableEnv.execute("test");
+        resultDataStream.getExecutionEnvironment().execute();
 
         List<Tuple2<Boolean, Long>> expected = Lists.newArrayList(Tuple2.of(true, 1L), Tuple2.of(false, 1L), Tuple2.of(true, 2L));
 
         assertEquals(new HashSet<>(expected), new HashSet<>(CollectionSink.output));
         CollectionSink.output.clear();
-
     }
 
     @Test
@@ -208,10 +220,13 @@ public class KuduCatalogTest extends KuduTestBase {
 
     @Test
     public void testTimestamp() throws Exception {
-        tableEnv.sqlUpdate("CREATE TABLE TestTableTsC (`first` STRING, `second` TIMESTAMP(3)) " +
+        tableEnv.executeSql("CREATE TABLE TestTableTsC (`first` STRING, `second` TIMESTAMP(3)) " +
                 "WITH ('kudu.hash-columns'='first', 'kudu.primary-key-columns'='first')");
-        tableEnv.sqlUpdate("INSERT INTO TestTableTsC values ('f', TIMESTAMP '2020-01-01 12:12:12.123456')");
-        tableEnv.execute("test");
+        tableEnv.executeSql("INSERT INTO TestTableTsC values ('f', TIMESTAMP '2020-01-01 12:12:12.123456')")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
         KuduTable kuduTable = harness.getClient().openTable("TestTableTsC");
         assertEquals(Type.UNIXTIME_MICROS, kuduTable.getSchema().getColumn("second").getType());
@@ -227,29 +242,32 @@ public class KuduCatalogTest extends KuduTestBase {
 
     @Test
     public void testDatatypes() throws Exception {
-        tableEnv.sqlUpdate("CREATE TABLE TestTable8 (`first` STRING, `second` BOOLEAN, `third` BYTES," +
+        tableEnv.executeSql("CREATE TABLE TestTable8 (`first` STRING, `second` BOOLEAN, `third` BYTES," +
                 "`fourth` TINYINT, `fifth` SMALLINT, `sixth` INT, `seventh` BIGINT, `eighth` FLOAT, `ninth` DOUBLE, " +
                 "`tenth` TIMESTAMP)" +
                 "WITH ('kudu.hash-columns' = 'first', 'kudu.primary-key-columns' = 'first')");
 
-        tableEnv.sqlUpdate("INSERT INTO TestTable8 values ('f', false, cast('bbbb' as BYTES), cast(12 as TINYINT)," +
+        tableEnv.executeSql("INSERT INTO TestTable8 values ('f', false, cast('bbbb' as BYTES), cast(12 as TINYINT)," +
                 "cast(34 as SMALLINT), 56, cast(78 as BIGINT), cast(3.14 as FLOAT), cast(1.2345 as DOUBLE)," +
-                "TIMESTAMP '2020-04-15 12:34:56.123') ");
+                "TIMESTAMP '2020-04-15 12:34:56.123') ")
+                .getJobClient()
+                .get()
+                .getJobExecutionResult(getClass().getClassLoader())
+                .get(1, TimeUnit.MINUTES);
 
-        tableEnv.execute("test");
         validateManyTypes("TestTable8");
     }
 
     @Test
     public void testMissingPropertiesCatalog() throws Exception {
         assertThrows(TableException.class,
-                () -> tableEnv.sqlUpdate("CREATE TABLE TestTable9a (`first` STRING, `second` String) " +
+                () -> tableEnv.executeSql("CREATE TABLE TestTable9a (`first` STRING, `second` String) " +
                         "WITH ('kudu.primary-key-columns' = 'second')"));
         assertThrows(TableException.class,
-                () -> tableEnv.sqlUpdate("CREATE TABLE TestTable9b (`first` STRING, `second` String) " +
+                () -> tableEnv.executeSql("CREATE TABLE TestTable9b (`first` STRING, `second` String) " +
                         "WITH ('kudu.hash-columns' = 'first')"));
         assertThrows(TableException.class,
-                () -> tableEnv.sqlUpdate("CREATE TABLE TestTable9b (`first` STRING, `second` String) " +
+                () -> tableEnv.executeSql("CREATE TABLE TestTable9b (`first` STRING, `second` String) " +
                         "WITH ('kudu.primary-key-columns' = 'second', 'kudu.hash-columns' = 'first')"));
     }
 

@@ -121,8 +121,7 @@ public class KuduTableSourceTest extends KuduTestBase {
         // expressions for supported predicates
         FieldReferenceExpression fieldReferenceExpression = new FieldReferenceExpression(
             "id", DataTypes.INT(), 0, 0);
-        ValueLiteralExpression valueLiteralExpression = new ValueLiteralExpression(
-            1, DataTypes.INT());
+        ValueLiteralExpression valueLiteralExpression = new ValueLiteralExpression(1);
         List<ResolvedExpression> args = new ArrayList<>(
             Arrays.asList(fieldReferenceExpression, valueLiteralExpression));
         Expression supportedPred = new CallExpression(
@@ -132,7 +131,7 @@ public class KuduTableSourceTest extends KuduTestBase {
         // unsupported predicate
         Expression unsupportedPred = new CallExpression(
             new ScalarFunctionDefinition("dummy", DUMMY_FUNCTION),
-            singletonList(new ValueLiteralExpression(1, DataTypes.INT())),
+            singletonList(new ValueLiteralExpression(1)),
             DataTypes.INT());
         // invalid predicate
         Expression invalidPred = new CallExpression(

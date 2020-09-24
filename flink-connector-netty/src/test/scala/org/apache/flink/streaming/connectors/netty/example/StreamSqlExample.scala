@@ -19,7 +19,7 @@ package org.apache.flink.streaming.connectors.netty.example
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
-import org.apache.flink.table.api.scala._
+import org.apache.flink.table.api.bridge.scala._
 
 /**
  * Simple example for demonstrating the use of SQL on a Stream Table.
@@ -55,8 +55,8 @@ object StreamSqlExample {
         val tk = line.split(",")
         Order(tk.head.trim.toLong, tk(1), tk(2).trim.toInt)
       }
-    // register the DataStreams under the name "OrderA" and "OrderB"
-    tEnv.registerDataStream("OrderA", orderA, 'user, 'product, 'amount)
+
+    tEnv.createTemporaryView("OrderA", orderA)
 
     // union the two tables
     val result = tEnv.sqlQuery("SELECT STREAM * FROM OrderA WHERE amount > 2")

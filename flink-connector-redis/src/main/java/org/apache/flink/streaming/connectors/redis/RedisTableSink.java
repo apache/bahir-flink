@@ -74,11 +74,6 @@ public class RedisTableSink implements UpsertStreamTableSink<Row> {
 
 
     @Override
-    public void emitDataStream(DataStream<Tuple2<Boolean, Row>> dataStream) {
-        consumeDataStream(dataStream);
-    }
-
-    @Override
     public TableSink configure(String[] fieldNames, TypeInformation[] fieldTypes) {
         return new RedisTableSink(getProperties());
     }
