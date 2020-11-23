@@ -76,7 +76,7 @@ public class MqttSinkTest {
         private volatile boolean isRunning;
         private AtomicLong count;
 
-        public RandomSource() {
+        RandomSource() {
             this.isRunning = true;
             this.count = new AtomicLong(1000);
         }
