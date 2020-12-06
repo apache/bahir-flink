@@ -75,6 +75,7 @@
     <module>flink-connector-akka</module>
     <module>flink-connector-flume</module>
     <module>flink-connector-influxdb</module>
+    <module>flink-connector-influxdb2</module>
     <module>flink-connector-kudu</module>
     <module>flink-connector-netty</module>
     <module>flink-connector-pinot</module>
