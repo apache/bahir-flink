@@ -29,7 +29,7 @@ under the License.
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>flink-next-gen-connector-influxdb_2.11</artifactId>
+    <artifactId>flink-next-gen-connector-influxdb_2.12</artifactId>
     <name>flink-next-gen-connector-influxdb</name>
 
     <packaging>jar</packaging>
@@ -37,21 +37,75 @@ under the License.
     <properties>
         <influxdbClient.version>2.21</influxdbClient.version>
         <flink.new.version>1.12.0</flink.new.version>
+        <scala.binary.new.version>2.11</scala.binary.new.version>
+        <testcontainers.version>1.15.1</testcontainers.version>
     </properties>
 
     <dependencies>
 
+        <!-- Flink  -->
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-core</artifactId>
             <version>${flink.new.version}</version>
         </dependency>
 
+        <!-- InfluxDB  -->
+
         <dependency>
             <groupId>org.influxdb</groupId>
             <artifactId>influxdb-java</artifactId>
             <version>${influxdbClient.version}</version>
         </dependency>
+
+        <!-- Flink Test Utils -->
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-test-utils_${scala.binary.new.version}</artifactId>
+            <version>${flink.new.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.apache.flink</groupId>-->
+<!--            <artifactId>flink-runtime_${scala.binary.new.version}</artifactId>-->
+<!--            <version>${flink.new.version}</version>-->
+<!--            <scope>test</scope>-->
+<!--            <classifier>tests</classifier>-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-streaming-java_${scala.binary.new.version}</artifactId>
+            <version>${flink.new.version}</version>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+        </dependency>
+
+        <!-- Test container -->
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>influxdb</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
