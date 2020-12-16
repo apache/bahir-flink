@@ -16,10 +16,6 @@
  */
 package org.apache.flink.streaming.connectors.redis.common.config.handler;
 
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_CLUSTER;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_MODE;
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_NODES;
-
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,6 +26,8 @@ import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisClust
 import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisConfigBase;
 import org.apache.flink.streaming.connectors.redis.common.hanlder.FlinkJedisConfigHandler;
 import org.apache.flink.util.Preconditions;
+
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.*;
 
 /**
  * jedis cluster config handler to find and create jedis cluster config use meta.
@@ -44,8 +42,16 @@ public class FlinkJedisClusterConfigHandler implements FlinkJedisConfigHandler {
             String[] arr = r.split(":");
             return new InetSocketAddress(arr[0].trim(), Integer.parseInt(arr[1].trim()));
         }).collect(Collectors.toSet());
-        return new FlinkJedisClusterConfig.Builder()
-                .setNodes(nodes).build();
+        String clusterPassword = properties.getOrDefault(CLUSTER_PASSWORD, null);
+        if (clusterPassword != null && clusterPassword.trim().isEmpty()) {
+            clusterPassword = null;
+        }
+        FlinkJedisClusterConfig.Builder builder = new FlinkJedisClusterConfig.Builder();
+        builder.setNodes(nodes);
+        if (clusterPassword != null) {
+            builder.setPassword(clusterPassword);
+        }
+        return builder.build();
     }
 
     @Override
