@@ -23,6 +23,7 @@ import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
+import org.apache.flink.util.TestLogger;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -42,14 +43,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Integration test for the InfluxDB source for Flink.
  */
-public class InfluxDBSourceITCase {
+public class InfluxDBSourceITCase extends TestLogger {
     private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("influxdb:v2.0.2");
 
     @Rule
     public InfluxDBContainer influxDbContainer = new InfluxDBContainer(DEFAULT_IMAGE_NAME);
 
     @ClassRule
-    public MiniClusterWithClientResource cluster = new MiniClusterWithClientResource(
+    public static final MiniClusterWithClientResource CLUSTER = new MiniClusterWithClientResource(
             new MiniClusterResourceConfiguration.Builder()
                     .setNumberSlotsPerTaskManager(2)
                     .setNumberTaskManagers(1)
@@ -69,7 +70,7 @@ public class InfluxDBSourceITCase {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(2);
 
-        CollectSink.values.clear();
+        CollectSink.VALUES.clear();
 
         env.fromElements(1L, 21L, 22L)
                 .map(new IncrementMapFunction())
@@ -77,17 +78,20 @@ public class InfluxDBSourceITCase {
 
         env.execute();
 
-        Collection<Long> results = new ArrayList<>();
+        final Collection<Long> results = new ArrayList<>();
         results.add(2L);
         results.add(22L);
         results.add(23L);
-        assertTrue(CollectSink.values.containsAll(results));
+        assertTrue(CollectSink.VALUES.containsAll(results));
     }
 
-    public class IncrementMapFunction implements MapFunction<Long, Long> {
+    /**
+     * Simple incrementation with map.
+     */
+    public static class IncrementMapFunction implements MapFunction<Long, Long> {
 
         @Override
-        public Long map(Long record) throws Exception {
+        public Long map(final Long record) throws Exception {
             return record + 1;
         }
     }
@@ -96,11 +100,11 @@ public class InfluxDBSourceITCase {
     private static class CollectSink implements SinkFunction<Long> {
 
         // must be static
-        public static final List<Long> values = Collections.synchronizedList(new ArrayList<>());
+        public static final List<Long> VALUES = Collections.synchronizedList(new ArrayList<>());
 
         @Override
-        public void invoke(Long value) throws Exception {
-            values.add(value);
+        public void invoke(final Long value) throws Exception {
+            VALUES.add(value);
         }
     }
 }
