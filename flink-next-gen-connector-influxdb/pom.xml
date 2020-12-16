@@ -36,14 +36,15 @@ under the License.
 
     <properties>
         <influxdbClient.version>2.21</influxdbClient.version>
+        <flink.new.version>1.12.0</flink.new.version>
     </properties>
 
     <dependencies>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
+            <artifactId>flink-core</artifactId>
+            <version>${flink.new.version}</version>
         </dependency>
 
         <dependency>
