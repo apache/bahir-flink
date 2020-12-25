@@ -29,6 +29,7 @@ import org.apache.flink.table.descriptors.DescriptorProperties;
 import org.apache.flink.table.descriptors.SchemaValidator;
 import org.apache.flink.table.factories.TableSinkFactory;
 import org.apache.flink.table.factories.TableSourceFactory;
+import org.apache.flink.table.sinks.TableSink;
 import org.apache.flink.types.Row;
 
 import java.util.ArrayList;
@@ -37,16 +38,34 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.flink.table.descriptors.ConnectorDescriptorValidator.CONNECTOR_TYPE;
-import static org.apache.flink.table.descriptors.DescriptorProperties.*;
-import static org.apache.flink.table.descriptors.Rowtime.*;
-import static org.apache.flink.table.descriptors.Schema.*;
+import static org.apache.flink.table.descriptors.DescriptorProperties.EXPR;
+import static org.apache.flink.table.descriptors.DescriptorProperties.WATERMARK;
+import static org.apache.flink.table.descriptors.DescriptorProperties.WATERMARK_ROWTIME;
+import static org.apache.flink.table.descriptors.DescriptorProperties.WATERMARK_STRATEGY_DATA_TYPE;
+import static org.apache.flink.table.descriptors.DescriptorProperties.WATERMARK_STRATEGY_EXPR;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_TIMESTAMPS_CLASS;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_TIMESTAMPS_FROM;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_TIMESTAMPS_SERIALIZED;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_TIMESTAMPS_TYPE;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_WATERMARKS_CLASS;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_WATERMARKS_DELAY;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_WATERMARKS_SERIALIZED;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_WATERMARKS_TYPE;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA_DATA_TYPE;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA_FROM;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA_NAME;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA_PROCTIME;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA_TYPE;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFactory<Tuple2<Boolean, Row>> {
 
     public static final String KUDU_TABLE = "kudu.table";
+    public static final String KUDU_TABLE_OWNER = "kudu.table-owner";
     public static final String KUDU_MASTERS = "kudu.masters";
     public static final String KUDU_HASH_COLS = "kudu.hash-columns";
+    public static final String KUDU_HASH_PARTITION_NUMS = "kudu.hash-partition-nums";
     public static final String KUDU_PRIMARY_KEY_COLS = "kudu.primary-key-columns";
     public static final String KUDU_REPLICAS = "kudu.replicas";
     public static final String KUDU = "kudu";
@@ -62,9 +81,12 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
     public List<String> supportedProperties() {
         List<String> properties = new ArrayList<>();
         properties.add(KUDU_TABLE);
+        properties.add(KUDU_TABLE_OWNER);
         properties.add(KUDU_MASTERS);
         properties.add(KUDU_HASH_COLS);
         properties.add(KUDU_PRIMARY_KEY_COLS);
+        properties.add(KUDU_HASH_PARTITION_NUMS);
+
         // schema
         properties.add(SCHEMA + ".#." + SCHEMA_DATA_TYPE);
         properties.add(SCHEMA + ".#." + SCHEMA_TYPE);
@@ -105,7 +127,22 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
     public KuduTableSource createTableSource(ObjectPath tablePath, CatalogTable table) {
         validateTable(table);
         String tableName = table.toProperties().getOrDefault(KUDU_TABLE, tablePath.getObjectName());
-        return createTableSource(tableName, table.getSchema(), table.getProperties());
+        return createTableSource(tableName, table.getSchema(), table.getOptions());
+    }
+
+    /**
+     * new createTableSource api
+     *
+     * @param context table context
+     * @return {@link KuduTableSource}
+     */
+    @Override
+    public KuduTableSource createTableSource(TableSourceFactory.Context context) {
+        CatalogTable table = context.getTable();
+        validateTable(table);
+        String objectName = context.getObjectIdentifier().getObjectName();
+        String tableName = table.toProperties().getOrDefault(KUDU_TABLE, objectName);
+        return createTableSource(tableName, table.getSchema(), table.getOptions());
     }
 
     private KuduTableSource createTableSource(String tableName, TableSchema schema, Map<String, String> props) {
@@ -119,11 +156,18 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
         return new KuduTableSource(configBuilder, tableInfo, physicalSchema, null, null);
     }
 
+    /**
+     * new createTableSink api
+     * @param context table context
+     * @return {@link KuduTableSink}
+     */
     @Override
-    public KuduTableSink createTableSink(ObjectPath tablePath, CatalogTable table) {
+    public KuduTableSink createTableSink(TableSinkFactory.Context context) {
+        CatalogTable table = context.getTable();
         validateTable(table);
-        String tableName = table.toProperties().getOrDefault(KUDU_TABLE, tablePath.getObjectName());
-        return createTableSink(tableName, table.getSchema(), table.getProperties());
+        String objectName = context.getObjectIdentifier().getObjectName();
+        String tableName = table.toProperties().getOrDefault(KUDU_TABLE, objectName);
+        return createTableSink(tableName, table.getSchema(), table.getOptions());
     }
 
     private KuduTableSink createTableSink(String tableName, TableSchema schema, Map<String, String> props) {

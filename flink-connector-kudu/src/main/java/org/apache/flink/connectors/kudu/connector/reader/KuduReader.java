@@ -43,9 +43,9 @@ public class KuduReader implements AutoCloseable {
     private final List<KuduFilterInfo> tableFilters;
     private final List<String> tableProjections;
 
-    private transient KuduClient client;
-    private transient KuduSession session;
-    private transient KuduTable table;
+    private final transient KuduClient client;
+    private final transient KuduSession session;
+    private final transient KuduTable table;
 
     public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig) throws IOException {
         this(tableInfo, readerConfig, new ArrayList<>(), null);

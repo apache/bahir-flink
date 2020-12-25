@@ -53,7 +53,7 @@ public class KuduSink<IN> extends RichSinkFunction<IN> implements CheckpointedFu
     private final KuduWriterConfig writerConfig;
     private final KuduFailureHandler failureHandler;
     private final KuduOperationMapper<IN> opsMapper;
-    private transient KuduWriter kuduWriter;
+    private transient KuduWriter<IN> kuduWriter;
 
     /**
      * Creates a new {@link KuduSink} that will execute operations against the specified Kudu table (defined in {@link KuduTableInfo})
@@ -85,11 +85,26 @@ public class KuduSink<IN> extends RichSinkFunction<IN> implements CheckpointedFu
 
     @Override
     public void open(Configuration parameters) throws Exception {
-        kuduWriter = new KuduWriter(tableInfo, writerConfig, opsMapper, failureHandler);
+        kuduWriter = new KuduWriter<>(tableInfo, writerConfig, opsMapper, failureHandler);
     }
 
     @Override
     public void invoke(IN value) throws Exception {
+        try {
+            kuduWriter.write(value);
+        } catch (ClassCastException e) {
+            failureHandler.onTypeMismatch(e);
+        }
+    }
+
+    /**
+     * new invoke api
+     * @param value input
+     * @param context runtime context
+     * @throws Exception
+     */
+    @Override
+    public void invoke(IN value, Context context) throws Exception {
         try {
             kuduWriter.write(value);
         } catch (ClassCastException e) {

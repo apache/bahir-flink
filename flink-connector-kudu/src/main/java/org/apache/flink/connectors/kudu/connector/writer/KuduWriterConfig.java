@@ -63,7 +63,7 @@ public class KuduWriterConfig implements Serializable {
      * Builder for the {@link KuduWriterConfig}.
      */
     public static class Builder {
-        private String masters;
+        private final String masters;
         private FlushMode flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
 
         private Builder(String masters) {
