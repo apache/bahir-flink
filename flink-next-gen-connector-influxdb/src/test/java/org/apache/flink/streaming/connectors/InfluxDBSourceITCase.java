@@ -24,13 +24,13 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
 import org.apache.flink.util.TestLogger;
-
-import org.junit.ClassRule;
-import org.junit.Rule;
+import org.influxdb.InfluxDB;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.rules.Timeout;
-import org.testcontainers.containers.InfluxDBContainer;
-import org.testcontainers.utility.DockerImageName;
+import util.InfluxDBContainer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,20 +44,30 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Integration test for the InfluxDB source for Flink.
  */
 public class InfluxDBSourceITCase extends TestLogger {
-    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("influxdb:v2.0.2");
+    private static InfluxDB influxDB;
 
-    @Rule
-    public InfluxDBContainer influxDbContainer = new InfluxDBContainer(DEFAULT_IMAGE_NAME);
+    @RegisterExtension
+    public static InfluxDBContainer influxDbContainer = new InfluxDBContainer();
 
-    @ClassRule
+    @RegisterExtension
     public static final MiniClusterWithClientResource CLUSTER = new MiniClusterWithClientResource(
             new MiniClusterResourceConfiguration.Builder()
                     .setNumberSlotsPerTaskManager(2)
                     .setNumberTaskManagers(1)
                     .build());
 
-    @Rule
+    @RegisterExtension
     public final Timeout timeout = Timeout.millis(300000L);
+
+    @BeforeAll
+    static void setUp() {
+        influxDbContainer.startPreIngestedInfluxDB();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        influxDbContainer.stop();
+    }
 
     /**
      * Test the following topology.
