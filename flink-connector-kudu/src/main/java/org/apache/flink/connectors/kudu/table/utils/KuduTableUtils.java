@@ -79,9 +79,9 @@ public class KuduTableUtils {
             List<String> keyColumns = getPrimaryKeyColumns(props, schema);
             ColumnSchemasFactory schemasFactory = () -> toKuduConnectorColumns(columns, keyColumns);
             List<String> hashColumns = getHashColumns(props);
-            int replicas = Optional.ofNullable(props.get(KuduTableFactory.KUDU_REPLICAS)).map(Integer::parseInt).orElse(1);
+            int replicas = Optional.ofNullable(props.get(KuduTableFactory.KUDU_REPLICAS)).map(Integer::parseInt).orElse(3);
             // if hash partitions nums not exists,default 1;
-            int hashPartitionNums = Optional.ofNullable(props.get(KUDU_HASH_PARTITION_NUMS)).map(Integer::parseInt).orElse(3);
+            int hashPartitionNums = Optional.ofNullable(props.get(KUDU_HASH_PARTITION_NUMS)).map(Integer::parseInt).orElse(2*replicas);
             // if table owner is null,default 'admin';
             String tableOwner = Optional.ofNullable(props.get(KUDU_TABLE_OWNER)).orElse("admin");
 
