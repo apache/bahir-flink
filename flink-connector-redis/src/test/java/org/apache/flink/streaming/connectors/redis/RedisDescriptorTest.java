@@ -68,9 +68,7 @@ public class RedisDescriptorTest extends  RedisITCaseBase{
                 .field("v", TypeInformation.of(Long.class)))
                 .createTemporaryTable("redis");
 
-
-        tableEnvironment.sqlUpdate("insert into redis select k, v from t1");
-        env.execute("Test Redis Table");
+        tableEnvironment.executeSql("insert into redis select k, v from t1");
     }
 
 

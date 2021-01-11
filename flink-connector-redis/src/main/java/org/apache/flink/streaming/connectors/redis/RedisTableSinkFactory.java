@@ -60,7 +60,7 @@ public class RedisTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bool
         properties.add(REDIS_SENTINEL);
         properties.add(REDIS_KEY_TTL);
         // schema
-        properties.add(SCHEMA + ".#." + SCHEMA_TYPE);
+        properties.add(SCHEMA + ".#." + SCHEMA_DATA_TYPE);
         properties.add(SCHEMA + ".#." + SCHEMA_NAME);
         properties.add(SCHEMA + ".#." + SCHEMA_FROM);
         // format wildcard
