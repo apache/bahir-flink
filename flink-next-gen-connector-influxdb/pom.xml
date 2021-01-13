@@ -18,7 +18,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -39,9 +39,17 @@ under the License.
         <flink.new.version>1.12.0</flink.new.version>
         <scala.binary.new.version>2.11</scala.binary.new.version>
         <testcontainers.version>1.15.1</testcontainers.version>
+        <spotless.version>2.7.0</spotless.version>
     </properties>
 
     <dependencies>
+
+        <!-- Spotless  -->
+        <dependency>
+            <groupId>com.diffplug.spotless</groupId>
+            <artifactId>spotless-maven-plugin</artifactId>
+            <version>${spotless.version}</version>
+        </dependency>
 
         <!-- Flink  -->
         <dependency>
@@ -66,14 +74,6 @@ under the License.
             <version>${flink.new.version}</version>
             <scope>test</scope>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>org.apache.flink</groupId>-->
-<!--            <artifactId>flink-runtime_${scala.binary.new.version}</artifactId>-->
-<!--            <version>${flink.new.version}</version>-->
-<!--            <scope>test</scope>-->
-<!--            <classifier>tests</classifier>-->
-<!--        </dependency>-->
 
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -120,6 +120,37 @@ under the License.
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless.version}</version>
+                <configuration>
+                    <java>
+                        <includes>
+                            <include>src/main/java/**/*.java</include>
+                            <include>src/test/java/**/*.java</include>
+                        </includes>
+
+                        <importOrder/>
+                        <importOrder>
+                            <order>java,javax,org,com,com.diffplug,
+                            </order>
+                        </importOrder>
+
+                        <removeUnusedImports/>
+
+                        <googleJavaFormat>
+                            <style>AOSP</style>
+                        </googleJavaFormat>
+
+                        <licenseHeader>
+                            <file>${basedir}/license-header</file>
+                        </licenseHeader>
+
+                    </java>
+                </configuration>
             </plugin>
         </plugins>
     </build>
