@@ -1,32 +1,28 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements. See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership. The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License. You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package org.apache.flink.streaming.connectors.influxdb;
-
-import org.apache.flink.util.Preconditions;
-
-import org.influxdb.InfluxDB.LogLevel;
 
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
+import org.apache.flink.util.Preconditions;
+import org.influxdb.InfluxDB.LogLevel;
 
-/**
- * Configuration for InfluxDB.
- */
+/** Configuration for InfluxDB. */
 public class InfluxDBConfig implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -49,9 +45,12 @@ public class InfluxDBConfig implements Serializable {
         Preconditions.checkArgument(builder != null, "InfluxDBConfig builder can not be null");
 
         this.url = Preconditions.checkNotNull(builder.getUrl(), "host can not be null");
-        this.username = Preconditions.checkNotNull(builder.getUsername(), "username can not be null");
-        this.password = Preconditions.checkNotNull(builder.getPassword(), "password can not be null");
-        this.database = Preconditions.checkNotNull(builder.getDatabase(), "database name can not be null");
+        this.username =
+                Preconditions.checkNotNull(builder.getUsername(), "username can not be null");
+        this.password =
+                Preconditions.checkNotNull(builder.getPassword(), "password can not be null");
+        this.database =
+                Preconditions.checkNotNull(builder.getDatabase(), "database name can not be null");
 
         this.batchActions = builder.getBatchActions();
         this.flushDuration = builder.getFlushDuration();
@@ -103,13 +102,13 @@ public class InfluxDBConfig implements Serializable {
 
     /**
      * Creates a new {@link InfluxDBConfig.Builder} instance.
-     * <p/>
-     * This is a convenience method for {@code new InfluxDBConfig.Builder()}.
      *
-     * @param url      the url to connect to
+     * <p>This is a convenience method for {@code new InfluxDBConfig.Builder()}.
+     *
+     * @param url the url to connect to
      * @param username the username which is used to authorize against the influxDB instance
      * @param password the password for the username which is used to authorize against the influxDB
-     *                 instance
+     *     instance
      * @param database the name of the database to write
      * @return the new InfluxDBConfig builder.
      */
@@ -117,9 +116,7 @@ public class InfluxDBConfig implements Serializable {
         return new Builder(url, username, password, database);
     }
 
-    /**
-     * A builder used to create a build an instance of a InfluxDBConfig.
-     */
+    /** A builder used to create a build an instance of a InfluxDBConfig. */
     public static class Builder {
         private String url;
         private String username;
@@ -135,10 +132,10 @@ public class InfluxDBConfig implements Serializable {
         /**
          * Creates a builder.
          *
-         * @param url      the url to connect to
+         * @param url the url to connect to
          * @param username the username which is used to authorize against the influxDB instance
-         * @param password the password for the username which is used to authorize against the influxDB
-         *                 instance
+         * @param password the password for the username which is used to authorize against the
+         *     influxDB instance
          * @param database the name of the database to write
          */
         public Builder(String url, String username, String password, String database) {
@@ -173,8 +170,8 @@ public class InfluxDBConfig implements Serializable {
         /**
          * Sets password.
          *
-         * @param password the password for the username which is used to authorize against the influxDB
-         *                 instance
+         * @param password the password for the username which is used to authorize against the
+         *     influxDB instance
          * @return this Builder to use it fluent
          */
         public InfluxDBConfig.Builder password(String password) {
@@ -194,8 +191,9 @@ public class InfluxDBConfig implements Serializable {
         }
 
         /**
-         * Sets when to flush a new bulk request based on the number of batch actions currently added.
-         * Defaults to <tt>DEFAULT_BATCH_ACTIONS</tt>. Can be set to <tt>-1</tt> to disable it.
+         * Sets when to flush a new bulk request based on the number of batch actions currently
+         * added. Defaults to <tt>DEFAULT_BATCH_ACTIONS</tt>. Can be set to <tt>-1</tt> to disable
+         * it.
          *
          * @param batchActions number of Points written after which a write must happen.
          * @return this Builder to use it fluent
@@ -208,7 +206,7 @@ public class InfluxDBConfig implements Serializable {
         /**
          * Sets a flush interval flushing *any* bulk actions pending if the interval passes.
          *
-         * @param flushDuration         the flush duration
+         * @param flushDuration the flush duration
          * @param flushDurationTimeUnit the TimeUnit of the flush duration
          * @return this Builder to use it fluent
          */
@@ -229,7 +227,8 @@ public class InfluxDBConfig implements Serializable {
                 try {
                     logLevel = LogLevel.valueOf(value.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    throw new IllegalArgumentException(String.format("Could not set %s as log level!", value.toUpperCase()));
+                    throw new IllegalArgumentException(
+                            String.format("Could not set %s as log level!", value.toUpperCase()));
                 }
             }
             return this;
