@@ -17,8 +17,15 @@
 
 package org.apache.flink.streaming.connectors.redis.common;
 
-import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.*;
-import static org.junit.Assert.*;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_CLUSTER;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_COMMAND;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_KEY_TTL;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_MODE;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_NODES;
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_CLUSTER_PASSWORD;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +50,7 @@ public class RedisHandlerTest extends AbstractTestBase {
         properties.put(REDIS_COMMAND, RedisCommand.SETEX.name());
         properties.put(REDIS_NODES, "localhost:8080");
         properties.put(REDIS_KEY_TTL, "1000");
-        properties.put(CLUSTER_PASSWORD, "test-pwd");
+        properties.put(REDIS_CLUSTER_PASSWORD, "test-pwd");
     }
 
     @Test
