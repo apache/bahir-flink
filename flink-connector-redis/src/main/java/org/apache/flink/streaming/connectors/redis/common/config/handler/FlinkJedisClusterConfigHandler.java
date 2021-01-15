@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisClusterConfig;
 import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisConfigBase;
 import org.apache.flink.streaming.connectors.redis.common.hanlder.FlinkJedisConfigHandler;
@@ -46,12 +48,9 @@ public class FlinkJedisClusterConfigHandler implements FlinkJedisConfigHandler {
             return new InetSocketAddress(arr[0].trim(), Integer.parseInt(arr[1].trim()));
         }).collect(Collectors.toSet());
         String clusterPassword = properties.getOrDefault(REDIS_CLUSTER_PASSWORD, null);
-        if (clusterPassword != null && clusterPassword.trim().isEmpty()) {
-            clusterPassword = null;
-        }
         FlinkJedisClusterConfig.Builder builder = new FlinkJedisClusterConfig.Builder();
         builder.setNodes(nodes);
-        if (clusterPassword != null) {
+        if (StringUtils.isNotBlank(clusterPassword)) {
             builder.setPassword(clusterPassword);
         }
         return builder.build();
