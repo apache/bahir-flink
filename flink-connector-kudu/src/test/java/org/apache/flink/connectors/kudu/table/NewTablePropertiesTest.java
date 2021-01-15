@@ -8,12 +8,6 @@ import org.apache.flink.table.catalog.exceptions.TableNotExistException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * @fileName: NewTablePropertiesTest.java
- * @description: new tableProperties test
- * @author: by echo huang
- * @date: 2020/12/25 2:30 下午
- */
 public class NewTablePropertiesTest extends KuduCatalogTest{
     private KuduCatalog catalog;
     private StreamTableEnvironment tableEnv;
