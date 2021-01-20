@@ -15,3 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.flink.streaming.connectors.influxdb.source.split;
+
+import org.apache.flink.api.connector.source.SourceSplit;
+
+/** A {@link SourceSplit} for a InfluxDB split. */
+public class InfluxDBSplit implements SourceSplit {
+
+    /** The unique ID of the split. Unique within the scope of this source. */
+    private final String id;
+
+    public InfluxDBSplit(final String id) {
+        this.id = id;
+    }
+
+    @Override
+    public String splitId() {
+        return this.id;
+    }
+}

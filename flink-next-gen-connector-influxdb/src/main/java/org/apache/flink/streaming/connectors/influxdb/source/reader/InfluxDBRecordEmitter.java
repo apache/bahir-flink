@@ -15,3 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.flink.streaming.connectors.influxdb.source.reader;
+
+import org.apache.flink.api.connector.source.SourceOutput;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.connector.base.source.reader.RecordEmitter;
+import org.apache.flink.streaming.connectors.influxdb.source.split.InfluxDBSplit;
+
+public class InfluxDBRecordEmitter<T> implements RecordEmitter<Tuple2<T, Long>, T, InfluxDBSplit> {
+    @Override
+    public void emitRecord(
+            final Tuple2<T, Long> element,
+            final SourceOutput<T> output,
+            final InfluxDBSplit splitState)
+            throws Exception {
+        output.collect(element.f0, element.f1);
+    }
+}

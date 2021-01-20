@@ -15,3 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.flink.streaming.connectors.influxdb.source.enumerator;
+
+import java.io.IOException;
+import org.apache.flink.core.io.SimpleVersionedSerializer;
+
+public class InfluxDBSourceEnumStateSerializer
+        implements SimpleVersionedSerializer<InfluxDBSourceEnumState> {
+    @Override
+    public int getVersion() {
+        return 0;
+    }
+
+    @Override
+    public byte[] serialize(final InfluxDBSourceEnumState influxDBSourceEnumState)
+            throws IOException {
+        return new byte[0];
+    }
+
+    @Override
+    public InfluxDBSourceEnumState deserialize(final int i, final byte[] bytes) throws IOException {
+        return new InfluxDBSourceEnumState();
+    }
+}

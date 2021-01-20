@@ -15,3 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.flink.streaming.connectors.influxdb.source.enumerator;
+
+/** The state of InfluxDB source enumerator. */
+public class InfluxDBSourceEnumState {}

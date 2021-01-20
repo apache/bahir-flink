@@ -1,20 +1,20 @@
 /*
-* Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements. See the NOTICE file
-* distributed with this work for additional information
-* regarding copyright ownership. The ASF licenses this file
-* to you under the Apache License, Version 2.0 (the
-* "License"); you may not use this file except in compliance
-* with the License. You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.flink.streaming.connectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,26 +23,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.connector.source.Boundedness;
+import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.streaming.connectors.influxdb.source.InfluxDBSource;
+import org.apache.flink.streaming.connectors.util.InfluxDBTestDeserializer;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
 import org.apache.flink.util.TestLogger;
-import org.influxdb.InfluxDB;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.rules.Timeout;
-import util.InfluxDBContainer;
 
 /** Integration test for the InfluxDB source for Flink. */
 public class InfluxDBSourceITCase extends TestLogger {
-    private static InfluxDB influxDB;
-
-    @RegisterExtension public static InfluxDBContainer influxDbContainer = new InfluxDBContainer();
-
     @RegisterExtension
     public static final MiniClusterWithClientResource CLUSTER =
             new MiniClusterWithClientResource(
@@ -51,40 +47,34 @@ public class InfluxDBSourceITCase extends TestLogger {
                             .setNumberTaskManagers(1)
                             .build());
 
-    @RegisterExtension public final Timeout timeout = Timeout.millis(300000L);
-
-    @BeforeAll
-    static void setUp() {
-        influxDbContainer.startPreIngestedInfluxDB();
-    }
-
-    @AfterAll
-    static void tearDown() {
-        influxDbContainer.stop();
-    }
-
     /**
      * Test the following topology.
      *
      * <pre>
+     *     1,2,3                +1              2,3,4
      *     (source1/1) -----> (map1/1) -----> (sink1/1)
      * </pre>
      */
     @Test
     void testIncrementPipeline() throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(2);
+        env.setParallelism(1);
 
         CollectSink.VALUES.clear();
 
-        env.fromElements(1L, 21L, 22L).map(new IncrementMapFunction()).addSink(new CollectSink());
+        final Source influxDBSource =
+                new InfluxDBSource<Long>(Boundedness.BOUNDED, new InfluxDBTestDeserializer());
+
+        env.fromSource(influxDBSource, WatermarkStrategy.noWatermarks(), "InfluxDBSource")
+                .map(new IncrementMapFunction())
+                .addSink(new CollectSink());
 
         env.execute();
 
         final Collection<Long> results = new ArrayList<>();
         results.add(2L);
-        results.add(22L);
-        results.add(23L);
+        results.add(3L);
+        results.add(4L);
         assertTrue(CollectSink.VALUES.containsAll(results));
     }
 
