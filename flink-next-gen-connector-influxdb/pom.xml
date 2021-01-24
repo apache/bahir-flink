@@ -17,148 +17,163 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.apache.bahir</groupId>
-        <artifactId>bahir-flink-parent_2.11</artifactId>
-        <version>1.1-SNAPSHOT</version>
-        <relativePath>..</relativePath>
-    </parent>
+  <parent>
+    <groupId>org.apache.bahir</groupId>
+    <artifactId>bahir-flink-parent_2.11</artifactId>
+    <version>1.1-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
 
-    <artifactId>flink-next-gen-connector-influxdb_2.12</artifactId>
-    <name>flink-next-gen-connector-influxdb</name>
+  <artifactId>flink-next-gen-connector-influxdb_2.12</artifactId>
+  <name>flink-next-gen-connector-influxdb</name>
 
-    <packaging>jar</packaging>
+  <packaging>jar</packaging>
 
-    <properties>
-        <influxdbClient.version>1.14.0</influxdbClient.version>
-        <flink.new.version>1.12.0</flink.new.version>
-        <scala.binary.new.version>2.11</scala.binary.new.version>
-        <testcontainers.version>1.15.1</testcontainers.version>
-        <spotless.version>2.7.0</spotless.version>
-    </properties>
+  <properties>
+    <influxdbClient.version>1.14.0</influxdbClient.version>
+    <flink.new.version>1.12.0</flink.new.version>
+    <scala.binary.new.version>2.11</scala.binary.new.version>
+    <testcontainers.version>1.15.1</testcontainers.version>
+    <spotless.version>2.7.0</spotless.version>
+  </properties>
 
-    <dependencies>
+  <dependencies>
 
-        <!-- Spotless  -->
-        <dependency>
-            <groupId>com.diffplug.spotless</groupId>
-            <artifactId>spotless-maven-plugin</artifactId>
-            <version>${spotless.version}</version>
-        </dependency>
+    <!-- Spotless  -->
+    <dependency>
+      <groupId>com.diffplug.spotless</groupId>
+      <artifactId>spotless-maven-plugin</artifactId>
+      <version>${spotless.version}</version>
+    </dependency>
 
-        <!-- Flink  -->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-core</artifactId>
-            <version>${flink.new.version}</version>
-        </dependency>
+    <!-- Flink  -->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-core</artifactId>
+      <version>${flink.new.version}</version>
+    </dependency>
 
 
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-base</artifactId>
-            <version>${flink.new.version}</version>
-        </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-base</artifactId>
+      <version>${flink.new.version}</version>
+    </dependency>
 
-        <!-- InfluxDB  -->
 
-        <dependency>
-            <groupId>com.influxdb</groupId>
-            <artifactId>influxdb-client-java</artifactId>
-            <version>${influxdbClient.version}</version>
-        </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.10</version>
+    </dependency>
 
-        <!-- Flink Test Utils -->
+    <!-- InfluxDB  -->
 
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-test-utils_${scala.binary.new.version}</artifactId>
-            <version>${flink.new.version}</version>
-            <scope>test</scope>
-        </dependency>
+    <dependency>
+      <groupId>com.influxdb</groupId>
+      <artifactId>influxdb-client-java</artifactId>
+      <version>${influxdbClient.version}</version>
+    </dependency>
 
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-streaming-java_${scala.binary.new.version}</artifactId>
-            <version>${flink.new.version}</version>
-            <scope>test</scope>
-            <classifier>tests</classifier>
-        </dependency>
+    <!-- Flink Test Utils -->
 
-        <!-- Test container -->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-test-utils_${scala.binary.new.version}</artifactId>
+      <version>${flink.new.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-            <version>${testcontainers.version}</version>
-            <scope>test</scope>
-        </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-streaming-java_${scala.binary.new.version}</artifactId>
+      <version>${flink.new.version}</version>
+      <scope>test</scope>
+      <classifier>tests</classifier>
+    </dependency>
 
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${testcontainers.version}</version>
-            <scope>test</scope>
-        </dependency>
+    <!-- Test container -->
 
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>influxdb</artifactId>
-            <version>${testcontainers.version}</version>
-            <scope>test</scope>
-        </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-    </dependencies>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>influxdb</artifactId>
+      <version>${testcontainers.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-            <plugin>
-                <groupId>com.diffplug.spotless</groupId>
-                <artifactId>spotless-maven-plugin</artifactId>
-                <version>${spotless.version}</version>
-                <configuration>
-                    <java>
-                        <includes>
-                            <include>src/main/java/**/*.java</include>
-                            <include>src/test/java/**/*.java</include>
-                        </includes>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <version>2.2</version>
+      <scope>test</scope>
+    </dependency>
 
-                        <importOrder/>
-                        <importOrder>
-                            <order>java,javax,org,com,com.diffplug,
-                            </order>
-                        </importOrder>
+  </dependencies>
 
-                        <removeUnusedImports/>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
-                        <googleJavaFormat>
-                            <style>AOSP</style>
-                        </googleJavaFormat>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless.version}</version>
+        <configuration>
+          <java>
+            <includes>
+              <include>src/main/java/**/*.java</include>
+              <include>src/test/java/**/*.java</include>
+            </includes>
 
-                        <licenseHeader>
-                            <file>${basedir}/license-header</file>
-                        </licenseHeader>
+            <importOrder/>
+            <importOrder>
+              <order>java,javax,org,com,com.diffplug,
+              </order>
+            </importOrder>
 
-                    </java>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+            <removeUnusedImports/>
+
+            <googleJavaFormat>
+              <style>AOSP</style>
+            </googleJavaFormat>
+
+            <licenseHeader>
+              <file>${basedir}/license-header</file>
+            </licenseHeader>
+
+          </java>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

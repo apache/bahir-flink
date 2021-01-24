@@ -19,6 +19,9 @@ package org.apache.flink.streaming.connectors.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.influxdb.client.InfluxDBClient;
+import com.influxdb.client.InfluxDBClientFactory;
+import com.influxdb.client.InfluxDBClientOptions;
 import java.io.IOException;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
@@ -69,14 +72,18 @@ public class InfluxDBContainer<SELF extends InfluxDBContainer<SELF>>
         this.writeDataToInfluxDB();
     }
 
-    /*    public InfluxDB getNewInfluxDB() {
-            final InfluxDB influxDB =
-                    InfluxDBFactory.connect(this.getUrl(), this.username, this.password);
-            influxDB.setDatabase(this.bucket);
-            return influxDB;
-        }
-    */
-    // TODO: update this with the new client
+    /** @return a influxDb client */
+    public InfluxDBClient getNewInfluxDB() {
+        final InfluxDBClientOptions influxDBClientOptions =
+                InfluxDBClientOptions.builder()
+                        .url(this.getUrl())
+                        .authenticate(this.username, this.password.toCharArray())
+                        .bucket(this.bucket)
+                        .org(this.organization)
+                        .build();
+        return InfluxDBClientFactory.create(influxDBClientOptions);
+    }
+
     private void writeDataToInfluxDB() {
         try {
             final Container.ExecResult execResult =
