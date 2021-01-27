@@ -21,7 +21,6 @@ import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.WriteApi;
 import com.influxdb.client.write.Point;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +28,7 @@ import org.apache.flink.api.connector.sink.Sink.ProcessingTimeService;
 import org.apache.flink.api.connector.sink.SinkWriter;
 import org.apache.flink.streaming.connectors.influxdb.InfluxDBConfig;
 
-public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN>, Serializable {
+public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN> {
 
     private static final int BUFFER_SIZE = 1000;
     private final List<IN> elements;
@@ -38,14 +37,13 @@ public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN>, Serializabl
 
     private final InfluxDBSchemaSerializer<IN> schemaSerializer;
 
-    private final InfluxDBConfig config;
-    private transient InfluxDBClient influxDBClient;
+    private final InfluxDBClient influxDBClient;
 
     public InfluxDBWriter(
             final InfluxDBSchemaSerializer<IN> schemaSerializer, final InfluxDBConfig config) {
         this.schemaSerializer = schemaSerializer;
         this.elements = new ArrayList<>(BUFFER_SIZE);
-        this.config = config;
+        this.influxDBClient = config.getClient();
     }
 
     @Override
@@ -83,9 +81,6 @@ public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN>, Serializabl
     }
 
     private void writeCurrentElements() throws Exception {
-        if (this.influxDBClient == null) {
-            this.influxDBClient = this.config.getClient();
-        }
         try (final WriteApi writeApi = this.influxDBClient.getWriteApi()) {
             final List<Point> points = new ArrayList<>(this.elements.size());
             for (final IN element : this.elements) {
