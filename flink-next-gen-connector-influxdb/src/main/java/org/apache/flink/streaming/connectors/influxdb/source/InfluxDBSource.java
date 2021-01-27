@@ -73,9 +73,9 @@ public class InfluxDBSource<OUT>
     @Override
     public SourceReader<OUT, InfluxDBSplit> createReader(
             final SourceReaderContext sourceReaderContext) throws Exception {
-        final Supplier<InfluxDBSplitReader<OUT>> splitReaderSupplier =
-                () -> new InfluxDBSplitReader<>();
-        final InfluxDBRecordEmitter<OUT> recordEmitter = new InfluxDBRecordEmitter<>();
+        final Supplier<InfluxDBSplitReader> splitReaderSupplier = InfluxDBSplitReader::new;
+        final InfluxDBRecordEmitter<OUT> recordEmitter =
+                new InfluxDBRecordEmitter<>(this.deserializationSchema);
         final Configuration config = new Configuration();
         config.setInteger("ELEMENT_QUEUE_CAPACITY", 3);
         return new InfluxDBSourceReader<OUT>(
@@ -108,6 +108,6 @@ public class InfluxDBSource<OUT>
 
     @Override
     public TypeInformation<OUT> getProducedType() {
-        return deserializationSchema.getProducedType();
+        return this.deserializationSchema.getProducedType();
     }
 }

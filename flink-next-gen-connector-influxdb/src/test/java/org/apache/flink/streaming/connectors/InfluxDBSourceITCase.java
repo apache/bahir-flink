@@ -19,10 +19,14 @@ package org.apache.flink.streaming.connectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import lombok.SneakyThrows;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.connector.source.Boundedness;
@@ -63,18 +67,33 @@ public class InfluxDBSourceITCase extends TestLogger {
         CollectSink.VALUES.clear();
 
         final Source influxDBSource =
-                new InfluxDBSource<Long>(Boundedness.BOUNDED, new InfluxDBTestDeserializer());
+                new InfluxDBSource<Long>(
+                        Boundedness.CONTINUOUS_UNBOUNDED, new InfluxDBTestDeserializer());
 
         env.fromSource(influxDBSource, WatermarkStrategy.noWatermarks(), "InfluxDBSource")
                 .map(new IncrementMapFunction())
                 .addSink(new CollectSink());
+        final Thread runner = new Thread(new ExecutionRunner(env));
+        runner.start();
+        Thread.sleep(5000);
+        final URL u = new URL("http://localhost:8000/api/v2/write");
+        final HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        // TODO set Content-Type (look at Influx API docs)
+        final OutputStream os = conn.getOutputStream();
+        final String line = "LINE_PROTOCOL_HERE"; // TODO replace
+        os.write(line.getBytes("utf-8"));
 
-        env.execute();
+        final int code = conn.getResponseCode();
+        assertTrue(code == 204);
+
+        runner.join();
 
         final Collection<Long> results = new ArrayList<>();
         results.add(2L);
-        results.add(3L);
-        results.add(4L);
+        // results.add(3L);
+        // results.add(4L);
         assertTrue(CollectSink.VALUES.containsAll(results));
     }
 
@@ -96,6 +115,20 @@ public class InfluxDBSourceITCase extends TestLogger {
         @Override
         public void invoke(final Long value) throws Exception {
             VALUES.add(value);
+        }
+    }
+
+    private static class ExecutionRunner implements Runnable {
+        private final StreamExecutionEnvironment streamExecutionEnvironment;
+
+        ExecutionRunner(final StreamExecutionEnvironment streamExecutionEnvironment) {
+            this.streamExecutionEnvironment = streamExecutionEnvironment;
+        }
+
+        @SneakyThrows
+        @Override
+        public void run() {
+            this.streamExecutionEnvironment.execute();
         }
     }
 }

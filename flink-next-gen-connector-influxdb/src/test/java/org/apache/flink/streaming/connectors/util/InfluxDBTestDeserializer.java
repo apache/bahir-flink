@@ -19,9 +19,11 @@ package org.apache.flink.streaming.connectors.util;
 
 import org.apache.flink.streaming.connectors.influxdb.source.DataPoint;
 import org.apache.flink.streaming.connectors.influxdb.source.reader.deserializer.InfluxDBDataPointDeserializer;
-import org.apache.flink.util.Collector;
 
 public class InfluxDBTestDeserializer implements InfluxDBDataPointDeserializer<Long> {
+
     @Override
-    public void deserialize(DataPoint dataPoint, Collector<Long> collector) throws Exception {}
+    public Long deserialize(final DataPoint dataPoint) throws Exception {
+        return (Long) dataPoint.getTime();
+    }
 }

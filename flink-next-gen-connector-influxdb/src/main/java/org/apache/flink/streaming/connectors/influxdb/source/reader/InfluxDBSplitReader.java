@@ -19,71 +19,150 @@ package org.apache.flink.streaming.connectors.influxdb.source.reader;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import javax.annotation.Nullable;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connector.base.source.reader.RecordsWithSplitIds;
 import org.apache.flink.connector.base.source.reader.splitreader.SplitReader;
 import org.apache.flink.connector.base.source.reader.splitreader.SplitsChange;
+import org.apache.flink.streaming.connectors.influxdb.source.DataPoint;
 import org.apache.flink.streaming.connectors.influxdb.source.split.InfluxDBSplit;
 
 /**
  * A {@link SplitReader} implementation that reads records from InfluxDB splits.
  *
- * <p>The returned type are in the format of {@code tuple2(record and timestamp}.
- *
- * @param <T> the type of the record to be emitted from the Source.
+ * <p>The returned type are in the format of {@link DataPoint}.
  */
-public class InfluxDBSplitReader<T> implements SplitReader<Tuple2<T, Long>, InfluxDBSplit> {
+public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit> {
+
+    private static final int INGEST_QUEUE_CAPACITY = 1000;
+    private HttpServer server = null;
+    private final ArrayBlockingQueue<DataPoint> ingestionQueue =
+            new ArrayBlockingQueue<>(INGEST_QUEUE_CAPACITY);
+    private final ArrayBlockingQueue<InfluxDBSplit> splitQueue =
+            new ArrayBlockingQueue<>(INGEST_QUEUE_CAPACITY);
 
     @Override
-    public RecordsWithSplitIds<Tuple2<T, Long>> fetch() throws IOException {
-        final InfluxDBSplitRecords<Tuple2<T, Long>> recordsBySplits = new InfluxDBSplitRecords<>();
-        final Collection<Tuple2<T, Long>> recordsForSplit = recordsBySplits.recordsForSplit("0");
-        recordsForSplit.add(new Tuple2(1L, 1L));
-        recordsForSplit.add(new Tuple2(2L, 2L));
-        recordsForSplit.add(new Tuple2(3L, 3L));
-        recordsBySplits.prepareForRead();
-        recordsBySplits.addFinishedSplit("0");
-        return recordsBySplits;
+    public RecordsWithSplitIds<DataPoint> fetch() throws IOException {
+        // Queue
+        final InfluxDBSplitRecords<DataPoint> recordsBySplits = new InfluxDBSplitRecords<>();
+        final InfluxDBSplit nextSplit;
+        try {
+            nextSplit = this.splitQueue.take();
+            final Collection<DataPoint> recordsForSplit =
+                    recordsBySplits.recordsForSplit(nextSplit.splitId());
+            recordsForSplit.add(this.ingestionQueue.take());
+            this.ingestionQueue.drainTo(recordsForSplit);
+            recordsBySplits.prepareForRead();
+            return recordsBySplits;
+        } catch (final InterruptedException e) {
+            // TODO: check what to do with split
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
-    public void handleSplitsChanges(final SplitsChange<InfluxDBSplit> splitsChange) {}
+    public void handleSplitsChanges(final SplitsChange<InfluxDBSplit> splitsChange) {
+        try {
+            for (final InfluxDBSplit split : splitsChange.splits()) {
+                this.splitQueue.put(split);
+            }
+        } catch (final InterruptedException e) {
+            // TODO: Check what to do with failing split
+            e.printStackTrace();
+        }
+        if (this.server != null) {
+            // TODO: Add split back to enumerator if does not match own split
+            return;
+        }
+        try {
+            this.server = HttpServer.create(new InetSocketAddress(8000), 0);
+        } catch (final IOException e) {
+            // TODO: Add split back to enumerator
+            e.printStackTrace();
+        }
+        this.server.createContext("/api/v2/write", new InfluxDBAPIHandler());
+        this.server.setExecutor(null); // creates a default executor
+        this.server.start();
+    }
 
     @Override
     public void wakeUp() {}
 
     @Override
-    public void close() throws Exception {}
+    public void close() throws Exception {
+        if (this.server != null) {
+            // TODO: check what to do with queue
+            this.server.stop(1); // waits max 1 second for pending requests to finish
+        }
+    }
 
-    // ---------------- private helper class ------------------------
+    // ---------------- private helper class --------------------
+
+    private class InfluxDBAPIHandler implements HttpHandler {
+        @Override
+        public void handle(final HttpExchange t) throws IOException {
+            final BufferedReader in =
+                    new BufferedReader(
+                            new InputStreamReader(t.getRequestBody(), StandardCharsets.UTF_8));
+            String line;
+            try {
+                while ((line = in.readLine()) != null) {
+                    final DataPoint dataPoint = LineProtocolParser.parse(line);
+                    if (dataPoint != null) {
+                        InfluxDBSplitReader.this.ingestionQueue.put(dataPoint);
+                    }
+                }
+            } catch (final InterruptedException e) {
+                // TODO: check what to do with failing put to queue
+                e.printStackTrace();
+            }
+            t.sendResponseHeaders(204, -1);
+        }
+    }
+
+    private static class LineProtocolParser {
+        private static final Long[] tuples = {1L, 2L, 3L};
+        private static int currentTuple = 0;
+
+        public static DataPoint parse(final String line) {
+            if (currentTuple < 3) {
+                final DataPoint result = new DataPoint("test");
+                result.time(tuples[currentTuple]);
+                result.putField("LongValue", tuples[currentTuple]);
+                currentTuple++;
+                return result;
+            }
+            return null;
+        }
+    }
 
     private static class InfluxDBSplitRecords<T> implements RecordsWithSplitIds<T> {
         private final Map<String, Collection<T>> recordsBySplits;
-        private final Set<String> finishedSplits;
         private Iterator<Map.Entry<String, Collection<T>>> splitIterator;
         private String currentSplitId;
         private Iterator<T> recordIterator;
 
         private InfluxDBSplitRecords() {
             this.recordsBySplits = new HashMap<>();
-            this.finishedSplits = new HashSet<>();
         }
 
-        private Collection<T> recordsForSplit(final String splitId) {
-            return this.recordsBySplits.computeIfAbsent(splitId, id -> new ArrayList<>());
-        }
-
-        private void addFinishedSplit(final String splitId) {
-            this.finishedSplits.add(splitId);
+        private Collection<T> recordsForSplit(final String splitID) {
+            return this.recordsBySplits.computeIfAbsent(splitID, id -> new ArrayList<>());
         }
 
         private void prepareForRead() {
@@ -121,7 +200,7 @@ public class InfluxDBSplitReader<T> implements SplitReader<Tuple2<T, Long>, Infl
 
         @Override
         public Set<String> finishedSplits() {
-            return this.finishedSplits;
+            return this.recordsBySplits.keySet();
         }
     }
 }

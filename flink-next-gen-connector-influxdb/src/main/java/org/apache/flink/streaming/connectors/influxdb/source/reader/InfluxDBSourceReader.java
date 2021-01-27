@@ -20,20 +20,20 @@ package org.apache.flink.streaming.connectors.influxdb.source.reader;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.apache.flink.api.connector.source.SourceReaderContext;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.base.source.reader.RecordEmitter;
 import org.apache.flink.connector.base.source.reader.SingleThreadMultiplexSourceReaderBase;
+import org.apache.flink.streaming.connectors.influxdb.source.DataPoint;
 import org.apache.flink.streaming.connectors.influxdb.source.split.InfluxDBSplit;
 
 /** The source reader for the InfluxDB line protocol. */
-public class InfluxDBSourceReader<T>
+public class InfluxDBSourceReader<OUT>
         extends SingleThreadMultiplexSourceReaderBase<
-                Tuple2<T, Long>, T, InfluxDBSplit, InfluxDBSplit> {
+                DataPoint, OUT, InfluxDBSplit, InfluxDBSplit> {
 
     public InfluxDBSourceReader(
-            final Supplier<InfluxDBSplitReader<T>> splitReaderSupplier,
-            final RecordEmitter<Tuple2<T, Long>, T, InfluxDBSplit> recordEmitter,
+            final Supplier<InfluxDBSplitReader> splitReaderSupplier,
+            final RecordEmitter<DataPoint, OUT, InfluxDBSplit> recordEmitter,
             final Configuration config,
             final SourceReaderContext context) {
         super(splitReaderSupplier::get, recordEmitter, config, context);

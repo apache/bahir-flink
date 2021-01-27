@@ -29,23 +29,36 @@ public class DataPoint {
     private final Map<String, Object> fields = new TreeMap();
     private Number time;
 
-    DataPoint(final String measurementName) {
+    public DataPoint(final String measurementName) {
         Arguments.checkNotNull(measurementName, "measurement");
         this.name = measurementName;
     }
 
-    DataPoint putField(final String field, final Object value) {
+    public String getMeasurement() {
+        return this.name;
+    }
+
+    public DataPoint putField(final String field, final Object value) {
         Arguments.checkNonEmpty(field, "fieldName");
         this.fields.put(field, value);
         return this;
     }
 
-    DataPoint time(final Number time) {
+    public Object getField(final String field) {
+        Arguments.checkNonEmpty(field, "fieldName");
+        return this.fields.getOrDefault(field, null);
+    }
+
+    public DataPoint time(final Number time) {
         this.time = time;
         return this;
     }
 
-    DataPoint addTag(final String key, final String value) {
+    public Number getTime() {
+        return this.time;
+    }
+
+    public DataPoint addTag(final String key, final String value) {
         Arguments.checkNotNull(key, "tagName");
         this.tags.put(key, value);
         return this;
