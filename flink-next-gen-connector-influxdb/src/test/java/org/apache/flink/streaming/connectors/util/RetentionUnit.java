@@ -15,23 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.influxdb.sink.commiter;
+package org.apache.flink.streaming.connectors.util;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
-import org.apache.flink.api.connector.sink.Committer;
+public enum RetentionUnit {
+    NANOSECONDS("ns"),
+    MICROSECONDS("us"),
+    MILLISECONDS("ms"),
+    SECONDS("s"),
+    MINUTES("m"),
+    HOURS("h"),
+    DAYS("d"),
+    WEEKS("w");
 
-public class InfluxDBCommitter implements Committer<Void>, Serializable {
+    final String label;
 
-    // This method is called only when a checkpoint is set
-    @Override
-    public List<Void> commit(final List<Void> committables) throws IOException {
-        // TODO: Write point to influxDB with currentTimestamp
-        return Collections.emptyList();
+    RetentionUnit(final String label) {
+        this.label = label;
     }
-
-    @Override
-    public void close() throws Exception {}
 }

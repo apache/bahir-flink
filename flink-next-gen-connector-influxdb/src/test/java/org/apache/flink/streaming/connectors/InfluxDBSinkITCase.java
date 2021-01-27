@@ -20,70 +20,69 @@ package org.apache.flink.streaming.connectors;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 
-import java.io.Serializable;
+import com.influxdb.client.InfluxDBClient;
+import com.influxdb.client.write.Point;
+import com.influxdb.query.FluxRecord;
+import com.influxdb.query.FluxTable;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.Supplier;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBCommittableSerializer;
+import org.apache.flink.streaming.connectors.influxdb.InfluxDBConfig;
 import org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSink;
 import org.apache.flink.streaming.connectors.influxdb.sink.commiter.InfluxDBCommitter;
-import org.apache.flink.streaming.connectors.influxdb.sink.writer.InfluxDBWriter;
+import org.apache.flink.streaming.connectors.util.InfluxDBContainer;
+import org.apache.flink.streaming.connectors.util.InfluxDBTestSerializer;
 import org.apache.flink.streaming.util.FiniteTestSource;
 import org.apache.flink.util.TestLogger;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.jupiter.api.Test;
 
 public class InfluxDBSinkITCase extends TestLogger {
 
-    static final List<Long> SOURCE_DATA = Arrays.asList(1L, 2L, 3L);
+    @ClassRule
+    public static final InfluxDBContainer<?> influxDBContainer =
+            InfluxDBContainer.createWithDefaultTag();
 
-    static final Queue<String> COMMIT_QUEUE = new ConcurrentLinkedQueue<>();
+    private static final List<Long> SOURCE_DATA = Arrays.asList(1L, 2L, 3L);
 
-    static final List<String> EXPECTED_COMMITTED_DATA_IN_STREAMING_MODE =
+    private static final List<String> EXPECTED_COMMITTED_DATA_IN_STREAMING_MODE =
             SOURCE_DATA.stream()
-                    // source send data two times
-                    .flatMap(
-                            x ->
-                                    Collections.nCopies(
-                                            2, Tuple3.of(x, null, Long.MIN_VALUE).toString())
-                                            .stream())
+                    .map(x -> new InfluxDBTestSerializer().serialize(x).toLineProtocol())
                     .collect(Collectors.toList());
-
-    @Before
-    void init() {
-        COMMIT_QUEUE.clear();
-    }
 
     /**
      * Test the following topology.
      *
      * <pre>
-     *     1,2,3               "(1,null,-9223372036854775808)", "(1,null,-9223372036854775808)",
-     *                          "(2,null,-9223372036854775808)", "(2,null,-9223372036854775808)",
-     *                          "(3,null,-9223372036854775808)", "(3,null,-9223372036854775808)"
+     *     1L,2L,3L           "Test,LongValue=1 fieldKey="fieldValue"",
+     *                        "Test,LongValue=2 fieldKey="fieldValue"",
+     *                        "Test,LongValue=3 fieldKey="fieldValue"",
      *     (source1/1) -----> (sink1/1)
      * </pre>
      */
     @Test
     void testIncrementPipeline() throws Exception {
-        final StreamExecutionEnvironment env = this.buildStreamEnv();
+        final StreamExecutionEnvironment env = buildStreamEnv();
 
-        final InfluxDBCommitter committer =
-                new InfluxDBCommitter((Supplier<Queue<String>> & Serializable) () -> COMMIT_QUEUE);
+        final InfluxDBConfig influxDBConfig =
+                InfluxDBConfig.builder()
+                        .url(influxDBContainer.getUrl())
+                        .username(InfluxDBContainer.getUsername())
+                        .password(InfluxDBContainer.getPassword())
+                        .bucket(InfluxDBContainer.getBucket())
+                        .organization(InfluxDBContainer.getOrganization())
+                        .build();
 
         final InfluxDBSink<Long> influxDBSink =
                 InfluxDBSink.<Long>builder()
-                        .writer(new InfluxDBWriter())
-                        .committer(committer)
-                        .committableSerializer(InfluxDBCommittableSerializer.INSTANCE)
+                        .influxDBSchemaSerializer(new InfluxDBTestSerializer())
+                        .influxDBConfig(influxDBConfig)
+                        .committer(new InfluxDBCommitter())
                         .build();
 
         env.addSource(new FiniteTestSource(SOURCE_DATA), BasicTypeInfo.LONG_TYPE_INFO)
@@ -92,15 +91,38 @@ public class InfluxDBSinkITCase extends TestLogger {
         env.execute();
 
         assertThat(
-                COMMIT_QUEUE,
+                queryWrittenData(influxDBConfig),
                 containsInAnyOrder(EXPECTED_COMMITTED_DATA_IN_STREAMING_MODE.toArray()));
     }
 
-    private StreamExecutionEnvironment buildStreamEnv() {
+    private static StreamExecutionEnvironment buildStreamEnv() {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
         env.setParallelism(1);
         env.enableCheckpointing(100);
         return env;
+    }
+
+    private static List<String> queryWrittenData(final InfluxDBConfig influxDBConfig) {
+        final String query =
+                String.format(
+                        "from(bucket: \"%s\") |> range(start: -1h)", InfluxDBContainer.getBucket());
+        final List<String> dataPoints = new ArrayList<>();
+        final InfluxDBClient influxDBClient = influxDBConfig.getClient();
+        final List<FluxTable> tables = influxDBClient.getQueryApi().query(query);
+        for (final FluxTable table : tables) {
+            for (final FluxRecord record : table.getRecords()) {
+                dataPoints.add(recordToDataPoint(record).toLineProtocol());
+            }
+        }
+        return dataPoints;
+    }
+
+    private static Point recordToDataPoint(final FluxRecord record) {
+        final String tagKey = "LongValue";
+        final Point point = new Point(record.getMeasurement());
+        point.addTag(tagKey, (String) record.getValueByKey(tagKey));
+        point.addField(Objects.requireNonNull(record.getField()), (String) record.getValue());
+        return point;
     }
 }

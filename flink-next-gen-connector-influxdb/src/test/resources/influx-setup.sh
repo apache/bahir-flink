@@ -1,19 +1,8 @@
-USERNAME=$1
-PASSWORD=$2
-BUCKET=$3
-ORG=$4
-DATA_FILE=$5
-
+#!/bin/bash
 influx setup \
-       -f \
-       -u "${USERNAME}" \
-       -p "${PASSWORD}" \
-       -b "${BUCKET}" \
-       -o "${ORG}" \
-       -r 0
-
-influx write \
-  -b "${BUCKET}" \
-  -o "${ORG}" \
-  -p ns \
-  -f /"${DATA_FILE}"
+       --force \
+       --username "${INFLUXDB_USER}" \
+       --password "${INFLUXDB_PASSWORD}" \
+       --bucket "${INFLUXDB_BUCKET}" \
+       --org "${INFLUXDB_ORG}" \
+       --retention "${INFLUXDB_RETENTION}""${INFLUXDB_RETENTION_UNIT}"

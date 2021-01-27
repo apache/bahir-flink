@@ -15,23 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.influxdb.sink.commiter;
+package org.apache.flink.streaming.connectors.influxdb.sink.writer;
 
-import java.io.IOException;
+import com.influxdb.client.write.Point;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
-import org.apache.flink.api.connector.sink.Committer;
 
-public class InfluxDBCommitter implements Committer<Void>, Serializable {
+public interface InfluxDBSchemaSerializer<IN> extends Serializable {
 
-    // This method is called only when a checkpoint is set
-    @Override
-    public List<Void> commit(final List<Void> committables) throws IOException {
-        // TODO: Write point to influxDB with currentTimestamp
-        return Collections.emptyList();
-    }
 
-    @Override
-    public void close() throws Exception {}
+    /**
+     * Serializes input into a InfluxDB point.
+     *
+     * @param element to serialize.
+     * @throws Exception if the serialization fails failed.
+     */
+    Point serialize(final IN element) throws Exception;
 }

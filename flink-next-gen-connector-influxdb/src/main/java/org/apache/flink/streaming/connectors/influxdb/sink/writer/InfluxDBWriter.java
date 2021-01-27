@@ -17,6 +17,9 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.sink.writer;
 
+import com.influxdb.client.InfluxDBClient;
+import com.influxdb.client.WriteApi;
+import com.influxdb.client.write.Point;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -24,41 +27,71 @@ import java.util.Collections;
 import java.util.List;
 import org.apache.flink.api.connector.sink.Sink.ProcessingTimeService;
 import org.apache.flink.api.connector.sink.SinkWriter;
-import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.streaming.connectors.influxdb.InfluxDBConfig;
 
-public class InfluxDBWriter<IN> implements SinkWriter<IN, String, String>, Serializable {
+public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN>, Serializable {
 
-    private List<String> elements;
+    private static final int BUFFER_SIZE = 1000;
+    private final List<IN> elements;
 
     private ProcessingTimeService processingTimerService;
 
-    public InfluxDBWriter() {
-        this.elements = new ArrayList<>();
+    private final InfluxDBSchemaSerializer<IN> schemaSerializer;
+
+    private final InfluxDBConfig config;
+    private transient InfluxDBClient influxDBClient;
+
+    public InfluxDBWriter(
+            final InfluxDBSchemaSerializer<IN> schemaSerializer, final InfluxDBConfig config) {
+        this.schemaSerializer = schemaSerializer;
+        this.elements = new ArrayList<>(BUFFER_SIZE);
+        this.config = config;
     }
 
     @Override
     public void write(final IN in, final Context context) throws IOException {
-        // Here we should convert the incoming data to datapoint
-        this.elements.add(
-                Tuple3.of(in, context.timestamp(), context.currentWatermark()).toString());
+        try {
+            if (this.elements.size() == BUFFER_SIZE) {
+                this.writeCurrentElements();
+                this.elements.clear();
+            } else {
+                this.elements.add(in);
+            }
+        } catch (final Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public List<String> prepareCommit(final boolean flush) throws IOException {
-        List<String> result = elements;
-        elements = new ArrayList<>();
-        return result;
-    }
-
-    @Override
-    public List<String> snapshotState() throws IOException {
+    public List<Void> prepareCommit(final boolean flush) throws IOException {
         return Collections.emptyList();
     }
 
     @Override
-    public void close() throws Exception {}
+    public List<IN> snapshotState() throws IOException {
+        return this.elements;
+    }
+
+    @Override
+    public void close() throws Exception {
+        this.writeCurrentElements();
+        this.influxDBClient.close();
+    }
 
     public void setProcessingTimerService(final ProcessingTimeService processingTimerService) {
         this.processingTimerService = processingTimerService;
+    }
+
+    private void writeCurrentElements() throws Exception {
+        if (this.influxDBClient == null) {
+            this.influxDBClient = this.config.getClient();
+        }
+        try (final WriteApi writeApi = this.influxDBClient.getWriteApi()) {
+            final List<Point> points = new ArrayList<>(this.elements.size());
+            for (final IN element : this.elements) {
+                points.add(this.schemaSerializer.serialize(element));
+            }
+            writeApi.writePoints(points);
+        }
     }
 }
