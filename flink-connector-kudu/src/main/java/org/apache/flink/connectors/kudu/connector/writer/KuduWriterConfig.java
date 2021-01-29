@@ -34,13 +34,28 @@ public class KuduWriterConfig implements Serializable {
 
     private final String masters;
     private final FlushMode flushMode;
+    private final long operationTimeout;
+    private int maxBufferSize;
+    private int flushInterval;
+    private boolean ignoreNotFound;
+    private boolean ignoreDuplicate;
 
     private KuduWriterConfig(
             String masters,
-            FlushMode flushMode) {
+            FlushMode flushMode,
+            long operationTimeout,
+            int maxBufferSize,
+            int flushInterval,
+            boolean ignoreNotFound,
+            boolean ignoreDuplicate) {
 
         this.masters = checkNotNull(masters, "Kudu masters cannot be null");
         this.flushMode = checkNotNull(flushMode, "Kudu flush mode cannot be null");
+        this.operationTimeout = operationTimeout;
+        this.maxBufferSize = maxBufferSize;
+        this.flushInterval = flushInterval;
+        this.ignoreNotFound = ignoreNotFound;
+        this.ignoreDuplicate = ignoreDuplicate;
     }
 
     public String getMasters() {
@@ -49,6 +64,26 @@ public class KuduWriterConfig implements Serializable {
 
     public FlushMode getFlushMode() {
         return flushMode;
+    }
+
+    public long getOperationTimeout() {
+        return operationTimeout;
+    }
+
+    public int getMaxBufferSize() {
+        return maxBufferSize;
+    }
+
+    public int getFlushInterval() {
+        return flushInterval;
+    }
+
+    public boolean isIgnoreNotFound() {
+        return isIgnoreNotFound();
+    }
+
+    public boolean isIgnoreDuplicate() {
+        return isIgnoreDuplicate();
     }
 
     @Override
@@ -65,6 +100,11 @@ public class KuduWriterConfig implements Serializable {
     public static class Builder {
         private String masters;
         private FlushMode flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
+        private long timeout = 30000;
+        private int maxBufferSize = 1000;
+        private int flushInterval = 1000;
+        private boolean ignoreNotFound = false;
+        private boolean ignoreDuplicate = false;
 
         private Builder(String masters) {
             this.masters = masters;
@@ -87,10 +127,40 @@ public class KuduWriterConfig implements Serializable {
             return setConsistency(FlushMode.AUTO_FLUSH_SYNC);
         }
 
+        public Builder setMaxBufferSize(int maxBufferSize) {
+            this.maxBufferSize = maxBufferSize;
+            return this;
+        }
+
+        public Builder setFlushInterval(int flushInterval) {
+            this.flushInterval = flushInterval;
+            return this;
+        }
+
+        public Builder setOperationTimeout(long timeout) {
+            this.timeout = timeout;
+            return this;
+        }
+
+        public Builder setIgnoreNotFound(boolean ignoreNotFound) {
+            this.ignoreNotFound = ignoreNotFound;
+            return this;
+        }
+
+        public Builder setIgnoreDuplicate(boolean ignoreDuplicate) {
+            this.ignoreDuplicate = ignoreDuplicate;
+            return this;
+        }
+
         public KuduWriterConfig build() {
             return new KuduWriterConfig(
                     masters,
-                    flushMode);
+                    flushMode,
+                    timeout,
+                    maxBufferSize,
+                    flushInterval,
+                    ignoreNotFound,
+                    ignoreDuplicate);
         }
     }
 }
