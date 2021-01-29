@@ -1,0 +1,24 @@
+name: Maven Build + Verify
+
+on: [ push ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Run the Maven verify phase
+        run: mvn --batch-mode --update-snapshots --pl flink-next-gen-connector-influxdb -Drat.skip=true clean verify
+      - name: Run the Maven spotless plugin
+        run: mvn --batch-mode --update-snapshots --pl flink-next-gen-connector-influxdb spotless:check
