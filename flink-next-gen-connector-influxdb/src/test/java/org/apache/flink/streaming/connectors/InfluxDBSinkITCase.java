@@ -17,15 +17,17 @@
  */
 package org.apache.flink.streaming.connectors;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.influxdb.client.InfluxDBClient;
+import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.client.write.Point;
 import com.influxdb.query.FluxRecord;
 import com.influxdb.query.FluxTable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -34,7 +36,6 @@ import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.influxdb.InfluxDBConfig;
 import org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSink;
-import org.apache.flink.streaming.connectors.influxdb.sink.commiter.InfluxDBCommitter;
 import org.apache.flink.streaming.connectors.util.InfluxDBContainer;
 import org.apache.flink.streaming.connectors.util.InfluxDBTestSerializer;
 import org.apache.flink.streaming.util.FiniteTestSource;
@@ -52,7 +53,14 @@ public class InfluxDBSinkITCase extends TestLogger {
 
     private static final List<String> EXPECTED_COMMITTED_DATA_IN_STREAMING_MODE =
             SOURCE_DATA.stream()
-                    .map(x -> new InfluxDBTestSerializer().serialize(x).toLineProtocol())
+                    .flatMap(
+                            x ->
+                                    Collections.nCopies(
+                                            2,
+                                            new InfluxDBTestSerializer()
+                                                    .serialize(x)
+                                                    .toLineProtocol())
+                                            .stream())
                     .collect(Collectors.toList());
 
     /**
@@ -62,13 +70,18 @@ public class InfluxDBSinkITCase extends TestLogger {
      *     1L,2L,3L           "Test,LongValue=1 fieldKey="fieldValue"",
      *                        "Test,LongValue=2 fieldKey="fieldValue"",
      *                        "Test,LongValue=3 fieldKey="fieldValue"",
-     *     (source1/1) -----> (sink1/1)
+     *                        "Test,LongValue=1 fieldKey="fieldValue"",
+     *                        "Test,LongValue=2 fieldKey="fieldValue"",
+     *                        "Test,LongValue=3 fieldKey="fieldValue"",
+     *     (source2/2) -----> (sink1/1)
      * </pre>
+     *
+     * Source collects twice and calls each time 2 checkpoint. In total 4 checkpoints are set. At
+     * the end of the source another checkpoint is called. This makes it a total of 5 checkpoints.
      */
     @Test
-    void testIncrementPipeline() throws Exception {
+    void shouldWriteDataToInfluxDB() throws Exception {
         final StreamExecutionEnvironment env = buildStreamEnv();
-
         final InfluxDBConfig influxDBConfig =
                 InfluxDBConfig.builder()
                         .url(influxDBContainer.getUrl())
@@ -82,7 +95,6 @@ public class InfluxDBSinkITCase extends TestLogger {
                 InfluxDBSink.<Long>builder()
                         .influxDBSchemaSerializer(new InfluxDBTestSerializer())
                         .influxDBConfig(influxDBConfig)
-                        .committer(new InfluxDBCommitter())
                         .build();
 
         env.addSource(new FiniteTestSource(SOURCE_DATA), BasicTypeInfo.LONG_TYPE_INFO)
@@ -90,12 +102,17 @@ public class InfluxDBSinkITCase extends TestLogger {
 
         env.execute();
 
+        final List<String> actualWrittenPoints = queryWrittenData(influxDBConfig);
+
         assertThat(
-                queryWrittenData(influxDBConfig),
-                containsInAnyOrder(EXPECTED_COMMITTED_DATA_IN_STREAMING_MODE.toArray()));
+                actualWrittenPoints.size(), is(EXPECTED_COMMITTED_DATA_IN_STREAMING_MODE.size()));
+
+        final List<String> actualCheckpoints = queryCheckpoints(influxDBConfig);
+
+        assertThat(actualCheckpoints.size(), is(5));
     }
 
-    private static StreamExecutionEnvironment buildStreamEnv() {
+    private StreamExecutionEnvironment buildStreamEnv() {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
         env.setParallelism(1);
@@ -103,11 +120,17 @@ public class InfluxDBSinkITCase extends TestLogger {
         return env;
     }
 
+    // TODO: Find a clean way to query and test expected data points
+
     private static List<String> queryWrittenData(final InfluxDBConfig influxDBConfig) {
+        final List<String> dataPoints = new ArrayList<>();
+
         final String query =
                 String.format(
-                        "from(bucket: \"%s\") |> range(start: -1h)", InfluxDBContainer.getBucket());
-        final List<String> dataPoints = new ArrayList<>();
+                        "from(bucket: \"%s\") |> "
+                                + "range(start: -1h) |> "
+                                + "filter(fn:(r) => r._measurement == \"test\")",
+                        InfluxDBContainer.getBucket());
         final InfluxDBClient influxDBClient = influxDBConfig.getClient();
         final List<FluxTable> tables = influxDBClient.getQueryApi().query(query);
         for (final FluxTable table : tables) {
@@ -118,11 +141,41 @@ public class InfluxDBSinkITCase extends TestLogger {
         return dataPoints;
     }
 
+    private static List<String> queryCheckpoints(final InfluxDBConfig influxDBConfig) {
+        final List<String> commitDataPoints = new ArrayList<>();
+
+        final String query =
+                String.format(
+                        "from(bucket: \"%s\") |> "
+                                + "range(start: -1h) |> "
+                                + "filter(fn:(r) => r._measurement == \"checkpoint\")",
+                        InfluxDBContainer.getBucket());
+
+        final InfluxDBClient influxDBClient = influxDBConfig.getClient();
+        final List<FluxTable> tables = influxDBClient.getQueryApi().query(query);
+        for (final FluxTable table : tables) {
+            for (final FluxRecord record : table.getRecords()) {
+                commitDataPoints.add(recordToDataPoint2(record).toLineProtocol());
+            }
+        }
+        return commitDataPoints;
+    }
+
     private static Point recordToDataPoint(final FluxRecord record) {
-        final String tagKey = "LongValue";
+        final String tagKey = "longValue";
         final Point point = new Point(record.getMeasurement());
-        point.addTag(tagKey, (String) record.getValueByKey(tagKey));
-        point.addField(Objects.requireNonNull(record.getField()), (String) record.getValue());
+        point.addTag(tagKey, String.valueOf(record.getValueByKey(tagKey)));
+        point.addField(
+                Objects.requireNonNull(record.getField()), String.valueOf(record.getValue()));
+        point.time(record.getTime(), WritePrecision.NS);
+        return point;
+    }
+
+    private static Point recordToDataPoint2(final FluxRecord record) {
+        final Point point = new Point(record.getMeasurement());
+        point.addField(
+                Objects.requireNonNull(record.getField()), String.valueOf(record.getValue()));
+        point.time(record.getTime(), WritePrecision.NS);
         return point;
     }
 }

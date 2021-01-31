@@ -31,12 +31,10 @@ import org.apache.flink.streaming.connectors.influxdb.InfluxDBConfig;
 public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN> {
 
     private static final int BUFFER_SIZE = 1000;
+
     private final List<IN> elements;
-
     private ProcessingTimeService processingTimerService;
-
     private final InfluxDBSchemaSerializer<IN> schemaSerializer;
-
     private final InfluxDBClient influxDBClient;
 
     public InfluxDBWriter(
@@ -73,7 +71,7 @@ public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN> {
     @Override
     public void close() throws Exception {
         this.writeCurrentElements();
-        this.influxDBClient.close();
+        this.elements.clear();
     }
 
     public void setProcessingTimerService(final ProcessingTimeService processingTimerService) {
