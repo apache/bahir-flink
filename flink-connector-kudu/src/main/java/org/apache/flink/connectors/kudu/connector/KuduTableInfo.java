@@ -23,6 +23,7 @@ import org.apache.kudu.Schema;
 import org.apache.kudu.client.CreateTableOptions;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Describes which table should be used in sources and sinks along with specifications
@@ -102,5 +103,22 @@ public class KuduTableInfo implements Serializable {
             throw new RuntimeException("Cannot access CreateTableOptions for KuduTableInfo. Use createTableIfNotExists to specify.");
         }
         return createTableOptionsFactory.getCreateTableOptions();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        KuduTableInfo that = (KuduTableInfo) o;
+        return Objects.equals(this.name, that.name);
     }
 }

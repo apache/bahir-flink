@@ -21,6 +21,7 @@ import org.apache.flink.annotation.PublicEvolving;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.kudu.client.SessionConfiguration.FlushMode;
@@ -79,11 +80,11 @@ public class KuduWriterConfig implements Serializable {
     }
 
     public boolean isIgnoreNotFound() {
-        return isIgnoreNotFound();
+        return ignoreNotFound;
     }
 
     public boolean isIgnoreDuplicate() {
-        return isIgnoreDuplicate();
+        return ignoreDuplicate;
     }
 
     @Override
@@ -161,6 +162,38 @@ public class KuduWriterConfig implements Serializable {
                     flushInterval,
                     ignoreNotFound,
                     ignoreDuplicate);
+        }
+
+        @Override
+        public int hashCode() {
+            int result =
+                    Objects.hash(
+                            masters,
+                            flushMode,
+                            timeout,
+                            maxBufferSize,
+                            flushInterval,
+                            ignoreNotFound,
+                            ignoreDuplicate);
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Builder that = (Builder) o;
+            return Objects.equals(masters, that.masters)
+                    && Objects.equals(flushMode, that.flushMode)
+                    && Objects.equals(timeout, that.timeout)
+                    && Objects.equals(maxBufferSize, that.maxBufferSize)
+                    && Objects.equals(flushInterval, that.flushInterval)
+                    && Objects.equals(ignoreNotFound, that.ignoreNotFound)
+                    && Objects.equals(ignoreDuplicate, that.ignoreDuplicate);
         }
     }
 }
