@@ -17,6 +17,7 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.sink;
 
+import com.influxdb.client.write.Point;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -32,13 +33,13 @@ import org.apache.flink.streaming.connectors.influxdb.sink.writer.InfluxDBSchema
 import org.apache.flink.streaming.connectors.influxdb.sink.writer.InfluxDBWriter;
 
 @Builder
-public class InfluxDBSink<IN> implements Sink<IN, Void, IN, Void> {
+public class InfluxDBSink<IN> implements Sink<IN, Void, Point, Void> {
 
     private final InfluxDBSchemaSerializer<IN> influxDBSchemaSerializer;
 
     private final InfluxDBConfig influxDBConfig;
 
-    @Nullable private final SimpleVersionedSerializer<IN> writerStateSerializer;
+    @Nullable private final SimpleVersionedSerializer<Point> writerStateSerializer;
 
     @Builder.Default
     private SimpleVersionedSerializer<Void> committableSerializer =
@@ -47,7 +48,7 @@ public class InfluxDBSink<IN> implements Sink<IN, Void, IN, Void> {
     private InfluxDBSink(
             final InfluxDBSchemaSerializer<IN> influxDBSchemaSerializer,
             final InfluxDBConfig influxDBConfig,
-            @Nullable final SimpleVersionedSerializer<IN> writerStateSerializer,
+            @Nullable final SimpleVersionedSerializer<Point> writerStateSerializer,
             final SimpleVersionedSerializer<Void> committableSerializer) {
         this.influxDBSchemaSerializer = influxDBSchemaSerializer;
         this.influxDBConfig = influxDBConfig;
@@ -56,8 +57,8 @@ public class InfluxDBSink<IN> implements Sink<IN, Void, IN, Void> {
     }
 
     @Override
-    public SinkWriter<IN, Void, IN> createWriter(
-            final InitContext initContext, final List<IN> list) {
+    public SinkWriter<IN, Void, Point> createWriter(
+            final InitContext initContext, final List<Point> list) {
         final InfluxDBWriter<IN> writer =
                 new InfluxDBWriter<>(this.influxDBSchemaSerializer, this.influxDBConfig);
         writer.setProcessingTimerService(initContext.getProcessingTimeService());
@@ -75,7 +76,7 @@ public class InfluxDBSink<IN> implements Sink<IN, Void, IN, Void> {
     }
 
     @Override
-    public Optional<SimpleVersionedSerializer<IN>> getWriterStateSerializer() {
+    public Optional<SimpleVersionedSerializer<Point>> getWriterStateSerializer() {
         return Optional.ofNullable(this.writerStateSerializer);
     }
 

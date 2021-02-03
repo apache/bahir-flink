@@ -17,6 +17,7 @@
  */
 package org.apache.flink.streaming.connectors;
 
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -27,7 +28,6 @@ import com.influxdb.query.FluxRecord;
 import com.influxdb.query.FluxTable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -55,14 +55,7 @@ public class InfluxDBSinkIntegrationTestCase extends TestLogger {
 
     private static final List<String> EXPECTED_COMMITTED_DATA_IN_STREAMING_MODE =
             SOURCE_DATA.stream()
-                    .flatMap(
-                            x ->
-                                    Collections.nCopies(
-                                            2,
-                                            new InfluxDBTestSerializer()
-                                                    .serialize(x)
-                                                    .toLineProtocol())
-                                            .stream())
+                    .map(x -> new InfluxDBTestSerializer().serialize(x, null).toLineProtocol())
                     .collect(Collectors.toList());
 
     /**
@@ -78,8 +71,8 @@ public class InfluxDBSinkIntegrationTestCase extends TestLogger {
      *     (source2/2) -----> (sink1/1)
      * </pre>
      *
-     * Source collects twice and calls each time 2 checkpoint. In total 4 checkpoints are set. At
-     * the end of the source another checkpoint is called. This makes it a total of 5 checkpoints.
+     * Source collects twice and calls each time 2 checkpoint. In total 4 checkpoints are set. In
+     * some cases there are more than 4 checkpoints set.
      */
     @Test
     void shouldWriteDataToInfluxDB() throws Exception {
@@ -111,8 +104,7 @@ public class InfluxDBSinkIntegrationTestCase extends TestLogger {
                 actualWrittenPoints.size(), is(EXPECTED_COMMITTED_DATA_IN_STREAMING_MODE.size()));
 
         final List<String> actualCheckpoints = queryCheckpoints(influxDBConfig);
-
-        assertThat(actualCheckpoints.size(), is(5));
+        assertThat(actualCheckpoints.size(), greaterThanOrEqualTo(4));
     }
 
     private StreamExecutionEnvironment buildStreamEnv() {

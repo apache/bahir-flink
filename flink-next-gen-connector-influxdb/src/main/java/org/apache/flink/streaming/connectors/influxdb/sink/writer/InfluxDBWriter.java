@@ -30,11 +30,11 @@ import org.apache.flink.api.connector.sink.SinkWriter;
 import org.apache.flink.streaming.connectors.influxdb.InfluxDBConfig;
 
 @Slf4j
-public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN> {
+public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, Point> {
 
     private static final int BUFFER_SIZE = 1000;
 
-    private final List<IN> elements;
+    private final List<Point> elements;
     private ProcessingTimeService processingTimerService;
     private final InfluxDBSchemaSerializer<IN> schemaSerializer;
     private final InfluxDBClient influxDBClient;
@@ -55,7 +55,7 @@ public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN> {
                 this.elements.clear();
             } else {
                 log.debug("Adding elements to buffer. Buffer size: {}", this.elements.size());
-                this.elements.add(in);
+                this.elements.add(this.schemaSerializer.serialize(in, context));
             }
         } catch (final Exception e) {
             e.printStackTrace();
@@ -68,7 +68,7 @@ public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN> {
     }
 
     @Override
-    public List<IN> snapshotState() throws IOException {
+    public List<Point> snapshotState() throws IOException {
         return this.elements;
     }
 
@@ -86,14 +86,8 @@ public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN> {
 
     private void writeCurrentElements() throws Exception {
         try (final WriteApi writeApi = this.influxDBClient.getWriteApi()) {
-            final List<Point> points = new ArrayList<>(this.elements.size());
-            for (final IN element : this.elements) {
-                final Point point = this.schemaSerializer.serialize(element);
-                points.add(point);
-                log.debug("Adding Data point {}", point.toLineProtocol());
-            }
-            writeApi.writePoints(points);
-            log.debug("Wrote {} data points", points.size());
+            writeApi.writePoints(elements);
+            log.debug("Wrote {} data points", elements.size());
         }
     }
 }

@@ -17,22 +17,20 @@
  */
 package org.apache.flink.streaming.connectors.util;
 
-import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.client.write.Point;
-import java.time.Instant;
 import lombok.SneakyThrows;
+import org.apache.flink.api.connector.sink.SinkWriter.Context;
 import org.apache.flink.streaming.connectors.influxdb.sink.writer.InfluxDBSchemaSerializer;
+import org.jetbrains.annotations.Nullable;
 
 public class InfluxDBTestSerializer implements InfluxDBSchemaSerializer<Long> {
 
     @SneakyThrows
     @Override
-    public Point serialize(final Long element) {
+    public Point serialize(final Long element, @Nullable final Context context) {
         final Point dataPoint = new Point("test");
         dataPoint.addTag("longValue", String.valueOf(element));
         dataPoint.addField("fieldKey", "fieldValue");
-        Thread.sleep(1); // create a delay to not overwrite data
-        dataPoint.time(Instant.now(), WritePrecision.NS);
         return dataPoint;
     }
 }

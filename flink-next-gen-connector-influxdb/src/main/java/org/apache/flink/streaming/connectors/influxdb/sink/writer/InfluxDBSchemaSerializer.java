@@ -19,6 +19,7 @@ package org.apache.flink.streaming.connectors.influxdb.sink.writer;
 
 import com.influxdb.client.write.Point;
 import java.io.Serializable;
+import org.apache.flink.api.connector.sink.SinkWriter.Context;
 
 public interface InfluxDBSchemaSerializer<IN> extends Serializable {
 
@@ -28,5 +29,5 @@ public interface InfluxDBSchemaSerializer<IN> extends Serializable {
      * @param element to serialize.
      * @throws Exception if the serialization fails failed.
      */
-    Point serialize(final IN element) throws Exception;
+    Point serialize(final IN element, final Context context) throws Exception;
 }
