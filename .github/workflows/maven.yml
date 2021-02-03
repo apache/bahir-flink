@@ -19,6 +19,6 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Run the Maven verify phase
-        run: mvn --batch-mode --update-snapshots --pl flink-next-gen-connector-influxdb -Drat.skip=true clean verify
+        run: mvn -B -U -pl flink-next-gen-connector-influxdb -Drat.skip=true verify
       - name: Run the Maven spotless plugin
-        run: mvn --batch-mode --update-snapshots --pl flink-next-gen-connector-influxdb spotless:check
+        run: mvn -B -U -pl flink-next-gen-connector-influxdb spotless:check

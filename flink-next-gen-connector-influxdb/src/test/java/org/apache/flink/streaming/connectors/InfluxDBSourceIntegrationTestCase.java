@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 /** Integration test for the InfluxDB source for Flink. */
-public class InfluxDBSourceITCase extends TestLogger {
+public class InfluxDBSourceIntegrationTestCase extends TestLogger {
     @RegisterExtension
     public static final MiniClusterWithClientResource CLUSTER =
             new MiniClusterWithClientResource(
