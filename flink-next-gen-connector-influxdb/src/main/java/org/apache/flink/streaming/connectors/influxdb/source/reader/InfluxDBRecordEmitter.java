@@ -34,6 +34,8 @@ public class InfluxDBRecordEmitter<T> implements RecordEmitter<DataPoint, T, Inf
     public void emitRecord(
             final DataPoint element, final SourceOutput<T> output, final InfluxDBSplit splitState)
             throws Exception {
-        output.collect(this.dataPointDeserializer.deserialize(element));
+        output.collect(this.dataPointDeserializer.deserialize(element), (Long) element.getTime());
+        // TODO: think about splitState timestamp
+        // IDEA: -> splitState.lastTimestamp = Math.max(this.lastTimestamp, element.getTime());
     }
 }
