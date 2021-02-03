@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -43,6 +44,7 @@ import org.apache.flink.util.TestLogger;
 import org.junit.ClassRule;
 import org.junit.jupiter.api.Test;
 
+@Slf4j
 public class InfluxDBSinkIntegrationTestCase extends TestLogger {
 
     @ClassRule
@@ -81,6 +83,7 @@ public class InfluxDBSinkIntegrationTestCase extends TestLogger {
      */
     @Test
     void shouldWriteDataToInfluxDB() throws Exception {
+        log.info("Starting test");
         final StreamExecutionEnvironment env = this.buildStreamEnv();
         final InfluxDBConfig influxDBConfig =
                 InfluxDBConfig.builder()

@@ -22,12 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
+@Slf4j
 public final class InfluxDBContainer<SELF extends InfluxDBContainer<SELF>>
         extends GenericContainer<SELF> {
 
@@ -65,6 +67,7 @@ public final class InfluxDBContainer<SELF extends InfluxDBContainer<SELF>>
     }
 
     public static InfluxDBContainer<?> createWithDefaultTag() {
+        log.info("Starting influxDB test container with default tag {}", DEFAULT_IMAGE_NAME);
         return new InfluxDBContainer<>(DEFAULT_IMAGE_NAME);
     }
 

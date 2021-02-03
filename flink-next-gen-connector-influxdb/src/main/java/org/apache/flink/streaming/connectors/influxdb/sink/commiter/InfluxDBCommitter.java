@@ -26,9 +26,11 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.connector.sink.Committer;
 import org.apache.flink.streaming.connectors.influxdb.InfluxDBConfig;
 
+@Slf4j
 public class InfluxDBCommitter implements Committer<Void> {
 
     private final InfluxDBClient influxDBClient;
@@ -41,6 +43,7 @@ public class InfluxDBCommitter implements Committer<Void> {
     @SneakyThrows
     @Override
     public List<Void> commit(final List<Void> committables) throws IOException {
+        log.info("A checkpoint is set.");
         this.writeCheckpointDataPoint();
         return Collections.emptyList();
     }
@@ -48,6 +51,7 @@ public class InfluxDBCommitter implements Committer<Void> {
     @Override
     public void close() throws Exception {
         this.influxDBClient.close();
+        log.debug("Closing the committer.");
     }
 
     private void writeCheckpointDataPoint() throws Exception {
@@ -56,6 +60,7 @@ public class InfluxDBCommitter implements Committer<Void> {
             point.addField("checkpoint", "flink");
             point.time(Instant.now(), WritePrecision.NS);
             writeApi.writePoint(point);
+            log.debug("Checkpoint data point write at {}", point.toLineProtocol());
         }
     }
 }

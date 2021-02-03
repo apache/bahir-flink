@@ -24,10 +24,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.connector.sink.Sink.ProcessingTimeService;
 import org.apache.flink.api.connector.sink.SinkWriter;
 import org.apache.flink.streaming.connectors.influxdb.InfluxDBConfig;
 
+@Slf4j
 public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN> {
 
     private static final int BUFFER_SIZE = 1000;
@@ -48,9 +50,11 @@ public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN> {
     public void write(final IN in, final Context context) throws IOException {
         try {
             if (this.elements.size() == BUFFER_SIZE) {
+                log.info("Buffer size reached preparing to write the elements.");
                 this.writeCurrentElements();
                 this.elements.clear();
             } else {
+                log.debug("Adding elements to buffer. Buffer size: {}", this.elements.size());
                 this.elements.add(in);
             }
         } catch (final Exception e) {
@@ -70,7 +74,9 @@ public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN> {
 
     @Override
     public void close() throws Exception {
+        log.debug("Preparing to write the elements in close.");
         this.writeCurrentElements();
+        log.debug("Closing the writer.");
         this.elements.clear();
     }
 
@@ -82,9 +88,12 @@ public class InfluxDBWriter<IN> implements SinkWriter<IN, Void, IN> {
         try (final WriteApi writeApi = this.influxDBClient.getWriteApi()) {
             final List<Point> points = new ArrayList<>(this.elements.size());
             for (final IN element : this.elements) {
-                points.add(this.schemaSerializer.serialize(element));
+                final Point point = this.schemaSerializer.serialize(element);
+                points.add(point);
+                log.debug("Adding Data point {}", point.toLineProtocol());
             }
             writeApi.writePoints(points);
+            log.debug("Wrote {} data points", points.size());
         }
     }
 }
