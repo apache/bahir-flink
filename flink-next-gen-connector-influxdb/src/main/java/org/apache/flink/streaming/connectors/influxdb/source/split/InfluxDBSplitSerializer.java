@@ -40,6 +40,6 @@ public class InfluxDBSplitSerializer implements SimpleVersionedSerializer<Influx
 
     @Override
     public InfluxDBSplit deserialize(final int i, final byte[] bytes) throws IOException {
-        return new InfluxDBSplit("0");
+        return new InfluxDBSplit(0);
     }
 }

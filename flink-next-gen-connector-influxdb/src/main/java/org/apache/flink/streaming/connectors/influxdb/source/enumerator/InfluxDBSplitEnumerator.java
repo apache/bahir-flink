@@ -33,7 +33,6 @@ public class InfluxDBSplitEnumerator
         implements SplitEnumerator<InfluxDBSplit, InfluxDBSourceEnumState> {
 
     private final SplitEnumeratorContext<InfluxDBSplit> context;
-    private boolean firstRun = true;
 
     public InfluxDBSplitEnumerator(final SplitEnumeratorContext<InfluxDBSplit> context) {
         this.context = checkNotNull(context);
@@ -45,20 +44,15 @@ public class InfluxDBSplitEnumerator
     }
 
     @Override
-    public void handleSplitRequest(final int i, @Nullable final String s) {
-        if (this.firstRun) {
-            this.context.assignSplit(new InfluxDBSplit(String.valueOf(i)), i);
-            this.firstRun = false;
-        } else {
-            this.context.signalNoMoreSplits(i);
-        }
+    public void handleSplitRequest(final int subtaskId, @Nullable final String requesterHostname) {
+        this.context.assignSplit(new InfluxDBSplit(subtaskId), subtaskId);
     }
 
     @Override
-    public void addSplitsBack(final List<InfluxDBSplit> list, final int i) {}
+    public void addSplitsBack(final List<InfluxDBSplit> splits, final int subtaskId) {}
 
     @Override
-    public void addReader(final int i) {
+    public void addReader(final int subtaskId) {
         // this source is purely lazy-pull-based, nothing to do upon registration
     }
 

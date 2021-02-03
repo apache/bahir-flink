@@ -24,6 +24,6 @@ public class InfluxDBTestDeserializer implements InfluxDBDataPointDeserializer<L
 
     @Override
     public Long deserialize(final DataPoint dataPoint) throws Exception {
-        return (Long) dataPoint.getTime();
+        return (Long) dataPoint.getField("longValue");
     }
 }

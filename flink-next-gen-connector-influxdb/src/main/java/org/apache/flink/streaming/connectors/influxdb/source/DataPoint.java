@@ -18,30 +18,27 @@
 package org.apache.flink.streaming.connectors.influxdb.source;
 
 import com.influxdb.Arguments;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
+import javax.annotation.Nullable;
+import lombok.Getter;
 
 /** InfluxDB data points */
-/* Split Reader (HTTP Server) Line Protocol -> DataPoint -> Deserializer */
 public class DataPoint {
-    private final String name;
-    private final Map<String, String> tags = new TreeMap();
-    private final Map<String, Object> fields = new TreeMap();
-    private Number time;
+    @Getter private final String name;
+    private final Map<String, String> tags = new HashMap();
+    private final Map<String, Object> fields = new HashMap();
+    @Getter private final Number timestamp;
 
-    public DataPoint(final String measurementName) {
+    DataPoint(final String measurementName, @Nullable final Number timestamp) {
         Arguments.checkNotNull(measurementName, "measurement");
         this.name = measurementName;
+        this.timestamp = timestamp;
     }
 
-    public String getMeasurement() {
-        return this.name;
-    }
-
-    public DataPoint putField(final String field, final Object value) {
+    public void addField(final String field, final Object value) {
         Arguments.checkNonEmpty(field, "fieldName");
         this.fields.put(field, value);
-        return this;
     }
 
     public Object getField(final String field) {
@@ -49,18 +46,13 @@ public class DataPoint {
         return this.fields.getOrDefault(field, null);
     }
 
-    public DataPoint time(final Number time) {
-        this.time = time;
-        return this;
-    }
-
-    public Number getTime() {
-        return this.time;
-    }
-
-    public DataPoint addTag(final String key, final String value) {
+    public void addTag(final String key, final String value) {
         Arguments.checkNotNull(key, "tagName");
         this.tags.put(key, value);
-        return this;
+    }
+
+    public String getTag(final String key) {
+        Arguments.checkNotNull(key, "tagName");
+        return this.tags.getOrDefault(key, null);
     }
 }

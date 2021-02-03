@@ -78,7 +78,7 @@ public class InfluxDBSource<OUT>
                 new InfluxDBRecordEmitter<>(this.deserializationSchema);
         final Configuration config = new Configuration();
         config.setInteger("ELEMENT_QUEUE_CAPACITY", 3);
-        return new InfluxDBSourceReader<OUT>(
+        return new InfluxDBSourceReader<>(
                 splitReaderSupplier, recordEmitter, config, sourceReaderContext);
     }
 
