@@ -24,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
@@ -32,63 +33,65 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.connector.base.source.reader.RecordsWithSplitIds;
 import org.apache.flink.connector.base.source.reader.splitreader.SplitReader;
 import org.apache.flink.connector.base.source.reader.splitreader.SplitsChange;
+import org.apache.flink.connector.base.source.reader.synchronization.FutureCompletingBlockingQueue;
 import org.apache.flink.streaming.connectors.influxdb.common.DataPoint;
 import org.apache.flink.streaming.connectors.influxdb.common.InfluxParser;
 import org.apache.flink.streaming.connectors.influxdb.source.split.InfluxDBSplit;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A {@link SplitReader} implementation that reads records from InfluxDB splits.
  *
  * <p>The returned type are in the format of {@link DataPoint}.
  */
+@Slf4j
 public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit> {
 
     private static final int INGEST_QUEUE_CAPACITY = 1000;
     private static final int MAXIMUM_LINES_PER_REQUEST = 1000;
+    private static final long ENQUEUE_WAIT_TIME = 5;
 
     private static final int DEFAULT_PORT = 8000;
     private HttpServer server = null;
 
-    private final ArrayBlockingQueue<List<DataPoint>> ingestionQueue =
-            new ArrayBlockingQueue<>(INGEST_QUEUE_CAPACITY);
+    private final FutureCompletingBlockingQueue<List<DataPoint>> ingestionQueue =
+            new FutureCompletingBlockingQueue<>(INGEST_QUEUE_CAPACITY);
+
     private final InfluxParser parser = new InfluxParser();
     private InfluxDBSplit split;
 
+    @SneakyThrows
     @Override
-    public RecordsWithSplitIds<DataPoint> fetch() throws IOException {
+    public RecordsWithSplitIds<DataPoint> fetch() {
         if (this.split == null) {
             return null;
         }
-        // Queue
-        final InfluxDBSplitRecords<DataPoint> recordsBySplits =
-                new InfluxDBSplitRecords<>(this.split.splitId());
-        try {
+        final InfluxDBSplitRecords recordsBySplits = new InfluxDBSplitRecords(this.split.splitId());
 
-            // TODO blocking call -> handle wakeUp signal
-            final List<List<DataPoint>> requests = new ArrayList<>();
-            requests.add(this.ingestionQueue.take());
-            this.ingestionQueue.drainTo(requests);
-            for (final List<DataPoint> request : requests) {
-                recordsBySplits.addAll(request);
-            }
-
+        this.ingestionQueue.getAvailabilityFuture().get();
+        final List<DataPoint> requests = this.ingestionQueue.poll();
+        if (requests == null) {
             recordsBySplits.prepareForRead();
             return recordsBySplits;
-        } catch (final InterruptedException e) {
-            // TODO: check what to do with split
-            e.printStackTrace();
-            return null;
         }
+        recordsBySplits.addAll(requests);
+        recordsBySplits.prepareForRead();
+        return recordsBySplits;
     }
 
     @Override
     public void handleSplitsChanges(final SplitsChange<InfluxDBSplit> splitsChange) {
-        if (splitsChange.splits().size() == 0) {
+        if (splitsChange.splits().isEmpty()) {
             return;
         }
         this.split = splitsChange.splits().get(0);
@@ -99,8 +102,8 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
         try {
             this.server = HttpServer.create(new InetSocketAddress(DEFAULT_PORT), 0);
         } catch (final IOException e) {
-            // TODO add splits back
-            e.printStackTrace();
+            throw new RuntimeException(
+                    "Unable to start HTTP Server on Port " + DEFAULT_PORT + ": " + e.getMessage());
         }
 
         this.server.createContext("/api/v2/write", new InfluxDBAPIHandler());
@@ -110,13 +113,12 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
 
     @Override
     public void wakeUp() {
-        // TODO make fetch return instantly when this method is called (see SplitReader interface)
+        this.ingestionQueue.notifyAvailable();
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         if (this.server != null) {
-            // TODO: check what to do with queue
             this.server.stop(1); // waits max 1 second for pending requests to finish
         }
     }
@@ -147,26 +149,46 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
                     }
                 }
 
-                InfluxDBSplitReader.this.ingestionQueue.put(points); // TODO use offer with timeout
+                final boolean result =
+                        CompletableFuture.supplyAsync(
+                                        () -> {
+                                            try {
+                                                return InfluxDBSplitReader.this.ingestionQueue.put(
+                                                        InfluxDBSplitReader.this
+                                                                .split
+                                                                .splitId()
+                                                                .hashCode(),
+                                                        points);
+                                            } catch (final InterruptedException e) {
+                                                return false;
+                                            }
+                                        })
+                                .get(ENQUEUE_WAIT_TIME, TimeUnit.SECONDS);
 
-                t.sendResponseHeaders(204, -1);
+                if (!result) {
+                    throw new TimeoutException("Failed to enqueue");
+                }
+
+                t.sendResponseHeaders(HttpURLConnection.HTTP_NO_CONTENT, -1);
+                InfluxDBSplitReader.this.ingestionQueue.notifyAvailable();
             } catch (final ParseException e) {
-                // 400 Bad Request
-                this.sendResponse(t, 400, e.getMessage());
+                this.sendResponse(t, HttpURLConnection.HTTP_BAD_REQUEST, e.getMessage());
             } catch (final RequestTooLargeException e) {
-                // 413 Payload Too Large
-                this.sendResponse(t, 413, e.getMessage());
-            } catch (final InterruptedException e) {
-                // TODO: InterruptedException may not be the right type
-                // 429 Too Many Requests
-                this.sendResponse(t, 429, "Server overloaded.");
-                // TODO rethrow/forward exception so that Flink knows the ingestion queue was full
-                e.printStackTrace();
+                this.sendResponse(t, HttpURLConnection.HTTP_ENTITY_TOO_LARGE, e.getMessage());
+            } catch (final TimeoutException e) {
+                final int HTTP_TOO_MANY_REQUESTS = 429;
+                this.sendResponse(t, HTTP_TOO_MANY_REQUESTS, "Server overloaded");
+                log.error(e.getMessage());
+            } catch (final ExecutionException | InterruptedException e) {
+                this.sendResponse(t, HttpURLConnection.HTTP_INTERNAL_ERROR, "Server Error");
+                log.error(e.getMessage());
             }
         }
 
         private void sendResponse(
-                final HttpExchange t, final int responseCode, final String message)
+                @NotNull final HttpExchange t,
+                final int responseCode,
+                @NotNull final String message)
                 throws IOException {
             final byte[] response = message.getBytes();
             t.sendResponseHeaders(responseCode, response.length);
@@ -182,9 +204,9 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
         }
     }
 
-    private static class InfluxDBSplitRecords<T> implements RecordsWithSplitIds<T> {
-        private final List<T> records;
-        private Iterator<T> recordIterator;
+    private static class InfluxDBSplitRecords implements RecordsWithSplitIds<DataPoint> {
+        private final List<DataPoint> records;
+        private Iterator<DataPoint> recordIterator;
         private final String splitId;
 
         private InfluxDBSplitRecords(final String splitId) {
@@ -192,7 +214,7 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
             this.records = new ArrayList<>();
         }
 
-        private boolean addAll(final List<T> records) {
+        private boolean addAll(final List<DataPoint> records) {
             return this.records.addAll(records);
         }
 
@@ -211,7 +233,7 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
 
         @Override
         @Nullable
-        public T nextRecordFromSplit() {
+        public DataPoint nextRecordFromSplit() {
             if (this.recordIterator.hasNext()) {
                 return this.recordIterator.next();
             } else {

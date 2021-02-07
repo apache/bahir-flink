@@ -77,15 +77,13 @@ public class InfluxDBSourceIntegrationTestCase extends TestLogger {
                 .addSink(new CollectSink());
 
         final JobClient jobClient = env.executeAsync();
-        // Wait for HTTPServer to start
-        Thread.sleep(5000);
 
         final HTTPRequestRunner request = new HTTPRequestRunner();
         final Thread runner = new Thread(request);
         runner.start();
         runner.join();
 
-        assertEquals(request.getCode(), 204);
+        assertEquals(204, request.getCode());
         jobClient.cancel();
 
         final Collection<Long> results = new ArrayList<>();
@@ -122,6 +120,8 @@ public class InfluxDBSourceIntegrationTestCase extends TestLogger {
         @SneakyThrows
         @Override
         public void run() {
+            // Wait for HTTPServer to start
+            Thread.sleep(5000);
             final URL u = new URL("http://localhost:8000/api/v2/write");
             final HttpURLConnection conn = (HttpURLConnection) u.openConnection();
             conn.setRequestMethod("POST");
