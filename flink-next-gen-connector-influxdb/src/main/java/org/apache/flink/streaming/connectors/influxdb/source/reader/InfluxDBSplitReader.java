@@ -32,20 +32,24 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
 import javax.annotation.Nullable;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.connector.base.source.reader.RecordsWithSplitIds;
 import org.apache.flink.connector.base.source.reader.splitreader.SplitReader;
 import org.apache.flink.connector.base.source.reader.splitreader.SplitsChange;
+import org.apache.flink.connector.base.source.reader.synchronization.FutureCompletingBlockingQueue;
 import org.apache.flink.streaming.connectors.influxdb.source.DataPoint;
 import org.apache.flink.streaming.connectors.influxdb.source.InfluxParser;
 import org.apache.flink.streaming.connectors.influxdb.source.split.InfluxDBSplit;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A {@link SplitReader} implementation that reads records from InfluxDB splits.
  *
  * <p>The returned type are in the format of {@link DataPoint}.
  */
+@Slf4j
 public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit> {
 
     private static final int INGEST_QUEUE_CAPACITY = 1000;
@@ -54,36 +58,30 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
     private static final int DEFAULT_PORT = 8000;
     private HttpServer server = null;
 
-    private final ArrayBlockingQueue<List<DataPoint>> ingestionQueue =
-            new ArrayBlockingQueue<>(INGEST_QUEUE_CAPACITY);
+    private final FutureCompletingBlockingQueue<List<DataPoint>> ingestionQueue =
+            new FutureCompletingBlockingQueue<>(INGEST_QUEUE_CAPACITY);
+
     private final InfluxParser parser = new InfluxParser();
     private InfluxDBSplit split;
 
+    @SneakyThrows
     @Override
     public RecordsWithSplitIds<DataPoint> fetch() throws IOException {
         if (this.split == null) {
             return null;
         }
-        // Queue
         final InfluxDBSplitRecords<DataPoint> recordsBySplits =
                 new InfluxDBSplitRecords<>(this.split.splitId());
-        try {
 
-            // TODO blocking call -> handle wakeUp signal
-            final List<List<DataPoint>> requests = new ArrayList<>();
-            requests.add(this.ingestionQueue.take());
-            this.ingestionQueue.drainTo(requests);
-            for (final List<DataPoint> request : requests) {
-                recordsBySplits.addAll(request);
-            }
-
+        this.ingestionQueue.getAvailabilityFuture().get();
+        final List<DataPoint> requests = this.ingestionQueue.poll();
+        if (requests == null) {
             recordsBySplits.prepareForRead();
             return recordsBySplits;
-        } catch (final InterruptedException e) {
-            // TODO: check what to do with split
-            e.printStackTrace();
-            return null;
         }
+        recordsBySplits.addAll(requests);
+        recordsBySplits.prepareForRead();
+        return recordsBySplits;
     }
 
     @Override
@@ -110,7 +108,7 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
 
     @Override
     public void wakeUp() {
-        // TODO make fetch return instantly when this method is called (see SplitReader interface)
+        this.ingestionQueue.notifyAvailable();
     }
 
     @Override
@@ -147,9 +145,16 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
                     }
                 }
 
-                InfluxDBSplitReader.this.ingestionQueue.put(points); // TODO use offer with timeout
+                // TODO use offer with timeout -> not possible with futureblockingqueue
+                // Returns true if added to queue
+                // Can we use the split id hashcode for the index?
+                if (InfluxDBSplitReader.this.ingestionQueue.put(
+                        InfluxDBSplitReader.this.split.splitId().hashCode(), points)) {
+                    t.sendResponseHeaders(204, -1);
+                    InfluxDBSplitReader.this.ingestionQueue.notifyAvailable();
+                }
+                // TODO what about the HTTPServer thread being blocked here
 
-                t.sendResponseHeaders(204, -1);
             } catch (final ParseException e) {
                 // 400 Bad Request
                 this.sendResponse(t, 400, e.getMessage());
@@ -166,7 +171,9 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
         }
 
         private void sendResponse(
-                final HttpExchange t, final int responseCode, final String message)
+                @NotNull final HttpExchange t,
+                final int responseCode,
+                @NotNull final String message)
                 throws IOException {
             final byte[] response = message.getBytes();
             t.sendResponseHeaders(responseCode, response.length);
