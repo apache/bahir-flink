@@ -30,8 +30,6 @@ import java.util.List;
 import lombok.SneakyThrows;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.connector.source.Boundedness;
-import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.core.execution.JobClient;
 import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -68,9 +66,10 @@ public class InfluxDBSourceIntegrationTestCase extends TestLogger {
 
         CollectSink.VALUES.clear();
 
-        final Source influxDBSource =
-                new InfluxDBSource<Long>(
-                        Boundedness.CONTINUOUS_UNBOUNDED, new InfluxDBTestDeserializer());
+        final InfluxDBSource<Long> influxDBSource =
+                InfluxDBSource.<Long>builder()
+                        .setDeserializer(new InfluxDBTestDeserializer())
+                        .build();
 
         env.fromSource(influxDBSource, WatermarkStrategy.noWatermarks(), "InfluxDBSource")
                 .map(new IncrementMapFunction())

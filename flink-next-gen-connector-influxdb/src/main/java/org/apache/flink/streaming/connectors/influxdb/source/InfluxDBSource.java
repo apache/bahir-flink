@@ -17,6 +17,7 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.source;
 
+import java.util.Properties;
 import java.util.function.Supplier;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.connector.source.Boundedness;
@@ -55,44 +56,55 @@ import org.apache.flink.streaming.connectors.influxdb.source.split.InfluxDBSplit
 public class InfluxDBSource<OUT>
         implements Source<OUT, InfluxDBSplit, InfluxDBSourceEnumState>, ResultTypeQueryable<OUT> {
 
-    private final Boundedness boundedness;
+    private final Properties properties;
     private final InfluxDBDataPointDeserializer<OUT> deserializationSchema;
 
-    public InfluxDBSource(
-            final Boundedness boundedness,
+    InfluxDBSource(
+            final Properties properties,
             final InfluxDBDataPointDeserializer<OUT> deserializationSchema) {
-        this.boundedness = boundedness;
+        this.properties = properties;
         this.deserializationSchema = deserializationSchema;
+    }
+
+    /**
+     * Get a influxDBSourceBuilder to build a {@link InfluxDBSource}.
+     *
+     * @return a InfluxDB source builder.
+     */
+    public static <OUT> InfluxDBSourceBuilder<OUT> builder() {
+        return new InfluxDBSourceBuilder<>();
     }
 
     @Override
     public Boundedness getBoundedness() {
-        return this.boundedness;
+        return Boundedness.CONTINUOUS_UNBOUNDED;
     }
 
     @Override
     public SourceReader<OUT, InfluxDBSplit> createReader(
-            final SourceReaderContext sourceReaderContext) throws Exception {
-        final Supplier<InfluxDBSplitReader> splitReaderSupplier = InfluxDBSplitReader::new;
+            final SourceReaderContext sourceReaderContext) {
+        final Supplier<InfluxDBSplitReader> splitReaderSupplier =
+                () -> new InfluxDBSplitReader(this.properties);
         final InfluxDBRecordEmitter<OUT> recordEmitter =
                 new InfluxDBRecordEmitter<>(this.deserializationSchema);
-        final Configuration config = new Configuration();
-        config.setInteger("ELEMENT_QUEUE_CAPACITY", 3);
+
         return new InfluxDBSourceReader<>(
-                splitReaderSupplier, recordEmitter, config, sourceReaderContext);
+                splitReaderSupplier,
+                recordEmitter,
+                this.toConfiguration(this.properties),
+                sourceReaderContext);
     }
 
     @Override
     public SplitEnumerator<InfluxDBSplit, InfluxDBSourceEnumState> createEnumerator(
-            final SplitEnumeratorContext<InfluxDBSplit> splitEnumeratorContext) throws Exception {
+            final SplitEnumeratorContext<InfluxDBSplit> splitEnumeratorContext) {
         return new InfluxDBSplitEnumerator(splitEnumeratorContext);
     }
 
     @Override
     public SplitEnumerator<InfluxDBSplit, InfluxDBSourceEnumState> restoreEnumerator(
             final SplitEnumeratorContext<InfluxDBSplit> splitEnumeratorContext,
-            final InfluxDBSourceEnumState influxDBSourceEnumState)
-            throws Exception {
+            final InfluxDBSourceEnumState influxDBSourceEnumState) {
         return null;
     }
 
@@ -109,5 +121,13 @@ public class InfluxDBSource<OUT>
     @Override
     public TypeInformation<OUT> getProducedType() {
         return this.deserializationSchema.getProducedType();
+    }
+
+    // ----------- private helper methods ---------------
+
+    private Configuration toConfiguration(final Properties props) {
+        final Configuration config = new Configuration();
+        props.stringPropertyNames().forEach(key -> config.setString(key, props.getProperty(key)));
+        return config;
     }
 }
