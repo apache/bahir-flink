@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.influxdb;
+package org.apache.flink.streaming.connectors.influxdb.common;
 
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.InfluxDBClientFactory;
@@ -24,7 +24,7 @@ import java.io.Serializable;
 import lombok.Builder;
 import lombok.NonNull;
 
-/** Configuration for InfluxDB. */
+/** A Configuration wrapper for InfluxDB Java Client. */
 @Builder
 public class InfluxDBConfig implements Serializable {
     private static final long serialVersionUID = 1L;

@@ -15,34 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.influxdb.sink;
+package org.apache.flink.streaming.connectors.influxdb.sink.writer;
 
+import com.influxdb.client.write.Point;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import org.apache.flink.annotation.PublicEvolving;
+import lombok.SneakyThrows;
 import org.apache.flink.core.io.SimpleVersionedSerializer;
+import org.apache.flink.streaming.connectors.influxdb.common.InfluxParser;
 
-/** A {@link SimpleVersionedSerializer} implementation for Strings. */
-// TODO: Replace this with a InfluxDB Serializer
-@PublicEvolving
-public final class SimpleVersionedStringSerializer implements SimpleVersionedSerializer<String> {
+public class InfluxDBPointSerializer implements SimpleVersionedSerializer<Point> {
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
-
-    public static final SimpleVersionedStringSerializer INSTANCE =
-            new SimpleVersionedStringSerializer();
+    InfluxParser parser = new InfluxParser();
 
     @Override
     public int getVersion() {
-        return 1;
+        return 0;
     }
 
     @Override
-    public byte[] serialize(String value) {
-        final byte[] serialized = value.getBytes(StandardCharsets.UTF_8);
+    public byte[] serialize(final Point point) throws IOException {
+        final byte[] serialized = point.toLineProtocol().getBytes(CHARSET);
         final byte[] targetBytes = new byte[Integer.BYTES + serialized.length];
 
         final ByteBuffer bb = ByteBuffer.wrap(targetBytes).order(ByteOrder.LITTLE_ENDIAN);
@@ -51,26 +48,13 @@ public final class SimpleVersionedStringSerializer implements SimpleVersionedSer
         return targetBytes;
     }
 
+    @SneakyThrows
     @Override
-    public String deserialize(int version, byte[] serialized) throws IOException {
-        switch (version) {
-            case 1:
-                return deserializeV1(serialized);
-            default:
-                throw new IOException("Unrecognized version or corrupt state: " + version);
-        }
-    }
-
-    private static String deserializeV1(byte[] serialized) {
+    public Point deserialize(final int version, final byte[] serialized) throws IOException {
         final ByteBuffer bb = ByteBuffer.wrap(serialized).order(ByteOrder.LITTLE_ENDIAN);
         final byte[] targetStringBytes = new byte[bb.getInt()];
         bb.get(targetStringBytes);
-        return new String(targetStringBytes, CHARSET);
+        final String line = new String(targetStringBytes, CHARSET);
+        return this.parser.parseToDataPoint(line).toPoint();
     }
-
-    /**
-     * Private constructor to prevent instantiation. Access the serializer through the {@link
-     * #INSTANCE}.
-     */
-    private SimpleVersionedStringSerializer() {}
 }

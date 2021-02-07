@@ -15,30 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.influxdb.sink;
+package org.apache.flink.streaming.connectors.influxdb.sink.commiter;
 
-import java.io.IOException;
-import java.io.Serializable;
+import java.nio.ByteBuffer;
 import org.apache.flink.core.io.SimpleVersionedSerializer;
 
-public class InfluxDBCommittableSerializer
-        implements SimpleVersionedSerializer<Void>, Serializable {
-
-    public static final InfluxDBCommittableSerializer INSTANCE =
-            new InfluxDBCommittableSerializer();
+/**
+ * This class Serialize and deserializes the commit values. Since we are sending the timestamp value
+ * as a commitabel the Long object is (de)serialized.
+ */
+public class InfluxDBCommittableSerializer implements SimpleVersionedSerializer<Long> {
 
     @Override
     public int getVersion() {
-        return SimpleVersionedStringSerializer.INSTANCE.getVersion();
+        return 1;
     }
 
     @Override
-    public byte[] serialize(final Void obj) throws IOException {
-        return SimpleVersionedStringSerializer.INSTANCE.serialize(String.valueOf(obj));
+    public byte[] serialize(final Long value) {
+        final ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(0, value);
+        return buffer.array();
     }
 
     @Override
-    public Void deserialize(final int version, final byte[] serialized) throws IOException {
-        return null;
+    public Long deserialize(final int version, final byte[] serialized) {
+        final ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.put(serialized, 0, serialized.length);
+        buffer.flip();
+        return buffer.getLong();
     }
 }

@@ -21,7 +21,7 @@ import java.io.Serializable;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
-import org.apache.flink.streaming.connectors.influxdb.source.DataPoint;
+import org.apache.flink.streaming.connectors.influxdb.common.DataPoint;
 
 /** An interface for the deserialization of InfluxDB data points. */
 public interface InfluxDBDataPointDeserializer<OUT> extends Serializable, ResultTypeQueryable<OUT> {

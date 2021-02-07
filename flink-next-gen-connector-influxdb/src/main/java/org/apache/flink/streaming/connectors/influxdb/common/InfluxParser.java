@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.influxdb.source;
+package org.apache.flink.streaming.connectors.influxdb.common;
 
 import java.text.ParseException;
 import java.util.List;
@@ -29,7 +29,15 @@ import org.apache.druid.data.input.influx.InfluxLineProtocolLexer;
 import org.apache.druid.data.input.influx.InfluxLineProtocolParser;
 import org.apache.druid.data.input.influx.InfluxLineProtocolParser.TimestampContext;
 
-// https://github.com/apache/druid/blob/master/extensions-contrib/influx-extensions/src/main/java/org/apache/druid/data/input/influx/InfluxParser.java
+/**
+ * This is an InfluxDB line protocol parser.
+ *
+ * @see <a href=https://docs.influxdata.com/influxdb/v2.0/reference/syntax/line-protocol/">Line
+ *     Protocol</a>
+ * @see <a
+ *     href=https://github.com/apache/druid/blob/master/extensions-contrib/influx-extensions/src/main/java/org/apache/druid/data/input/influx/InfluxParser.java>
+ *     Apache Druid InfluxDB Parser </a>
+ */
 public class InfluxParser {
     private static final Pattern BACKSLASH_PATTERN = Pattern.compile("\\\\\"");
     private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("\\\\([,= ])");

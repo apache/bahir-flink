@@ -15,9 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.influxdb.source;
+package org.apache.flink.streaming.connectors.influxdb.common;
 
 import com.influxdb.Arguments;
+import com.influxdb.client.domain.WritePrecision;
+import com.influxdb.client.write.Point;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -34,6 +36,14 @@ public class DataPoint {
         Arguments.checkNotNull(measurementName, "measurement");
         this.name = measurementName;
         this.timestamp = timestamp;
+    }
+
+    public Point toPoint() {
+        final Point out = new Point(this.name);
+        out.time(this.timestamp, WritePrecision.NS);
+        out.addTags(this.tags);
+        out.addFields(this.fields);
+        return out;
     }
 
     public void addField(final String field, final Object value) {
