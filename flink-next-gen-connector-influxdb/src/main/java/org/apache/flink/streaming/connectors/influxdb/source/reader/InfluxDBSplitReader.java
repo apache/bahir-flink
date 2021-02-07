@@ -17,8 +17,6 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.source.reader;
 
-import static org.apache.flink.util.Preconditions.checkNotNull;
-
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -30,11 +28,9 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import javax.annotation.Nullable;
@@ -69,18 +65,16 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
             return null;
         }
         // Queue
-        final InfluxDBSplitRecords<DataPoint> recordsBySplits = new InfluxDBSplitRecords<>();
+        final InfluxDBSplitRecords<DataPoint> recordsBySplits =
+                new InfluxDBSplitRecords<>(this.split.splitId());
         try {
-            // TODO blocking call -> handle wakeUp signal
-            final Collection<DataPoint> recordsForSplit =
-                    recordsBySplits.recordsForSplit(this.split.splitId());
 
             // TODO blocking call -> handle wakeUp signal
             final List<List<DataPoint>> requests = new ArrayList<>();
             requests.add(this.ingestionQueue.take());
             this.ingestionQueue.drainTo(requests);
             for (final List<DataPoint> request : requests) {
-                recordsForSplit.addAll(request);
+                recordsBySplits.addAll(request);
             }
 
             recordsBySplits.prepareForRead();
@@ -189,45 +183,35 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
     }
 
     private static class InfluxDBSplitRecords<T> implements RecordsWithSplitIds<T> {
-        private final Map<String, Collection<T>> recordsBySplits;
-        private Iterator<Map.Entry<String, Collection<T>>> splitIterator;
-        private String currentSplitId;
+        private final List<T> records;
         private Iterator<T> recordIterator;
+        private final String splitId;
 
-        private InfluxDBSplitRecords() {
-            this.recordsBySplits = new HashMap<>();
+        private InfluxDBSplitRecords(final String splitId) {
+            this.splitId = splitId;
+            this.records = new ArrayList<>();
         }
 
-        private Collection<T> recordsForSplit(final String splitID) {
-            return this.recordsBySplits.computeIfAbsent(splitID, id -> new ArrayList<>());
+        private boolean addAll(final List<T> records) {
+            return this.records.addAll(records);
         }
 
         private void prepareForRead() {
-            this.splitIterator = this.recordsBySplits.entrySet().iterator();
+            this.recordIterator = this.records.iterator();
         }
 
         @Override
         @Nullable
         public String nextSplit() {
-            if (this.splitIterator.hasNext()) {
-                final Map.Entry<String, Collection<T>> entry = this.splitIterator.next();
-                this.currentSplitId = entry.getKey();
-                this.recordIterator = entry.getValue().iterator();
-                return this.currentSplitId;
-            } else {
-                this.currentSplitId = null;
-                this.recordIterator = null;
-                return null;
+            if (this.recordIterator.hasNext()) {
+                return this.splitId;
             }
+            return null;
         }
 
         @Override
         @Nullable
         public T nextRecordFromSplit() {
-            checkNotNull(
-                    this.currentSplitId,
-                    "Make sure nextSplit() did not return null before "
-                            + "iterate over the records split.");
             if (this.recordIterator.hasNext()) {
                 return this.recordIterator.next();
             } else {
@@ -237,7 +221,7 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
 
         @Override
         public Set<String> finishedSplits() {
-            return this.recordsBySplits.keySet();
+            return Collections.emptySet();
         }
     }
 }

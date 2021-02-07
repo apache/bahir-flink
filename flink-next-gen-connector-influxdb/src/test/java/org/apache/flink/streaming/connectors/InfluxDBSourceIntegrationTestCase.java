@@ -17,6 +17,7 @@
  */
 package org.apache.flink.streaming.connectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.OutputStream;
@@ -75,16 +76,16 @@ public class InfluxDBSourceIntegrationTestCase extends TestLogger {
                 .map(new IncrementMapFunction())
                 .addSink(new CollectSink());
 
-        JobClient jobClient = env.executeAsync();
+        final JobClient jobClient = env.executeAsync();
         // Wait for HTTPServer to start
         Thread.sleep(5000);
 
-        HTTPRequestRunner request = new HTTPRequestRunner();
+        final HTTPRequestRunner request = new HTTPRequestRunner();
         final Thread runner = new Thread(request);
         runner.start();
         runner.join();
 
-        assertTrue(request.getCode() == 204);
+        assertEquals(request.getCode(), 204);
         jobClient.cancel();
 
         final Collection<Long> results = new ArrayList<>();
@@ -131,11 +132,11 @@ public class InfluxDBSourceIntegrationTestCase extends TestLogger {
             final String line = "test longValue=1i 1";
             os.write(line.getBytes("utf-8"));
             os.close();
-            code = conn.getResponseCode();
+            this.code = conn.getResponseCode();
         }
 
         public int getCode() {
-            return code;
+            return this.code;
         }
     }
 }
