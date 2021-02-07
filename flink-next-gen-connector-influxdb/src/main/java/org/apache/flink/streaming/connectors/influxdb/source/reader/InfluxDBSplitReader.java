@@ -32,6 +32,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +58,7 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
 
     private static final int INGEST_QUEUE_CAPACITY = 1000;
     private static final int MAXIMUM_LINES_PER_REQUEST = 1000;
+    private static final long ENQUEUE_WAIT_TIME = 5;
 
     private static final int DEFAULT_PORT = 8000;
     private HttpServer server = null;
@@ -97,8 +102,8 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
         try {
             this.server = HttpServer.create(new InetSocketAddress(DEFAULT_PORT), 0);
         } catch (final IOException e) {
-            // TODO add splits back
-            e.printStackTrace();
+            throw new RuntimeException(
+                    "Unable to start HTTP Server on Port " + DEFAULT_PORT + ": " + e.getMessage());
         }
 
         this.server.createContext("/api/v2/write", new InfluxDBAPIHandler());
@@ -114,7 +119,6 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
     @Override
     public void close() throws Exception {
         if (this.server != null) {
-            // TODO: check what to do with queue
             this.server.stop(1); // waits max 1 second for pending requests to finish
         }
     }
@@ -145,28 +149,43 @@ public class InfluxDBSplitReader implements SplitReader<DataPoint, InfluxDBSplit
                     }
                 }
 
-                // TODO use offer with timeout -> not possible with futureblockingqueue
-                // Returns true if added to queue
-                // Can we use the split id hashcode for the index?
-                if (InfluxDBSplitReader.this.ingestionQueue.put(
-                        InfluxDBSplitReader.this.split.splitId().hashCode(), points)) {
-                    t.sendResponseHeaders(204, -1);
-                    InfluxDBSplitReader.this.ingestionQueue.notifyAvailable();
-                }
-                // TODO what about the HTTPServer thread being blocked here
+                boolean result =
+                        CompletableFuture.supplyAsync(
+                                        () -> {
+                                            boolean success = false;
+                                            try {
+                                                success =
+                                                        InfluxDBSplitReader.this.ingestionQueue.put(
+                                                                InfluxDBSplitReader.this
+                                                                        .split
+                                                                        .splitId()
+                                                                        .hashCode(),
+                                                                points);
+                                            } catch (InterruptedException e) {
+                                            }
+                                            return success;
+                                        })
+                                .get(ENQUEUE_WAIT_TIME, TimeUnit.SECONDS);
 
+                if (!result) {
+                    throw new TimeoutException("Failed to enqueue");
+                }
+
+                t.sendResponseHeaders(204, -1);
+                InfluxDBSplitReader.this.ingestionQueue.notifyAvailable();
             } catch (final ParseException e) {
                 // 400 Bad Request
                 this.sendResponse(t, 400, e.getMessage());
             } catch (final RequestTooLargeException e) {
                 // 413 Payload Too Large
                 this.sendResponse(t, 413, e.getMessage());
-            } catch (final InterruptedException e) {
-                // TODO: InterruptedException may not be the right type
+            } catch (final TimeoutException e) {
                 // 429 Too Many Requests
-                this.sendResponse(t, 429, "Server overloaded.");
-                // TODO rethrow/forward exception so that Flink knows the ingestion queue was full
-                e.printStackTrace();
+                this.sendResponse(t, 429, "Server overloaded");
+                log.error(e.getMessage());
+            } catch (ExecutionException | InterruptedException e) {
+                this.sendResponse(t, 500, "Server Error");
+                log.error(e.getMessage());
             }
         }
 
