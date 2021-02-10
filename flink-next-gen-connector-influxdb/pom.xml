@@ -74,7 +74,7 @@ under the License.
       <artifactId>influxdb-client-java</artifactId>
       <version>${influxdbClient.version}</version>
     </dependency>
-    
+
     <!-- InfluxDB Line Protocol Parser by Apache Druid -->
 
     <dependency>
