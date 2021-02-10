@@ -42,7 +42,7 @@ import org.apache.flink.streaming.connectors.util.InfluxDBTestSerializer;
 import org.apache.flink.streaming.util.FiniteTestSource;
 import org.apache.flink.util.TestLogger;
 import org.junit.ClassRule;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 @Slf4j
 public class InfluxDBSinkIntegrationTestCase extends TestLogger {
@@ -75,7 +75,7 @@ public class InfluxDBSinkIntegrationTestCase extends TestLogger {
      * some cases there are more than 4 checkpoints set.
      */
     @Test
-    void shouldWriteDataToInfluxDB() throws Exception {
+    public void shouldWriteDataToInfluxDB() throws Exception {
         log.info("Starting test");
         final StreamExecutionEnvironment env = this.buildStreamEnv();
         final InfluxDBConfig influxDBConfig =
