@@ -191,7 +191,7 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
 
     @Override
     public String toString() {
-        return "JedisClusterConfig{" +
+        return "FlinkJedisClusterConfig{" +
             "nodes=" + nodes +
             ", timeout=" + connectionTimeout +
             ", maxRedirections=" + maxRedirections +
