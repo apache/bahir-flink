@@ -61,7 +61,7 @@ public class KuduTableFactoryTest extends KuduTestBase {
     public void init() {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment().setParallelism(1);
         tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerStreamingMode(env);
-        kuduMasters = harness.getMasterAddressesAsString();
+        kuduMasters = getMasterAddress();
     }
 
     @Test
@@ -119,10 +119,10 @@ public class KuduTableFactoryTest extends KuduTestBase {
                 .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
-        KuduTable kuduTable = harness.getClient().openTable("TestTableTs");
+        KuduTable kuduTable = getClient().openTable("TestTableTs");
         assertEquals(Type.UNIXTIME_MICROS, kuduTable.getSchema().getColumn("second").getType());
 
-        KuduScanner scanner = harness.getClient().newScannerBuilder(kuduTable).build();
+        KuduScanner scanner = getClient().newScannerBuilder(kuduTable).build();
         HashSet<Timestamp> results = new HashSet<>();
         scanner.forEach(sc -> results.add(sc.getTimestamp("second")));
 
@@ -156,8 +156,8 @@ public class KuduTableFactoryTest extends KuduTestBase {
                 .get(1, TimeUnit.MINUTES);
 
         // Validate that both insertions were into the same table
-        KuduTable kuduTable = harness.getClient().openTable("TestTable12");
-        KuduScanner scanner = harness.getClient().newScannerBuilder(kuduTable).build();
+        KuduTable kuduTable = getClient().openTable("TestTable12");
+        KuduScanner scanner = getClient().newScannerBuilder(kuduTable).build();
         List<RowResult> rows = new ArrayList<>();
         scanner.forEach(rows::add);
 
