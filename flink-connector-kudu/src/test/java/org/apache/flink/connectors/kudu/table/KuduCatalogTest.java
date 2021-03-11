@@ -77,7 +77,7 @@ public class KuduCatalogTest extends KuduTestBase {
         tableEnv.executeSql("INSERT INTO TestTable1 VALUES ('f', 's')")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         // Add this once Primary key support has been enabled
@@ -101,7 +101,7 @@ public class KuduCatalogTest extends KuduTestBase {
         tableEnv.executeSql("INSERT INTO TestTable3 VALUES ('f', 2, 't')")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         validateMultiKey("TestTable3");
@@ -113,14 +113,14 @@ public class KuduCatalogTest extends KuduTestBase {
         tableEnv.executeSql("INSERT INTO TestTable5 VALUES ('s', 'f', 't')")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         tableEnv.executeSql("CREATE TABLE TestTable6 (`first` STRING, `second` String) WITH ('kudu.hash-columns' = 'first', 'kudu.primary-key-columns' = 'first')");
         tableEnv.executeSql("INSERT INTO TestTable6 (SELECT `first`, `second` FROM  TestTable5)")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         validateSingleKey("TestTable6");
@@ -133,12 +133,12 @@ public class KuduCatalogTest extends KuduTestBase {
         tableEnv.executeSql("INSERT INTO TestTableEP VALUES ('f','s')")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
         tableEnv.executeSql("INSERT INTO TestTableEP VALUES ('f2','s2')")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         Table result = tableEnv.sqlQuery("SELECT COUNT(*) FROM TestTableEP");
@@ -225,7 +225,7 @@ public class KuduCatalogTest extends KuduTestBase {
         tableEnv.executeSql("INSERT INTO TestTableTsC values ('f', TIMESTAMP '2020-01-01 12:12:12.123456')")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         KuduTable kuduTable = harness.getClient().openTable("TestTableTsC");
@@ -252,7 +252,7 @@ public class KuduCatalogTest extends KuduTestBase {
                 "TIMESTAMP '2020-04-15 12:34:56.123') ")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         validateManyTypes("TestTable8");

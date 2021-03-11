@@ -95,7 +95,7 @@ public class KuduTableSourceTest extends KuduTestBase {
     void testGetProducedDataType() throws Exception {
         DataType producedDataType = kuduTableSource.getProducedDataType();
         assertNotNull(producedDataType);
-        assertEquals(getReturnDataType(getFieldNames(), getFieldDataTypes()), producedDataType);
+        assertEquals(getReturnDataType(getFieldNames(), getFieldDataTypes()).notNull(), producedDataType);
     }
 
     @Test
