@@ -257,7 +257,7 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
             jedisCluster.incrBy(key, value);
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
-                LOG.error("Cannot send Redis message with command incrby to key {} with increment {} and tll {} error message {}",
+                LOG.error("Cannot send Redis message with command incrby to key {} with increment {} error message {}",
                         key, value, e.getMessage());
             }
             throw e;

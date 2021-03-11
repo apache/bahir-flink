@@ -335,7 +335,7 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
             }
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
-                LOG.error("Cannot send Redis with incrby command with increment {}  with ttl {} error message {}",
+                LOG.error("Cannot send Redis with incrby command to key {} with increment {}  with ttl {} error message {}",
                         key, value, ttl, e.getMessage());
             }
             throw e;
@@ -355,7 +355,7 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
             }
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
-                LOG.error("Cannot send Redis with decrBy command with decrement {}  with ttl {} error message {}",
+                LOG.error("Cannot send Redis with decrBy command to key {} with decrement {}  with ttl {} error message {}",
                         key, value, ttl, e.getMessage());
             }
             throw e;
@@ -372,7 +372,7 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
             jedis.incrBy(key, value);
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
-                LOG.error("Cannot send Redis with incrby command with increment {}  error message {}",
+                LOG.error("Cannot send Redis with incrby command to key {} with increment {}  error message {}",
                         key, value, e.getMessage());
             }
             throw e;
@@ -389,7 +389,7 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
             jedis.decrBy(key, value);
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
-                LOG.error("Cannot send Redis with decrBy command with increment {}  error message {}",
+                LOG.error("Cannot send Redis with decrBy command to key {} with increment {}  error message {}",
                         key, value, e.getMessage());
             }
             throw e;
