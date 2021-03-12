@@ -236,7 +236,7 @@ public class FlinkJedisSentinelConfig extends FlinkJedisConfigBase {
 
     @Override
     public String toString() {
-        return "JedisSentinelConfig{" +
+        return "FlinkJedisSentinelConfig{" +
             "masterName='" + masterName + '\'' +
             ", connectionTimeout=" + connectionTimeout +
             ", soTimeout=" + soTimeout +
