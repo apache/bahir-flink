@@ -64,6 +64,7 @@ public class FlinkJedisSentinelConfig extends FlinkJedisConfigBase {
                                      int maxTotal, int maxIdle, int minIdle,
                                      boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
         super(connectionTimeout, maxTotal, maxIdle, minIdle, password, testOnBorrow, testOnReturn, testWhileIdle);
+
         Objects.requireNonNull(masterName, "Master name should be presented");
         Objects.requireNonNull(sentinels, "Sentinels information should be presented");
         Util.checkArgument(!sentinels.isEmpty(), "Sentinel hosts should not be empty");
@@ -275,23 +276,13 @@ public class FlinkJedisSentinelConfig extends FlinkJedisConfigBase {
          */
         public FlinkJedisSentinelConfig build(){
             return new FlinkJedisSentinelConfig(masterName, sentinels, connectionTimeout, soTimeout,
-              password, database, maxTotal, maxIdle, minIdle, testOnBorrow, testOnReturn, testWhileIdle);
+                password, database, maxTotal, maxIdle, minIdle, testOnBorrow, testOnReturn, testWhileIdle);
         }
     }
 
     @Override
     public String toString() {
         return "FlinkJedisSentinelConfig{" +
-<<<<<<< master
-            "masterName='" + masterName + '\'' +
-            ", connectionTimeout=" + connectionTimeout +
-            ", soTimeout=" + soTimeout +
-            ", database=" + database +
-            ", maxTotal=" + maxTotal +
-            ", maxIdle=" + maxIdle +
-            ", minIdle=" + minIdle +
-            '}';
-=======
           "masterName='" + masterName + '\'' +
           ", sentinels=" + sentinels +
           ", soTimeout=" + soTimeout +
@@ -305,6 +296,5 @@ public class FlinkJedisSentinelConfig extends FlinkJedisConfigBase {
           ", testOnReturn=" + testOnReturn +
           ", testWhileIdle=" + testWhileIdle +
           '}';
->>>>>>> [BAHIR-247] Provide connection validation/idle testing for Flink-Redis Connector
     }
 }

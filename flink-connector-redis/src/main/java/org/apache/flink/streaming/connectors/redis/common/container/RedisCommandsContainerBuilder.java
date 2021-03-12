@@ -23,6 +23,7 @@ import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisPoolC
 import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisSentinelConfig;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisSentinelPool;
 
 import java.util.Objects;
@@ -135,12 +136,13 @@ public class RedisCommandsContainerBuilder {
     }
 
     private static GenericObjectPoolConfig getGenericObjectPoolConfig(FlinkJedisConfigBase jedisConfig) {
-        GenericObjectPoolConfig genericObjectPoolConfig = new GenericObjectPoolConfig();
+        GenericObjectPoolConfig genericObjectPoolConfig = jedisConfig.isTestWhileIdle() ? new JedisPoolConfig(): new GenericObjectPoolConfig();
         genericObjectPoolConfig.setMaxIdle(jedisConfig.getMaxIdle());
         genericObjectPoolConfig.setMaxTotal(jedisConfig.getMaxTotal());
         genericObjectPoolConfig.setMinIdle(jedisConfig.getMinIdle());
         genericObjectPoolConfig.setTestOnBorrow(jedisConfig.getTestOnBorrow());
         genericObjectPoolConfig.setTestOnReturn(jedisConfig.getTestOnReturn());
+
         return genericObjectPoolConfig;
     }
 }

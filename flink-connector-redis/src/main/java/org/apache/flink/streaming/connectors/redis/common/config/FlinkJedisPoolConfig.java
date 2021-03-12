@@ -54,6 +54,7 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
                                  int maxTotal, int maxIdle, int minIdle,
                                  boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
         super(connectionTimeout, maxTotal, maxIdle, minIdle, password, testOnBorrow, testOnReturn, testWhileIdle);
+
         Objects.requireNonNull(host, "Host information should be presented");
         this.host = host;
         this.port = port;
@@ -247,16 +248,6 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
     @Override
     public String toString() {
         return "FlinkJedisPoolConfig{" +
-<<<<<<< master
-            "host='" + host + '\'' +
-            ", port=" + port +
-            ", timeout=" + connectionTimeout +
-            ", database=" + database +
-            ", maxTotal=" + maxTotal +
-            ", maxIdle=" + maxIdle +
-            ", minIdle=" + minIdle +
-            '}';
-=======
           "host='" + host + '\'' +
           ", port=" + port +
           ", database=" + database +
@@ -269,6 +260,5 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
           ", testOnReturn=" + testOnReturn +
           ", testWhileIdle=" + testWhileIdle +
           '}';
->>>>>>> [BAHIR-247] Provide connection validation/idle testing for Flink-Redis Connector
     }
 }

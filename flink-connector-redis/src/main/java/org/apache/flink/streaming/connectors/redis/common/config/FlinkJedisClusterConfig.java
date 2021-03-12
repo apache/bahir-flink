@@ -54,8 +54,8 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
      * @throws NullPointerException if parameter {@code nodes} is {@code null}
      */
     private FlinkJedisClusterConfig(Set<InetSocketAddress> nodes, int connectionTimeout, int maxRedirections,
-                                    int maxTotal, int maxIdle, int minIdle,
-                                    String password, boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
+                                    int maxTotal, int maxIdle, int minIdle, String password,
+                                    boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
         super(connectionTimeout, maxTotal, maxIdle, minIdle, password, testOnBorrow, testOnReturn, testWhileIdle);
 
         Objects.requireNonNull(nodes, "Node information should be presented");
@@ -237,15 +237,6 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
     @Override
     public String toString() {
         return "FlinkJedisClusterConfig{" +
-<<<<<<< master
-            "nodes=" + nodes +
-            ", timeout=" + connectionTimeout +
-            ", maxRedirections=" + maxRedirections +
-            ", maxTotal=" + maxTotal +
-            ", maxIdle=" + maxIdle +
-            ", minIdle=" + minIdle +
-            '}';
-=======
           "nodes=" + nodes +
           ", maxRedirections=" + maxRedirections +
           ", maxTotal=" + maxTotal +
@@ -257,6 +248,5 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
           ", testOnReturn=" + testOnReturn +
           ", testWhileIdle=" + testWhileIdle +
           '}';
->>>>>>> [BAHIR-247] Provide connection validation/idle testing for Flink-Redis Connector
     }
 }
