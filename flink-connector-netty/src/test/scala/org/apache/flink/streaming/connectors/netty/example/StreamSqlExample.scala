@@ -19,6 +19,7 @@ package org.apache.flink.streaming.connectors.netty.example
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
+import org.apache.flink.table.api.EnvironmentSettings
 import org.apache.flink.table.api.bridge.scala._
 
 /**
@@ -39,8 +40,9 @@ object StreamSqlExample {
     val param = ParameterTool.fromArgs(args)
 
     // set up execution environment
+    val envSettings = EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build()
     val env = StreamExecutionEnvironment.getExecutionEnvironment
-    val tEnv = StreamTableEnvironment.create(env)
+    val tEnv = StreamTableEnvironment.create(env, envSettings)
 
     val spec = if (param.get("tcp") == "true") {
       new TcpReceiverSource(7070, Some("http://localhost:9090/cb"))
@@ -59,7 +61,7 @@ object StreamSqlExample {
     tEnv.createTemporaryView("OrderA", orderA)
 
     // union the two tables
-    val result = tEnv.sqlQuery("SELECT STREAM * FROM OrderA WHERE amount > 2")
+    val result = tEnv.sqlQuery("SELECT * FROM OrderA WHERE amount > 2")
 
     result.toAppendStream[Order].print()
 

@@ -60,7 +60,6 @@ public class ActiveMQConnectorITCase {
         flinkConfig.setInteger(ConfigConstants.LOCAL_NUMBER_TASK_MANAGER, 1);
         flinkConfig.setInteger(TaskManagerOptions.NUM_TASK_SLOTS.key(), 8);
         flinkConfig.setInteger(TaskManagerOptions.MANAGED_MEMORY_SIZE.key(), 16);
-        flinkConfig.setString(ConfigConstants.RESTART_STRATEGY_FIXED_DELAY_DELAY, "0 s");
 
     }
 
@@ -111,7 +110,6 @@ public class ActiveMQConnectorITCase {
     private StreamExecutionEnvironment createExecutionEnvironment() {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
         env.setRestartStrategy(RestartStrategies.noRestart());
-        env.getConfig().disableSysoutLogging();
         return env;
     }
 

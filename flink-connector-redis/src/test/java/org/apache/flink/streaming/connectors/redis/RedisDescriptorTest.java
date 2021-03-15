@@ -26,6 +26,7 @@ import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommand;
 import org.apache.flink.streaming.connectors.redis.descriptor.Redis;
 import org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator;
 import org.apache.flink.table.api.EnvironmentSettings;
+import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.descriptors.Schema;
 import org.apache.flink.types.Row;
@@ -68,11 +69,29 @@ public class RedisDescriptorTest extends  RedisITCaseBase{
                 .field("v", TypeInformation.of(Long.class)))
                 .createTemporaryTable("redis");
 
-
-        tableEnvironment.sqlUpdate("insert into redis select k, v from t1");
-        env.execute("Test Redis Table");
+        tableEnvironment.executeSql("insert into redis select k, v from t1");
     }
 
+    @Test
+    public void testRedisTableFactory() throws Exception {
+        DataStreamSource<Row> source = (DataStreamSource<Row>) env.addSource(new TestSourceFunctionString())
+                .returns(new RowTypeInfo(TypeInformation.of(String.class), TypeInformation.of(Long.class)));
+
+        EnvironmentSettings settings = EnvironmentSettings
+                .newInstance()
+                .useOldPlanner()
+                .inStreamingMode()
+                .build();
+        StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env, settings);
+        Table table = tableEnv.fromDataStream(source);
+        tableEnv.createTemporaryView("t1", table);
+
+        tableEnv.executeSql("CREATE TABLE redis (key  STRING, number BIGINT) WITH ('connector.type'='redis'," +
+                "'redis-mode'='cluster', 'key.ttl' = '70000','command'='INCRBY_EX','cluster-nodes'='" + REDIS_HOST + ":" + REDIS_PORT + "')");
+
+        tableEnv.executeSql("insert into redis select * from t1");
+
+    }
 
     private static class TestSourceFunctionString implements SourceFunction<Row> {
         private static final long serialVersionUID = 1L;

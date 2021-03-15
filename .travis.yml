@@ -34,8 +34,8 @@ jdk:
   - openjdk8
 
 env:
-  - FLINK_VERSION="1.11.2" SCALA_VERSION="2.11"
-  - FLINK_VERSION="1.11.2" SCALA_VERSION="2.12"
+  - FLINK_VERSION="1.12.2" SCALA_VERSION="2.11"
+  - FLINK_VERSION="1.12.2" SCALA_VERSION="2.12"
 
 before_install:
   - ./dev/change-scala-version.sh $SCALA_VERSION

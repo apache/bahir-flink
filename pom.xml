@@ -96,7 +96,7 @@
     <log4j2.version>2.13.3</log4j2.version>
 
     <!-- Flink version -->
-    <flink.version>1.11.2</flink.version>
+    <flink.version>1.12.2</flink.version>
 
     <junit.jupiter.version>5.4.1</junit.jupiter.version>
 

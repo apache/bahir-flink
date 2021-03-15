@@ -64,7 +64,7 @@ public class KuduTableFactoryTest extends KuduTestBase {
                 "WITH ('connector.type'='kudu', 'kudu.table'='TestTable11', 'kudu.masters'='" + kuduMasters + "')");
         JobClient jobClient = tableEnv.executeSql("INSERT INTO TestTable11 values ('f', 1)").getJobClient().get();
         try {
-            jobClient.getJobExecutionResult(getClass().getClassLoader()).get();
+            jobClient.getJobExecutionResult().get();
             fail();
         } catch (ExecutionException ee) {
             assertTrue(ee.getCause() instanceof JobExecutionException);
@@ -80,7 +80,7 @@ public class KuduTableFactoryTest extends KuduTestBase {
         tableEnv.executeSql("INSERT INTO TestTable11 values ('f', 's')")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         validateSingleKey("TestTable11");
@@ -96,13 +96,13 @@ public class KuduTableFactoryTest extends KuduTestBase {
         tableEnv.executeSql("INSERT INTO TestTableTs values ('f', TIMESTAMP '2020-01-01 12:12:12.123456')")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         tableEnv.executeSql("INSERT INTO TestTableTs values ('s', TIMESTAMP '2020-02-02 23:23:23')")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         KuduTable kuduTable = harness.getClient().openTable("TestTableTs");
@@ -129,7 +129,7 @@ public class KuduTableFactoryTest extends KuduTestBase {
         tableEnv.executeSql("INSERT INTO TestTable12 values ('f', 's')")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         // Then another one in SQL that refers to the previously created one
@@ -138,7 +138,7 @@ public class KuduTableFactoryTest extends KuduTestBase {
         tableEnv.executeSql("INSERT INTO TestTable12b values ('f2','s2')")
                 .getJobClient()
                 .get()
-                .getJobExecutionResult(getClass().getClassLoader())
+                .getJobExecutionResult()
                 .get(1, TimeUnit.MINUTES);
 
         // Validate that both insertions were into the same table

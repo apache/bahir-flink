@@ -80,4 +80,5 @@ public class JedisClusterConfigTest extends TestLogger {
                 .build();
         assertNull(clusterConfig.getPassword());
     }
+
 }
