@@ -99,18 +99,6 @@ public abstract class FlinkJedisConfigBase implements Serializable {
         return minIdle;
     }
 
-    public boolean isTestOnBorrow() {
-        return testOnBorrow;
-    }
-
-    public boolean isTestOnReturn() {
-        return testOnReturn;
-    }
-
-    public boolean isTestWhileIdle() {
-        return testWhileIdle;
-    }
-
     /**
      * Returns password.
      *
