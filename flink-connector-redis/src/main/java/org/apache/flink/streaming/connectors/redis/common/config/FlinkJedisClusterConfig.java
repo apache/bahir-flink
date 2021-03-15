@@ -243,7 +243,7 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
           ", maxIdle=" + maxIdle +
           ", minIdle=" + minIdle +
           ", connectionTimeout=" + connectionTimeout +
-          ", password='" + password + '\'' +
+          ", password=" + password +
           ", testOnBorrow=" + testOnBorrow +
           ", testOnReturn=" + testOnReturn +
           ", testWhileIdle=" + testWhileIdle +

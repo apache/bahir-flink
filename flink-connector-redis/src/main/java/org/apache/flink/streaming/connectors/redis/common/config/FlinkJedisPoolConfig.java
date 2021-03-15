@@ -248,14 +248,14 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
     @Override
     public String toString() {
         return "FlinkJedisPoolConfig{" +
-          "host='" + host + '\'' +
+          "host=" + host +
           ", port=" + port +
           ", database=" + database +
           ", maxTotal=" + maxTotal +
           ", maxIdle=" + maxIdle +
           ", minIdle=" + minIdle +
-          ", connectionTimeout=" + connectionTimeout +
-          ", password='" + password + '\'' +
+          ", connectionTimeout=" +
+          ", password=" + password +
           ", testOnBorrow=" + testOnBorrow +
           ", testOnReturn=" + testOnReturn +
           ", testWhileIdle=" + testWhileIdle +

@@ -65,14 +65,6 @@ public class RedisCommandsContainerBuilder {
 
         GenericObjectPoolConfig genericObjectPoolConfig = getGenericObjectPoolConfig(jedisPoolConfig);
 
-        if (jedisPoolConfig.getTestWhileIdle()) {
-            // default parameters from redis.clients.jedis.JedisPoolConfig
-            genericObjectPoolConfig.setTestWhileIdle(true);
-            genericObjectPoolConfig.setMinEvictableIdleTimeMillis(60000);
-            genericObjectPoolConfig.setTimeBetweenEvictionRunsMillis(30000);
-            genericObjectPoolConfig.setNumTestsPerEvictionRun(-1);
-        }
-
         JedisPool jedisPool = new JedisPool(genericObjectPoolConfig, jedisPoolConfig.getHost(),
           jedisPoolConfig.getPort(), jedisPoolConfig.getConnectionTimeout(), jedisPoolConfig.getPassword(),
           jedisPoolConfig.getDatabase());
@@ -90,14 +82,6 @@ public class RedisCommandsContainerBuilder {
         Objects.requireNonNull(jedisClusterConfig, "Redis cluster config should not be Null");
 
         GenericObjectPoolConfig genericObjectPoolConfig = getGenericObjectPoolConfig(jedisClusterConfig);
-
-        if (jedisClusterConfig.getTestWhileIdle()) {
-            // default parameters from redis.clients.jedis.JedisPoolConfig
-            genericObjectPoolConfig.setTestWhileIdle(true);
-            genericObjectPoolConfig.setMinEvictableIdleTimeMillis(60000);
-            genericObjectPoolConfig.setTimeBetweenEvictionRunsMillis(30000);
-            genericObjectPoolConfig.setNumTestsPerEvictionRun(-1);
-        }
 
         JedisCluster jedisCluster = new JedisCluster(jedisClusterConfig.getNodes(),
           jedisClusterConfig.getConnectionTimeout(),
@@ -119,14 +103,6 @@ public class RedisCommandsContainerBuilder {
         Objects.requireNonNull(jedisSentinelConfig, "Redis sentinel config should not be Null");
 
         GenericObjectPoolConfig genericObjectPoolConfig = getGenericObjectPoolConfig(jedisSentinelConfig);
-
-        if (jedisSentinelConfig.getTestWhileIdle()) {
-            // default parameters from redis.clients.jedis.JedisPoolConfig
-            genericObjectPoolConfig.setTestWhileIdle(true);
-            genericObjectPoolConfig.setMinEvictableIdleTimeMillis(60000);
-            genericObjectPoolConfig.setTimeBetweenEvictionRunsMillis(30000);
-            genericObjectPoolConfig.setNumTestsPerEvictionRun(-1);
-        }
 
         JedisSentinelPool jedisSentinelPool = new JedisSentinelPool(jedisSentinelConfig.getMasterName(),
           jedisSentinelConfig.getSentinels(), genericObjectPoolConfig,
