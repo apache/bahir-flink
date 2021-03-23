@@ -40,7 +40,7 @@ class KuduOutputFormatTest extends KuduTestBase {
     @Test
     void testInvalidTableInfo() {
         String masterAddresses = harness.getMasterAddressesAsString();
-        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
+        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.newInstance(masterAddresses).build();
         Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(writerConfig, null, null));
     }
 
@@ -48,7 +48,7 @@ class KuduOutputFormatTest extends KuduTestBase {
     void testNotTableExist() {
         String masterAddresses = harness.getMasterAddressesAsString();
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), false);
-        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
+        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.newInstance(masterAddresses).build();
         KuduOutputFormat<Row> outputFormat = new KuduOutputFormat<>(writerConfig, tableInfo, new RowOperationMapper(KuduTestBase.columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
         Assertions.assertThrows(RuntimeException.class, () -> outputFormat.open(0, 1));
     }
@@ -59,7 +59,7 @@ class KuduOutputFormatTest extends KuduTestBase {
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), true);
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder
-                .setMasters(masterAddresses)
+                .newInstance(masterAddresses)
                 .setStrongConsistency()
                 .build();
         KuduOutputFormat<Row> outputFormat = new KuduOutputFormat<>(writerConfig, tableInfo, new RowOperationMapper(KuduTestBase.columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
@@ -84,7 +84,7 @@ class KuduOutputFormatTest extends KuduTestBase {
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), true);
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder
-                .setMasters(masterAddresses)
+                .newInstance(masterAddresses)
                 .setEventualConsistency()
                 .build();
         KuduOutputFormat<Row> outputFormat = new KuduOutputFormat<>(writerConfig, tableInfo, new RowOperationMapper(KuduTestBase.columns, AbstractSingleOperationMapper.KuduOperation.INSERT));

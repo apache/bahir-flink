@@ -61,7 +61,7 @@ public class KuduSinkTest extends KuduTestBase {
     void testInvalidTableInfo() {
         harness.getClient();
         String masterAddresses = harness.getMasterAddressesAsString();
-        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
+        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.newInstance(masterAddresses).build();
         Assertions.assertThrows(NullPointerException.class, () -> new KuduSink<>(writerConfig, null, new RowOperationMapper(columns, AbstractSingleOperationMapper.KuduOperation.INSERT)));
     }
 
@@ -69,7 +69,7 @@ public class KuduSinkTest extends KuduTestBase {
     void testNotTableExist() {
         String masterAddresses = harness.getMasterAddressesAsString();
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), false);
-        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
+        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.newInstance(masterAddresses).build();
         KuduSink<Row> sink = new KuduSink<>(writerConfig, tableInfo, new RowOperationMapper(columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
 
         sink.setRuntimeContext(context);
@@ -82,7 +82,7 @@ public class KuduSinkTest extends KuduTestBase {
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), true);
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder
-                .setMasters(masterAddresses)
+                .newInstance(masterAddresses)
                 .setStrongConsistency()
                 .build();
         KuduSink<Row> sink = new KuduSink<>(writerConfig, tableInfo, new RowOperationMapper(KuduTestBase.columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
@@ -106,7 +106,7 @@ public class KuduSinkTest extends KuduTestBase {
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), true);
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder
-                .setMasters(masterAddresses)
+                .newInstance(masterAddresses)
                 .setEventualConsistency()
                 .build();
         KuduSink<Row> sink = new KuduSink<>(writerConfig, tableInfo, new RowOperationMapper(KuduTestBase.columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
@@ -150,7 +150,7 @@ public class KuduSinkTest extends KuduTestBase {
                                 .addHashPartitions(Lists.newArrayList("id"), 6));
 
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder
-                .setMasters(masterAddresses)
+                .newInstance(masterAddresses)
                 .setEventualConsistency()
                 .build();
         KuduSink<Row> sink = new KuduSink<>(writerConfig, tableInfo, new RowOperationMapper(columns, AbstractSingleOperationMapper.KuduOperation.INSERT));

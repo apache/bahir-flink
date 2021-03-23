@@ -72,6 +72,8 @@ public class KuduWriter<T> implements AutoCloseable {
     private KuduSession obtainSession() {
         KuduSession session = client.newSession();
         session.setFlushMode(writerConfig.getFlushMode());
+        session.setFlushInterval(writerConfig.getFlushIntervalMillis());
+        session.setMutationBufferSpace(writerConfig.getMutationBufferMaxOps());
         return session;
     }
 

@@ -132,7 +132,7 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
         KuduTableInfo tableInfo = KuduTableUtils.createTableInfo(tableName, schema, props);
 
         KuduWriterConfig.Builder configBuilder = KuduWriterConfig.Builder
-                .setMasters(masterAddresses);
+                .newInstance(masterAddresses);
 
         return new KuduTableSink(configBuilder, tableInfo, physicalSchema);
     }

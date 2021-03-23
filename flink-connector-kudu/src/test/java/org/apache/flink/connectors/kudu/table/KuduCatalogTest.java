@@ -189,7 +189,7 @@ public class KuduCatalogTest extends KuduTestBase {
         // Writing with simple sink
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(2);
-        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(harness.getMasterAddressesAsString()).build();
+        KuduWriterConfig writerConfig = KuduWriterConfig.Builder.newInstance(harness.getMasterAddressesAsString()).build();
         env.fromCollection(input).addSink(
                 new KuduSink<>(
                         writerConfig,

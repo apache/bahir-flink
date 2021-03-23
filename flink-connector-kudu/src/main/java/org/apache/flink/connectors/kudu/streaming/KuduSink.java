@@ -32,6 +32,8 @@ import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
@@ -94,6 +96,9 @@ public class KuduSink<IN> extends RichSinkFunction<IN> implements CheckpointedFu
             kuduWriter.write(value);
         } catch (ClassCastException e) {
             failureHandler.onTypeMismatch(e);
+        } catch (IOException e) {
+            log.error("write into kudu error, value:[" + value + "]", e);
+            throw e;
         }
     }
 

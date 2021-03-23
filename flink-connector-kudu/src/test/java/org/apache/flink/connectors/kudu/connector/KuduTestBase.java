@@ -160,7 +160,7 @@ public class KuduTestBase {
     protected void setUpDatabase(KuduTableInfo tableInfo) {
         try {
             String masterAddresses = harness.getMasterAddressesAsString();
-            KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
+            KuduWriterConfig writerConfig = KuduWriterConfig.Builder.newInstance(masterAddresses).build();
             KuduWriter kuduWriter = new KuduWriter(tableInfo, writerConfig, new RowOperationMapper(columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
             booksDataRow().forEach(row -> {
                 try {
@@ -178,7 +178,7 @@ public class KuduTestBase {
     protected void cleanDatabase(KuduTableInfo tableInfo) {
         try {
             String masterAddresses = harness.getMasterAddressesAsString();
-            KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
+            KuduWriterConfig writerConfig = KuduWriterConfig.Builder.newInstance(masterAddresses).build();
             KuduWriter kuduWriter = new KuduWriter(tableInfo, writerConfig, new RowOperationMapper(columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
             kuduWriter.deleteTable();
             kuduWriter.close();

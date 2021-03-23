@@ -34,13 +34,19 @@ public class KuduWriterConfig implements Serializable {
 
     private final String masters;
     private final FlushMode flushMode;
+    private final int flushIntervalMillis;
+    private final int mutationBufferMaxOps;
 
     private KuduWriterConfig(
             String masters,
-            FlushMode flushMode) {
+            FlushMode flushMode,
+            int flushIntervalMillis,
+            int numOps) {
 
         this.masters = checkNotNull(masters, "Kudu masters cannot be null");
         this.flushMode = checkNotNull(flushMode, "Kudu flush mode cannot be null");
+        this.flushIntervalMillis = checkNotNull(flushIntervalMillis, "Kudu flush mode cannot be null");
+        this.mutationBufferMaxOps = checkNotNull(numOps, "Kudu flush mode cannot be null");
     }
 
     public String getMasters() {
@@ -51,11 +57,21 @@ public class KuduWriterConfig implements Serializable {
         return flushMode;
     }
 
+    public int getFlushIntervalMillis() {
+        return flushIntervalMillis;
+    }
+
+    public int getMutationBufferMaxOps() {
+        return mutationBufferMaxOps;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
                 .append("masters", masters)
                 .append("flushMode", flushMode)
+                .append("flushIntervalMillis", flushIntervalMillis)
+                .append("mutationBufferMaxOps", mutationBufferMaxOps)
                 .toString();
     }
 
@@ -65,17 +81,29 @@ public class KuduWriterConfig implements Serializable {
     public static class Builder {
         private String masters;
         private FlushMode flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
+        private int flushIntervalMillis=1000;
+        private int mutationBufferMaxOps=1000;
 
         private Builder(String masters) {
             this.masters = masters;
         }
 
-        public static Builder setMasters(String masters) {
+        public static Builder newInstance(String masters) {
             return new Builder(masters);
         }
 
         public Builder setConsistency(FlushMode flushMode) {
             this.flushMode = flushMode;
+            return this;
+        }
+
+        public Builder setFlushIntervalMillis(int intervalMillis){
+            this.flushIntervalMillis=intervalMillis;
+            return this;
+        }
+
+        public Builder setMutationBufferMaxOps(int numOps){
+            this.mutationBufferMaxOps=numOps;
             return this;
         }
 
@@ -90,7 +118,10 @@ public class KuduWriterConfig implements Serializable {
         public KuduWriterConfig build() {
             return new KuduWriterConfig(
                     masters,
-                    flushMode);
+                    flushMode,
+                    flushIntervalMillis,
+                    mutationBufferMaxOps
+            );
         }
     }
 }
