@@ -53,7 +53,7 @@ public class KuduTableSink implements UpsertStreamTableSink<Row> {
 
     @Override
     public DataStreamSink<?> consumeDataStream(DataStream<Tuple2<Boolean, Row>> dataStreamTuple) {
-        KuduSink upsertKuduSink = new KuduSink(writerConfigBuilder.build(), tableInfo, new UpsertOperationMapper(getTableSchema().getFieldNames()));
+        KuduSink<Tuple2<Boolean, Row>> upsertKuduSink = new KuduSink<>(writerConfigBuilder.build(), tableInfo, new UpsertOperationMapper(getTableSchema().getFieldNames()));
 
         return dataStreamTuple
                 .addSink(upsertKuduSink)

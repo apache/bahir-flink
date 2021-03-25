@@ -55,7 +55,8 @@ public class KuduCatalogFactory implements CatalogFactory {
         List<String> properties = new ArrayList<>();
 
         properties.add(KuduTableFactory.KUDU_MASTERS);
-
+        properties.add(KuduTableFactory.KUDU_TABLE_OWNER);
+        properties.add(KuduTableFactory.KUDU_HASH_PARTITION_NUMS);
         return properties;
     }
 

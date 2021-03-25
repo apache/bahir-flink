@@ -21,6 +21,7 @@ package org.apache.flink.connectors.kudu.table;
 import org.apache.flink.annotation.PublicEvolving;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.connectors.kudu.table.utils.KuduTableUtils;
+import org.apache.flink.shaded.guava18.com.google.common.collect.Lists;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.catalog.CatalogBaseTable;
@@ -41,9 +42,6 @@ import org.apache.flink.table.catalog.stats.CatalogTableStatistics;
 import org.apache.flink.table.expressions.Expression;
 import org.apache.flink.table.factories.TableFactory;
 import org.apache.flink.util.StringUtils;
-
-import org.apache.flink.shaded.guava18.com.google.common.collect.Lists;
-
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.client.AlterTableOptions;
 import org.apache.kudu.client.KuduClient;
@@ -64,8 +62,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.apache.flink.connectors.kudu.table.KuduTableFactory.KUDU_HASH_COLS;
+import static org.apache.flink.connectors.kudu.table.KuduTableFactory.KUDU_HASH_PARTITION_NUMS;
 import static org.apache.flink.connectors.kudu.table.KuduTableFactory.KUDU_PRIMARY_KEY_COLS;
 import static org.apache.flink.connectors.kudu.table.KuduTableFactory.KUDU_REPLICAS;
+import static org.apache.flink.connectors.kudu.table.KuduTableFactory.KUDU_TABLE_OWNER;
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
@@ -78,7 +78,7 @@ public class KuduCatalog extends AbstractReadOnlyCatalog {
     private static final Logger LOG = LoggerFactory.getLogger(KuduCatalog.class);
     private final KuduTableFactory tableFactory = new KuduTableFactory();
     private final String kuduMasters;
-    private KuduClient kuduClient;
+    private final KuduClient kuduClient;
 
     /**
      * Create a new {@link KuduCatalog} with the specified catalog name and kudu master addresses.
@@ -114,7 +114,8 @@ public class KuduCatalog extends AbstractReadOnlyCatalog {
     }
 
     @Override
-    public void open() {}
+    public void open() {
+    }
 
     @Override
     public void close() {
@@ -237,10 +238,10 @@ public class KuduCatalog extends AbstractReadOnlyCatalog {
 
     @Override
     public void createTable(ObjectPath tablePath, CatalogBaseTable table, boolean ignoreIfExists) throws TableAlreadyExistException {
-        Map<String, String> tableProperties = table.getProperties();
+        Map<String, String> tableProperties = table.getOptions();
         TableSchema tableSchema = table.getSchema();
-
-        Set<String> optionalProperties = new HashSet<>(Arrays.asList(KUDU_REPLICAS));
+        // add hash partition nums config
+        Set<String> optionalProperties = new HashSet<>(Arrays.asList(KUDU_REPLICAS, KUDU_HASH_PARTITION_NUMS,KUDU_TABLE_OWNER));
         Set<String> requiredProperties = new HashSet<>(Arrays.asList(KUDU_HASH_COLS));
 
         if (!tableSchema.getPrimaryKey().isPresent()) {

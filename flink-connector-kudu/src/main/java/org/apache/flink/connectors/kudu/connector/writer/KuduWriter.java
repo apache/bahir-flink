@@ -46,9 +46,9 @@ public class KuduWriter<T> implements AutoCloseable {
     private final KuduFailureHandler failureHandler;
     private final KuduOperationMapper<T> operationMapper;
 
-    private transient KuduClient client;
-    private transient KuduSession session;
-    private transient KuduTable table;
+    private final transient KuduClient client;
+    private final transient KuduSession session;
+    private final transient KuduTable table;
 
     public KuduWriter(KuduTableInfo tableInfo, KuduWriterConfig writerConfig, KuduOperationMapper<T> operationMapper) throws IOException {
         this(tableInfo, writerConfig, operationMapper, new DefaultKuduFailureHandler());
