@@ -97,20 +97,7 @@ public class KuduSink<IN> extends RichSinkFunction<IN> implements CheckpointedFu
         }
     }
 
-    /**
-     * new invoke api
-     * @param value input
-     * @param context runtime context
-     * @throws Exception
-     */
-    @Override
-    public void invoke(IN value, Context context) throws Exception {
-        try {
-            kuduWriter.write(value);
-        } catch (ClassCastException e) {
-            failureHandler.onTypeMismatch(e);
-        }
-    }
+   
 
     @Override
     public void close() throws Exception {
