@@ -39,7 +39,6 @@ import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.ColumnTypeAttributes;
 import org.apache.kudu.Schema;
 import org.apache.kudu.client.CreateTableOptions;
-import org.apache.kudu.client.PartialRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,9 +83,6 @@ public class KuduTableUtils {
             int hashPartitionNums = Optional.ofNullable(props.get(KUDU_HASH_PARTITION_NUMS)).map(Integer::parseInt).orElse(3);
             // if table owner is null,default 'admin';
             String tableOwner = Optional.ofNullable(props.get(KUDU_TABLE_OWNER)).orElse("admin");
-
-            PartialRow lowerRow = new PartialRow(new Schema(schemasFactory.getColumnSchemas()));
-            PartialRow upper = new PartialRow(new Schema(schemasFactory.getColumnSchemas()));
 
 
             CreateTableOptionsFactory optionsFactory = () -> new CreateTableOptions()
