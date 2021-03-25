@@ -81,10 +81,10 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
     public List<String> supportedProperties() {
         List<String> properties = new ArrayList<>();
         properties.add(KUDU_TABLE);
-        properties.add(KUDU_TABLE_OWNER);
         properties.add(KUDU_MASTERS);
         properties.add(KUDU_HASH_COLS);
         properties.add(KUDU_PRIMARY_KEY_COLS);
+        properties.add(KUDU_TABLE_OWNER);
         properties.add(KUDU_HASH_PARTITION_NUMS);
 
         // schema
