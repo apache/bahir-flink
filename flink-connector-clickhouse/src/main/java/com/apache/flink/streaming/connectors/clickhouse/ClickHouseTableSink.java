@@ -75,15 +75,6 @@ public class ClickHouseTableSink implements AppendStreamTableSink<Row> {
     }
 
     /**
-     * @param dataStream
-     * @deprecated
-     */
-    @Override
-    public void emitDataStream(DataStream<Row> dataStream) {
-        consumeDataStream(dataStream);
-    }
-
-    /**
      *
      * @return ClickHouseAppendSinkFunction
      */

@@ -75,8 +75,6 @@ public class ClickHouseTableSourceSinkFactory implements StreamTableSinkFactory<
         properties.add(SCHEMA + ".#." + SCHEMA_DATA_TYPE);
         properties.add(SCHEMA + ".#." + SCHEMA_TYPE);
         properties.add(SCHEMA + ".#." + SCHEMA_NAME);
-        // computed column
-        properties.add(SCHEMA + ".#." + TABLE_SCHEMA_EXPR);
 
         // watermark
         properties.add(SCHEMA + "." + WATERMARK + ".#."  + WATERMARK_ROWTIME);
