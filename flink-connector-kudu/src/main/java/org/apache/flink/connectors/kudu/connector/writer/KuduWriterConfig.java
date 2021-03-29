@@ -101,10 +101,15 @@ public class KuduWriterConfig implements Serializable {
     public static class Builder {
         private String masters;
         private FlushMode flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
+        // Reference from AsyncKuduClientBuilder defaultOperationTimeoutMs.
         private long timeout = 30000;
+        // Reference from AsyncKuduSession mutationBufferMaxOps 1000.
         private int maxBufferSize = 1000;
+        // Reference from AsyncKuduSession flushIntervalMillis 1000.
         private int flushInterval = 1000;
+        // Reference from AsyncKuduSession ignoreAllNotFoundRows false.
         private boolean ignoreNotFound = false;
+        // Reference from AsyncKuduSession ignoreAllDuplicateRows false.
         private boolean ignoreDuplicate = false;
 
         private Builder(String masters) {
