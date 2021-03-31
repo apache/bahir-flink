@@ -19,6 +19,7 @@ package org.apache.flink.connectors.kudu.connector.writer;
 import org.apache.flink.annotation.PublicEvolving;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.kudu.client.AsyncKuduClient;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -102,7 +103,7 @@ public class KuduWriterConfig implements Serializable {
         private String masters;
         private FlushMode flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
         // Reference from AsyncKuduClientBuilder defaultOperationTimeoutMs.
-        private long timeout = 30000;
+        private long timeout = AsyncKuduClient.DEFAULT_OPERATION_TIMEOUT_MS;
         // Reference from AsyncKuduSession mutationBufferMaxOps 1000.
         private int maxBufferSize = 1000;
         // Reference from AsyncKuduSession flushIntervalMillis 1000.
