@@ -35,11 +35,28 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.apache.flink.table.descriptors.ConnectorDescriptorValidator.CONNECTOR_TYPE;
-import static org.apache.flink.table.descriptors.DescriptorProperties.*;
-import static org.apache.flink.table.descriptors.Rowtime.*;
-import static org.apache.flink.table.descriptors.Schema.*;
+import static org.apache.flink.table.descriptors.DescriptorProperties.EXPR;
+import static org.apache.flink.table.descriptors.DescriptorProperties.WATERMARK;
+import static org.apache.flink.table.descriptors.DescriptorProperties.WATERMARK_ROWTIME;
+import static org.apache.flink.table.descriptors.DescriptorProperties.WATERMARK_STRATEGY_DATA_TYPE;
+import static org.apache.flink.table.descriptors.DescriptorProperties.WATERMARK_STRATEGY_EXPR;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_TIMESTAMPS_CLASS;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_TIMESTAMPS_FROM;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_TIMESTAMPS_SERIALIZED;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_TIMESTAMPS_TYPE;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_WATERMARKS_CLASS;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_WATERMARKS_DELAY;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_WATERMARKS_SERIALIZED;
+import static org.apache.flink.table.descriptors.Rowtime.ROWTIME_WATERMARKS_TYPE;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA_DATA_TYPE;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA_FROM;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA_NAME;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA_PROCTIME;
+import static org.apache.flink.table.descriptors.Schema.SCHEMA_TYPE;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFactory<Tuple2<Boolean, Row>> {
@@ -49,6 +66,11 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
     public static final String KUDU_HASH_COLS = "kudu.hash-columns";
     public static final String KUDU_PRIMARY_KEY_COLS = "kudu.primary-key-columns";
     public static final String KUDU_REPLICAS = "kudu.replicas";
+    public static final String KUDU_MAX_BUFFER_SIZE = "kudu.max-buffer-size";
+    public static final String KUDU_FLUSH_INTERVAL = "kudu.flush-interval";
+    public static final String KUDU_OPERATION_TIMEOUT = "kudu.operation-timeout";
+    public static final String KUDU_IGNORE_NOT_FOUND = "kudu.ignore-not-found";
+    public static final String KUDU_IGNORE_DUPLICATE = "kudu.ignore-duplicate";
     public static final String KUDU = "kudu";
 
     @Override
@@ -65,6 +87,11 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
         properties.add(KUDU_MASTERS);
         properties.add(KUDU_HASH_COLS);
         properties.add(KUDU_PRIMARY_KEY_COLS);
+        properties.add(KUDU_MAX_BUFFER_SIZE);
+        properties.add(KUDU_FLUSH_INTERVAL);
+        properties.add(KUDU_OPERATION_TIMEOUT);
+        properties.add(KUDU_IGNORE_NOT_FOUND);
+        properties.add(KUDU_IGNORE_DUPLICATE);
         // schema
         properties.add(SCHEMA + ".#." + SCHEMA_DATA_TYPE);
         properties.add(SCHEMA + ".#." + SCHEMA_TYPE);
@@ -123,16 +150,30 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
     public KuduTableSink createTableSink(ObjectPath tablePath, CatalogTable table) {
         validateTable(table);
         String tableName = table.toProperties().getOrDefault(KUDU_TABLE, tablePath.getObjectName());
-        return createTableSink(tableName, table.getSchema(), table.getProperties());
+        return createTableSink(tableName, table.getSchema(), table.toProperties());
     }
 
     private KuduTableSink createTableSink(String tableName, TableSchema schema, Map<String, String> props) {
+        DescriptorProperties properties = new DescriptorProperties();
+        properties.putProperties(props);
         String masterAddresses = props.get(KUDU_MASTERS);
         TableSchema physicalSchema = KuduTableUtils.getSchemaWithSqlTimestamp(schema);
         KuduTableInfo tableInfo = KuduTableUtils.createTableInfo(tableName, schema, props);
 
         KuduWriterConfig.Builder configBuilder = KuduWriterConfig.Builder
                 .setMasters(masterAddresses);
+
+        Optional<Long> operationTimeout = properties.getOptionalLong(KUDU_OPERATION_TIMEOUT);
+        Optional<Integer> flushInterval = properties.getOptionalInt(KUDU_FLUSH_INTERVAL);
+        Optional<Integer> bufferSize = properties.getOptionalInt(KUDU_MAX_BUFFER_SIZE);
+        Optional<Boolean> ignoreNotFound = properties.getOptionalBoolean(KUDU_IGNORE_NOT_FOUND);
+        Optional<Boolean> ignoreDuplicate = properties.getOptionalBoolean(KUDU_IGNORE_DUPLICATE);
+
+        operationTimeout.ifPresent(time -> configBuilder.setOperationTimeout(time));
+        flushInterval.ifPresent(interval -> configBuilder.setFlushInterval(interval));
+        bufferSize.ifPresent(size -> configBuilder.setMaxBufferSize(size));
+        ignoreNotFound.ifPresent(i -> configBuilder.setIgnoreNotFound(i));
+        ignoreDuplicate.ifPresent(i -> configBuilder.setIgnoreDuplicate(i));
 
         return new KuduTableSink(configBuilder, tableInfo, physicalSchema);
     }

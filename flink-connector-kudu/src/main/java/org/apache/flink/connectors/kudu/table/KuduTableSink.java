@@ -30,6 +30,8 @@ import org.apache.flink.table.sinks.UpsertStreamTableSink;
 import org.apache.flink.table.utils.TableConnectorUtils;
 import org.apache.flink.types.Row;
 
+import java.util.Objects;
+
 public class KuduTableSink implements UpsertStreamTableSink<Row> {
 
     private final KuduWriterConfig.Builder writerConfigBuilder;
@@ -68,4 +70,23 @@ public class KuduTableSink implements UpsertStreamTableSink<Row> {
 
     @Override
     public TableSchema getTableSchema() { return flinkSchema; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || o.getClass() != this.getClass()) {
+            return false;
+        }
+        KuduTableSink that = (KuduTableSink) o;
+        return this.writerConfigBuilder.equals(that.writerConfigBuilder) &&
+                this.flinkSchema.equals(that.flinkSchema) &&
+                this.tableInfo.equals(that.tableInfo);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(writerConfigBuilder, flinkSchema, tableInfo);
+    }
 }

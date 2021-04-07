@@ -16,12 +16,21 @@
  */
 package org.apache.flink.connectors.kudu.table;
 
+import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.connectors.kudu.connector.KuduTestBase;
+import org.apache.flink.connectors.kudu.connector.writer.KuduWriterConfig;
 import org.apache.flink.core.execution.JobClient;
 import org.apache.flink.runtime.client.JobExecutionException;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.TableException;
+import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.apache.flink.table.catalog.CatalogTableImpl;
+import org.apache.flink.table.catalog.ObjectPath;
+import org.apache.flink.table.factories.TableFactoryService;
+import org.apache.flink.table.factories.TableSinkFactory;
+import org.apache.flink.table.sinks.TableSink;
 import org.apache.kudu.Type;
 import org.apache.kudu.client.KuduScanner;
 import org.apache.kudu.client.KuduTable;
@@ -32,12 +41,17 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class KuduTableFactoryTest extends KuduTestBase {
     private StreamTableEnvironment tableEnv;
@@ -152,5 +166,33 @@ public class KuduTableFactoryTest extends KuduTestBase {
         assertEquals("s", rows.get(0).getString("second"));
         assertEquals("f2", rows.get(1).getString("first"));
         assertEquals("s2", rows.get(1).getString("second"));
+    }
+
+    @Test
+    public void testTableSink() {
+        final TableSchema schema = TableSchema.builder()
+                .field("first", DataTypes.STRING())
+                .field("second", DataTypes.STRING())
+                .build();
+        final Map<String, String> properties = new HashMap<>();
+        properties.put("connector.type", "kudu");
+        properties.put("kudu.masters", kuduMasters);
+        properties.put("kudu.table", "TestTable12");
+        properties.put("kudu.ignore-not-found", "true");
+        properties.put("kudu.ignore-duplicate", "true");
+        properties.put("kudu.flush-interval", "10000");
+        properties.put("kudu.max-buffer-size", "10000");
+
+        KuduWriterConfig.Builder builder = KuduWriterConfig.Builder.setMasters(kuduMasters)
+                .setFlushInterval(10000)
+                .setMaxBufferSize(10000)
+                .setIgnoreDuplicate(true)
+                .setIgnoreNotFound(true);
+        KuduTableInfo kuduTableInfo = KuduTableInfo.forTable("TestTable12");
+        KuduTableSink expected = new KuduTableSink(builder, kuduTableInfo, schema);
+        final TableSink<?> actualSink = TableFactoryService.find(TableSinkFactory.class, properties)
+                .createTableSink(ObjectPath.fromString("default.TestTable12"), new CatalogTableImpl(schema, properties, null));
+
+        assertEquals(expected, actualSink);
     }
 }
