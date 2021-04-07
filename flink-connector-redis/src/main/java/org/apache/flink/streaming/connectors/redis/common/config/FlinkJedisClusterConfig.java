@@ -48,12 +48,15 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
      * @param maxIdle the cap on the number of "idle" instances in the pool
      * @param minIdle the minimum number of idle objects to maintain in the pool
      * @param password the password of redis cluster
+     * @param testOnBorrow Whether objects borrowed from the pool will be validated before being returned, default value is false
+     * @param testOnReturn Whether objects borrowed from the pool will be validated when they are returned to the pool, default value is false
+     * @param testWhileIdle Whether objects sitting idle in the pool will be validated by the idle object evictor, default value is false
      * @throws NullPointerException if parameter {@code nodes} is {@code null}
      */
     private FlinkJedisClusterConfig(Set<InetSocketAddress> nodes, int connectionTimeout, int maxRedirections,
-                                    int maxTotal, int maxIdle, int minIdle,
-                                    String password) {
-        super(connectionTimeout, maxTotal, maxIdle, minIdle, password);
+                                    int maxTotal, int maxIdle, int minIdle, String password,
+                                    boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
+        super(connectionTimeout, maxTotal, maxIdle, minIdle, password, testOnBorrow, testOnReturn, testWhileIdle);
 
         Objects.requireNonNull(nodes, "Node information should be presented");
         Util.checkArgument(!nodes.isEmpty(), "Redis cluster hosts should not be empty");
@@ -96,6 +99,9 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
         private int maxTotal = GenericObjectPoolConfig.DEFAULT_MAX_TOTAL;
         private int maxIdle = GenericObjectPoolConfig.DEFAULT_MAX_IDLE;
         private int minIdle = GenericObjectPoolConfig.DEFAULT_MIN_IDLE;
+        private boolean testOnBorrow = GenericObjectPoolConfig.DEFAULT_TEST_ON_BORROW;
+        private boolean testOnReturn = GenericObjectPoolConfig.DEFAULT_TEST_ON_RETURN;
+        private boolean testWhileIdle = GenericObjectPoolConfig.DEFAULT_TEST_WHILE_IDLE;
         private String password;
 
         /**
@@ -180,24 +186,67 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
         }
 
         /**
+         * Sets value for the {@code testOnBorrow} configuration attribute
+         * for pools to be created with this configuration instance.
+         *
+         * @param testOnBorrow Whether objects borrowed from the pool will be validated before being returned
+         * @return Builder itself
+         */
+        public Builder setTestOnBorrow(boolean testOnBorrow) {
+            this.testOnBorrow = testOnBorrow;
+            return this;
+        }
+
+        /**
+         * Sets value for the {@code testOnReturn} configuration attribute
+         * for pools to be created with this configuration instance.
+         *
+         * @param testOnReturn Whether objects borrowed from the pool will be validated when they are returned to the pool
+         * @return Builder itself
+         */
+        public Builder setTestOnReturn(boolean testOnReturn) {
+            this.testOnReturn = testOnReturn;
+            return this;
+        }
+
+        /**
+         * Sets value for the {@code testWhileIdle} configuration attribute
+         * for pools to be created with this configuration instance.
+         *
+         * Setting this to true will also set default idle-testing parameters provided in Jedis
+         * @see redis.clients.jedis.JedisPoolConfig
+         *
+         * @param testWhileIdle Whether objects sitting idle in the pool will be validated by the idle object evictor
+         * @return Builder itself
+         */
+        public Builder setTestWhileIdle(boolean testWhileIdle) {
+            this.testWhileIdle = testWhileIdle;
+            return this;
+        }
+
+        /**
          * Builds JedisClusterConfig.
          *
          * @return JedisClusterConfig
          */
         public FlinkJedisClusterConfig build() {
-            return new FlinkJedisClusterConfig(nodes, timeout, maxRedirections, maxTotal, maxIdle, minIdle, password);
+            return new FlinkJedisClusterConfig(nodes, timeout, maxRedirections, maxTotal, maxIdle, minIdle, password, testOnBorrow, testOnReturn, testWhileIdle);
         }
     }
 
     @Override
     public String toString() {
         return "FlinkJedisClusterConfig{" +
-            "nodes=" + nodes +
-            ", timeout=" + connectionTimeout +
-            ", maxRedirections=" + maxRedirections +
-            ", maxTotal=" + maxTotal +
-            ", maxIdle=" + maxIdle +
-            ", minIdle=" + minIdle +
-            '}';
+          "nodes=" + nodes +
+          ", maxRedirections=" + maxRedirections +
+          ", maxTotal=" + maxTotal +
+          ", maxIdle=" + maxIdle +
+          ", minIdle=" + minIdle +
+          ", connectionTimeout=" + connectionTimeout +
+          ", password=" + password +
+          ", testOnBorrow=" + testOnBorrow +
+          ", testOnReturn=" + testOnReturn +
+          ", testWhileIdle=" + testWhileIdle +
+          '}';
     }
 }

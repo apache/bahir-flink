@@ -33,7 +33,12 @@ public abstract class FlinkJedisConfigBase implements Serializable {
     protected final int connectionTimeout;
     protected final String password;
 
-    protected FlinkJedisConfigBase(int connectionTimeout, int maxTotal, int maxIdle, int minIdle, String password) {
+    protected final boolean testOnBorrow;
+    protected final boolean testOnReturn;
+    protected final boolean testWhileIdle;
+
+    protected FlinkJedisConfigBase(int connectionTimeout, int maxTotal, int maxIdle, int minIdle, String password, boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
+
         Util.checkArgument(connectionTimeout >= 0, "connection timeout can not be negative");
         Util.checkArgument(maxTotal >= 0, "maxTotal value can not be negative");
         Util.checkArgument(maxIdle >= 0, "maxIdle value can not be negative");
@@ -43,6 +48,9 @@ public abstract class FlinkJedisConfigBase implements Serializable {
         this.maxTotal = maxTotal;
         this.maxIdle = maxIdle;
         this.minIdle = minIdle;
+        this.testOnBorrow = testOnBorrow;
+        this.testOnReturn = testOnReturn;
+        this.testWhileIdle = testWhileIdle;
         this.password = password;
     }
 
@@ -98,5 +106,41 @@ public abstract class FlinkJedisConfigBase implements Serializable {
      */
     public String getPassword() {
         return password;
+    }
+
+    /**
+     * Get the value for the {@code testOnBorrow} configuration attribute
+     * for pools to be created with this configuration instance.
+     *
+     * @return  The current setting of {@code testOnBorrow} for this
+     *          configuration instance
+     * @see GenericObjectPoolConfig#getTestOnBorrow()
+     */
+    public boolean getTestOnBorrow() {
+        return testOnBorrow;
+    }
+
+    /**
+     * Get the value for the {@code testOnReturn} configuration attribute
+     * for pools to be created with this configuration instance.
+     *
+     * @return  The current setting of {@code testOnReturn} for this
+     *          configuration instance
+     * @see GenericObjectPoolConfig#getTestOnReturn()
+     */
+    public boolean getTestOnReturn() {
+        return testOnReturn;
+    }
+
+    /**
+     * Get the value for the {@code testWhileIdle} configuration attribute
+     * for pools to be created with this configuration instance.
+     *
+     * @return  The current setting of {@code testWhileIdle} for this
+     *          configuration instance
+     * @see GenericObjectPoolConfig#getTestWhileIdle()
+     */
+    public boolean getTestWhileIdle() {
+        return testWhileIdle;
     }
 }

@@ -45,11 +45,16 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
      * @param maxTotal the maximum number of objects that can be allocated by the pool, default value is 8
      * @param maxIdle the cap on the number of "idle" instances in the pool, default value is 8
      * @param minIdle the minimum number of idle objects to maintain in the pool, default value is 0
+     * @param testOnBorrow Whether objects borrowed from the pool will be validated before being returned, default value is false
+     * @param testOnReturn Whether objects borrowed from the pool will be validated when they are returned to the pool, default value is false
+     * @param testWhileIdle Whether objects sitting idle in the pool will be validated by the idle object evictor, default value is false
      * @throws NullPointerException if parameter {@code host} is {@code null}
      */
     private FlinkJedisPoolConfig(String host, int port, int connectionTimeout, String password, int database,
-                                int maxTotal, int maxIdle, int minIdle) {
-        super(connectionTimeout, maxTotal, maxIdle, minIdle, password);
+                                 int maxTotal, int maxIdle, int minIdle,
+                                 boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
+        super(connectionTimeout, maxTotal, maxIdle, minIdle, password, testOnBorrow, testOnReturn, testWhileIdle);
+
         Objects.requireNonNull(host, "Host information should be presented");
         this.host = host;
         this.port = port;
@@ -96,6 +101,9 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
         private int maxTotal = GenericObjectPoolConfig.DEFAULT_MAX_TOTAL;
         private int maxIdle = GenericObjectPoolConfig.DEFAULT_MAX_IDLE;
         private int minIdle = GenericObjectPoolConfig.DEFAULT_MIN_IDLE;
+        private boolean testOnBorrow = GenericObjectPoolConfig.DEFAULT_TEST_ON_BORROW;
+        private boolean testOnReturn = GenericObjectPoolConfig.DEFAULT_TEST_ON_RETURN;
+        private boolean testWhileIdle = GenericObjectPoolConfig.DEFAULT_TEST_WHILE_IDLE;
 
         /**
          * Sets value for the {@code maxTotal} configuration attribute
@@ -188,6 +196,44 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
             return this;
         }
 
+        /**
+         * Sets value for the {@code testOnBorrow} configuration attribute
+         * for pools to be created with this configuration instance.
+         *
+         * @param testOnBorrow Whether objects borrowed from the pool will be validated before being returned
+         * @return Builder itself
+         */
+        public Builder setTestOnBorrow(boolean testOnBorrow) {
+            this.testOnBorrow = testOnBorrow;
+            return this;
+        }
+
+        /**
+         * Sets value for the {@code testOnReturn} configuration attribute
+         * for pools to be created with this configuration instance.
+         *
+         * @param testOnReturn Whether objects borrowed from the pool will be validated when they are returned to the pool
+         * @return Builder itself
+         */
+        public Builder setTestOnReturn(boolean testOnReturn) {
+            this.testOnReturn = testOnReturn;
+            return this;
+        }
+
+        /**
+         * Sets value for the {@code testWhileIdle} configuration attribute
+         * for pools to be created with this configuration instance.
+         *
+         * Setting this to true will also set default idle-testing parameters provided in Jedis
+         * @see redis.clients.jedis.JedisPoolConfig
+         *
+         * @param testWhileIdle Whether objects sitting idle in the pool will be validated by the idle object evictor
+         * @return Builder itself
+         */
+        public Builder setTestWhileIdle(boolean testWhileIdle) {
+            this.testWhileIdle = testWhileIdle;
+            return this;
+        }
 
         /**
          * Builds JedisPoolConfig.
@@ -195,20 +241,24 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
          * @return JedisPoolConfig
          */
         public FlinkJedisPoolConfig build() {
-            return new FlinkJedisPoolConfig(host, port, timeout, password, database, maxTotal, maxIdle, minIdle);
+            return new FlinkJedisPoolConfig(host, port, timeout, password, database, maxTotal, maxIdle, minIdle, testOnBorrow, testOnReturn, testWhileIdle);
         }
     }
 
     @Override
     public String toString() {
         return "FlinkJedisPoolConfig{" +
-            "host='" + host + '\'' +
-            ", port=" + port +
-            ", timeout=" + connectionTimeout +
-            ", database=" + database +
-            ", maxTotal=" + maxTotal +
-            ", maxIdle=" + maxIdle +
-            ", minIdle=" + minIdle +
-            '}';
+          "host=" + host +
+          ", port=" + port +
+          ", database=" + database +
+          ", maxTotal=" + maxTotal +
+          ", maxIdle=" + maxIdle +
+          ", minIdle=" + minIdle +
+          ", connectionTimeout=" +
+          ", password=" + password +
+          ", testOnBorrow=" + testOnBorrow +
+          ", testOnReturn=" + testOnReturn +
+          ", testWhileIdle=" + testWhileIdle +
+          '}';
     }
 }

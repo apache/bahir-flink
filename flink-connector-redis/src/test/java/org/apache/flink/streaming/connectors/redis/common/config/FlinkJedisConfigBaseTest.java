@@ -23,28 +23,28 @@ public class FlinkJedisConfigBaseTest extends TestLogger {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionIfTimeOutIsNegative(){
-        new TestConfig(-1, 0, 0, 0);
+        new TestConfig(-1, 0, 0, 0, false, false, false);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionIfMaxTotalIsNegative(){
-        new TestConfig(1, -1, 0, 0);
+        new TestConfig(1, -1, 0, 0, false, false, false);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionIfMaxIdleIsNegative(){
-        new TestConfig(0, 0, -1, 0);
+        new TestConfig(0, 0, -1, 0, false, false, false);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionIfMinIdleIsNegative(){
-        new TestConfig(0, 0, 0, -1);
+        new TestConfig(0, 0, 0, -1, false, false, false);
     }
 
     private class TestConfig extends FlinkJedisConfigBase {
-
-        protected TestConfig(int connectionTimeout, int maxTotal, int maxIdle, int minIdle) {
-            super(connectionTimeout, maxTotal, maxIdle, minIdle, "dummy");
+        protected TestConfig(int connectionTimeout, int maxTotal, int maxIdle, int minIdle,
+                             boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
+            super(connectionTimeout, maxTotal, maxIdle, minIdle, "dummy", testOnBorrow, testOnReturn, testWhileIdle);
         }
     }
 }
