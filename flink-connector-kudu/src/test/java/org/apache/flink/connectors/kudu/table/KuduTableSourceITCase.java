@@ -41,7 +41,7 @@ public class KuduTableSourceITCase extends KuduTestBase {
         KuduTableInfo tableInfo = booksTableInfo("books", true);
         setUpDatabase(tableInfo);
         tableEnv = KuduTableTestUtils.createTableEnvWithBlinkPlannerBatchMode();
-        catalog = new KuduCatalog(harness.getMasterAddressesAsString());
+        catalog = new KuduCatalog(getMasterAddress());
         tableEnv.registerCatalog("kudu", catalog);
         tableEnv.useCatalog("kudu");
     }

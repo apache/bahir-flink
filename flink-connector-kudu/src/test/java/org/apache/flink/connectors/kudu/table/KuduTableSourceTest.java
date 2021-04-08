@@ -67,7 +67,7 @@ public class KuduTableSourceTest extends KuduTestBase {
     public void init() {
         KuduTableInfo tableInfo = booksTableInfo("books", true);
         setUpDatabase(tableInfo);
-        catalog = new KuduCatalog(harness.getMasterAddressesAsString());
+        catalog = new KuduCatalog(getMasterAddress());
         ObjectPath op = new ObjectPath(EnvironmentSettings.DEFAULT_BUILTIN_DATABASE, "books");
         try {
             kuduTableSource = catalog.getKuduTableFactory().createTableSource(op, catalog.getTable(op));
