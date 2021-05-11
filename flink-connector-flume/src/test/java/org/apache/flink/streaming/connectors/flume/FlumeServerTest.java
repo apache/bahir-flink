@@ -19,41 +19,42 @@ package org.apache.flink.streaming.connectors.flume;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
+
 
 public class FlumeServerTest {
 
     private static final Integer EXPOSED_PORT = 44444;
+    private static final DockerImageName DOCKER_IMAGE_NAME = DockerImageName.parse("eskabetxe/flume");
 
-    public GenericContainer<?> sink = new GenericContainer<>("eskabetxe/flume")
-
+    private final GenericContainer<?> sink = new GenericContainer<>(DOCKER_IMAGE_NAME)
             .withCopyFileToContainer(MountableFile.forClasspathResource("docker/conf/sink.conf"), "/opt/flume-config/flume.conf")
             .withEnv("FLUME_AGENT_NAME", "docker");
 
-    public GenericContainer<?> source = new GenericContainer<>("eskabetxe/flume")
+    private final GenericContainer<?> source = new GenericContainer<>(DOCKER_IMAGE_NAME)
             .withCopyFileToContainer(MountableFile.forClasspathResource("docker/conf/source.conf"), "/opt/flume-config/flume.conf")
             .withExposedPorts(EXPOSED_PORT)
             .withEnv("FLUME_AGENT_NAME", "docker")
-            .dependsOn(sink);
+            .dependsOn(this.sink);
 
     @BeforeEach
-    void start() {
-        sink.start();
-        source.start();
+    void init() {
+        this.sink.start();
+        this.source.start();
     }
 
     @AfterEach
-    void stop() {
-        source.stop();
-        sink.stop();
+    void tearDown() {
+        this.source.stop();
+        this.sink.stop();
     }
 
     protected String getHost() {
-        return source.getHost();
+        return this.source.getHost();
     }
 
     protected Integer getPort() {
-        return source.getMappedPort(EXPOSED_PORT);
+        return this.source.getMappedPort(EXPOSED_PORT);
     }
-
 }
