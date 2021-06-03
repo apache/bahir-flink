@@ -105,7 +105,7 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
     public KuduTableSource createTableSource(ObjectPath tablePath, CatalogTable table) {
         validateTable(table);
         String tableName = table.toProperties().getOrDefault(KUDU_TABLE, tablePath.getObjectName());
-        return createTableSource(tableName, table.getSchema(), table.getProperties());
+        return createTableSource(tableName, table.getSchema(), table.getOptions());
     }
 
     private KuduTableSource createTableSource(String tableName, TableSchema schema, Map<String, String> props) {
@@ -123,7 +123,7 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
     public KuduTableSink createTableSink(ObjectPath tablePath, CatalogTable table) {
         validateTable(table);
         String tableName = table.toProperties().getOrDefault(KUDU_TABLE, tablePath.getObjectName());
-        return createTableSink(tableName, table.getSchema(), table.getProperties());
+        return createTableSink(tableName, table.getSchema(), table.getOptions());
     }
 
     private KuduTableSink createTableSink(String tableName, TableSchema schema, Map<String, String> props) {

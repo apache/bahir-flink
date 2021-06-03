@@ -21,24 +21,18 @@ import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.connectors.kudu.connector.failure.DefaultKuduFailureHandler;
 import org.apache.flink.connectors.kudu.connector.failure.KuduFailureHandler;
-
-import org.apache.kudu.client.DeleteTableResponse;
-import org.apache.kudu.client.KuduClient;
-import org.apache.kudu.client.KuduSession;
-import org.apache.kudu.client.KuduTable;
-import org.apache.kudu.client.Operation;
-import org.apache.kudu.client.OperationResponse;
-import org.apache.kudu.client.RowError;
+import org.apache.kudu.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
 @Internal
-public class KuduWriter<T> implements AutoCloseable {
-
+public class KuduWriter<T> implements AutoCloseable, Serializable {
+    private static final long serialVersionUID = 1L;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final KuduTableInfo tableInfo;
@@ -143,7 +137,9 @@ public class KuduWriter<T> implements AutoCloseable {
     }
 
     private void checkAsyncErrors() throws IOException {
-        if (session.countPendingErrors() == 0) { return; }
+        if (session.countPendingErrors() == 0) {
+            return;
+        }
 
         List<RowError> errors = Arrays.asList(session.getPendingErrors().getRowErrors());
         failureHandler.onFailure(errors);

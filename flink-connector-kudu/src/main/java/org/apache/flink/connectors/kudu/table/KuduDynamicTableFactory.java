@@ -22,14 +22,19 @@ import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.connectors.kudu.connector.writer.AbstractSingleOperationMapper.KuduOperation;
 import org.apache.flink.connectors.kudu.connector.writer.KuduWriterConfig;
-import org.apache.flink.connectors.kudu.connector.writer.RowOperationMapper;
+import org.apache.flink.connectors.kudu.table.KuduDynamicTableSource.LookupOptions;
+import org.apache.flink.connectors.kudu.table.KuduDynamicTableSource.ScanOptions;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.factories.DynamicTableSinkFactory;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
+import org.apache.flink.table.utils.TableSchemaUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -38,6 +43,8 @@ import java.util.Set;
  */
 public class KuduDynamicTableFactory implements DynamicTableSourceFactory, DynamicTableSinkFactory {
 
+    private static final Logger log = LoggerFactory.getLogger(KuduDynamicTableFactory.class);
+
     public static final String IDENTIFIER = "kudu";
     public static final ConfigOption<String> MASTER = ConfigOptions.key("master")
             .stringType().noDefaultValue().withDescription("the kudu master address.");
@@ -45,6 +52,14 @@ public class KuduDynamicTableFactory implements DynamicTableSourceFactory, Dynam
             .stringType().noDefaultValue().withDescription("the kudu table name.");
     public static final ConfigOption<String> OPERATION = ConfigOptions.key("operation")
             .stringType().noDefaultValue().withDescription("the kudu operation type.");
+    public static final ConfigOption<Long> INERVAL = ConfigOptions.key("inerval")
+            .longType().defaultValue(5 * 60 * 1000L).withDescription("the kudu query inerval.");
+    public static final ConfigOption<Long> MAX_SIZE = ConfigOptions.key("lookup.cache.max-size")
+            .longType().defaultValue(-1L).withDescription("the kudu query cache max size.");
+    public static final ConfigOption<Long> EXPIRE_MS = ConfigOptions.key("lookup.cache.expire-ms")
+            .longType().defaultValue(-1L).withDescription("the kudu query cache expire millsecond.");
+    public static final ConfigOption<Integer> MAX_RETRIES = ConfigOptions.key("lookup.cache.max-retries")
+            .intType().defaultValue(3).withDescription("the kudu query cache max retry times.");
 
 
     @Override
@@ -52,21 +67,33 @@ public class KuduDynamicTableFactory implements DynamicTableSourceFactory, Dynam
         final FactoryUtil.TableFactoryHelper helper =
                 FactoryUtil.createTableFactoryHelper(this, context);
         final ReadableConfig config = helper.getOptions();
+        helper.validate();
         String tableName = config.get(TABLE_NAME);
         String master = config.get(MASTER);
-        KuduOperation operation = getOperation(config.get(OPERATION));
-        helper.validate();
         TableSchema schema = context.getCatalogTable().getSchema();
         KuduTableInfo kuduTableInfo = KuduTableInfo.forTable(tableName);
         KuduWriterConfig kuduWriterConfig = KuduWriterConfig.Builder.newInstance(master).build();
-        RowOperationMapper rowOperationMapper = new RowOperationMapper(schema.getFieldNames(), operation);
-        KuduDynamicTableSink sink = new KuduDynamicTableSink(schema, kuduTableInfo, kuduWriterConfig, rowOperationMapper);
+        UpsertOperationMapper upsertOperationMapper = new UpsertOperationMapper(schema.getFieldNames());
+        KuduDynamicTableSink sink = new KuduDynamicTableSink(schema, kuduTableInfo, kuduWriterConfig, upsertOperationMapper);
         return sink;
     }
 
     @Override
     public DynamicTableSource createDynamicTableSource(Context context) {
-        throw new IllegalArgumentException("not support now.");
+        final FactoryUtil.TableFactoryHelper helper =
+                FactoryUtil.createTableFactoryHelper(this, context);
+        final ReadableConfig config = helper.getOptions();
+        helper.validate();
+        String master = config.get(MASTER);
+        String tableName = config.get(TABLE_NAME);
+        Long inerval = config.get(INERVAL);
+        Long cacheMaxSize = config.get(MAX_SIZE);
+        Long cacheExpireMs = config.get(EXPIRE_MS);
+        Integer maxRetryTimes = config.get(MAX_RETRIES);
+        LookupOptions lookupOptions = new LookupOptions(cacheMaxSize, cacheExpireMs, maxRetryTimes);
+        ScanOptions scanOptions = new ScanOptions(inerval);
+        TableSchema physicalSchema = TableSchemaUtils.getPhysicalSchema(context.getCatalogTable().getSchema());
+        return new KuduDynamicTableSource(master, tableName, physicalSchema, lookupOptions, scanOptions);
     }
 
     @Override
@@ -76,12 +103,18 @@ public class KuduDynamicTableFactory implements DynamicTableSourceFactory, Dynam
 
     @Override
     public Set<ConfigOption<?>> requiredOptions() {
-        return null;
+        Set<ConfigOption<?>> options = new HashSet<>();
+        options.add(TABLE_NAME);
+        options.add(MASTER);
+        options.add(INERVAL);
+        return options;
     }
 
     @Override
     public Set<ConfigOption<?>> optionalOptions() {
-        return null;
+        Set<ConfigOption<?>> options = new HashSet<>();
+        options.add(OPERATION);
+        return options;
     }
 
 
