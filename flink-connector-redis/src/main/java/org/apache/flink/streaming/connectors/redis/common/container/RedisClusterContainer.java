@@ -167,6 +167,19 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
     }
 
     @Override
+    public void setnx(String key, String value) {
+        try {
+            jedisCluster.setnx(key, value);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command SETNX to key {} error message {}",
+                        key, e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    @Override
     public void pfadd(final String key, final String element) {
         try {
             jedisCluster.pfadd(key, element);
