@@ -80,7 +80,6 @@
     <module>flink-connector-netty</module>
     <module>flink-connector-pinot</module>
     <module>flink-connector-redis</module>
-    <module>flink-library-siddhi</module>
   </modules>
 
   <properties>
