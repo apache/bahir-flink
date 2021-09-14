@@ -17,22 +17,22 @@
 
 package org.apache.flink.streaming.siddhi.operator;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Map;
-
+import io.siddhi.core.event.Event;
+import io.siddhi.core.stream.output.StreamCallback;
+import io.siddhi.query.api.definition.AbstractDefinition;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.typeutils.PojoTypeInfo;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.DeserializationFeature;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.flink.streaming.siddhi.utils.SiddhiTupleFactory;
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
+import org.apache.flink.streaming.siddhi.utils.SiddhiTupleFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.siddhi.core.event.Event;
-import org.wso2.siddhi.core.stream.output.StreamCallback;
-import org.wso2.siddhi.query.api.definition.AbstractDefinition;
+
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 /**
  * Siddhi Stream output callback handler and conver siddhi {@link Event} to required output type,
@@ -86,7 +86,7 @@ public class StreamInMemOutputHandler<R> extends StreamCallback {
         this.collectedRecords.clear();
     }
 
-    private Map<String, Object> toMap(Event event) {
+    public Map<String, Object> toMap(Event event) {
         Map<String, Object> map = new LinkedHashMap<>();
         for (int i = 0; i < definition.getAttributeNameArray().length; i++) {
             map.put(definition.getAttributeNameArray()[i], event.getData(i));
