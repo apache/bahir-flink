@@ -17,14 +17,14 @@
 
 package org.apache.flink.streaming.siddhi.operator;
 
+import io.siddhi.core.SiddhiManager;
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.siddhi.exception.UndefinedStreamException;
 import org.apache.flink.streaming.siddhi.schema.SiddhiStreamSchema;
 import org.apache.flink.streaming.siddhi.schema.StreamSchema;
-import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.util.Preconditions;
-import org.wso2.siddhi.core.SiddhiManager;
 
 import java.io.Serializable;
 import java.util.ArrayList;

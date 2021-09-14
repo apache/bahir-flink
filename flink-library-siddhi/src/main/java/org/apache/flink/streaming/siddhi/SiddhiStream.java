@@ -24,11 +24,11 @@ import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.siddhi.operator.SiddhiOperatorContext;
 import org.apache.flink.streaming.siddhi.utils.SiddhiStreamFactory;
 import org.apache.flink.streaming.siddhi.utils.SiddhiTypeFactory;
-import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.util.Preconditions;
 
 import java.util.Arrays;

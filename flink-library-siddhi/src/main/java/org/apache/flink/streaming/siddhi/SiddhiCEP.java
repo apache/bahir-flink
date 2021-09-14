@@ -18,12 +18,12 @@
 package org.apache.flink.streaming.siddhi;
 
 import org.apache.flink.annotation.PublicEvolving;
-import org.apache.flink.streaming.siddhi.exception.DuplicatedStreamException;
-import org.apache.flink.streaming.siddhi.exception.UndefinedStreamException;
-import org.apache.flink.streaming.siddhi.schema.SiddhiStreamSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.siddhi.exception.DuplicatedStreamException;
+import org.apache.flink.streaming.siddhi.exception.UndefinedStreamException;
 import org.apache.flink.streaming.siddhi.operator.SiddhiStreamOperator;
+import org.apache.flink.streaming.siddhi.schema.SiddhiStreamSchema;
 import org.apache.flink.streaming.siddhi.schema.StreamSchema;
 import org.apache.flink.util.Preconditions;
 
