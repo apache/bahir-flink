@@ -45,6 +45,7 @@ public final class InfluxDBContainer<SELF extends InfluxDBContainer<SELF>>
 
     public static final String username = "test-user";
     public static final String password = "test-password";
+    public static final String token = "access-token";
     public static final String bucket = "test-bucket";
     public static final String organization = "test-org";
     private static final int retention = 0;

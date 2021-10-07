@@ -60,6 +60,12 @@ public final class InfluxDBSinkOptions {
                     .noDefaultValue()
                     .withDescription("InfluxDB password.");
 
+    public static final ConfigOption<String> INFLUXDB_TOKEN =
+            ConfigOptions.key("sink.influxDB.client.token")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("InfluxDB access token.");
+
     public static final ConfigOption<String> INFLUXDB_BUCKET =
             ConfigOptions.key("sink.influxDB.client.bucket")
                     .stringType()
@@ -76,15 +82,20 @@ public final class InfluxDBSinkOptions {
         final String url = configuration.getString(INFLUXDB_URL);
         final String username = configuration.getString(INFLUXDB_USERNAME);
         final String password = configuration.getString(INFLUXDB_PASSWORD);
+        final String token = configuration.getString(INFLUXDB_TOKEN);
         final String bucket = configuration.getString(INFLUXDB_BUCKET);
         final String organization = configuration.getString(INFLUXDB_ORGANIZATION);
-        final InfluxDBClientOptions influxDBClientOptions =
-                InfluxDBClientOptions.builder()
-                        .url(url)
-                        .authenticate(username, password.toCharArray())
-                        .bucket(bucket)
-                        .org(organization)
-                        .build();
+        InfluxDBClientOptions.Builder builder = InfluxDBClientOptions.builder();
+        builder = builder
+                .url(url)
+                .bucket(bucket)
+                .org(organization);
+        if (token != null) {
+            builder = builder.authenticateToken(token.toCharArray());
+        } else if (username != null && password != null) {
+            builder = builder.authenticate(username, password.toCharArray());
+        }
+        final InfluxDBClientOptions influxDBClientOptions = builder.build();
         return InfluxDBClientFactory.create(influxDBClientOptions);
     }
 }
