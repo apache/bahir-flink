@@ -42,10 +42,10 @@ class InfluxDBSinkBuilderTest {
     }
 
     @Test
-    void shouldNotBuildSinkWhenUsernameIsNotProvided() {
-        final NullPointerException exception =
+    void shouldNotBuildSinkWhenTokenNotProvidedAndUsernameIsNotProvided() {
+        final IllegalArgumentException exception =
                 assertThrows(
-                        NullPointerException.class,
+                        IllegalArgumentException.class,
                         () ->
                                 InfluxDBSink.builder()
                                         .setInfluxDBUrl("http://localhost:8086")
@@ -54,14 +54,15 @@ class InfluxDBSinkBuilderTest {
                                         .setInfluxDBOrganization(InfluxDBContainer.organization)
                                         .setInfluxDBSchemaSerializer(new InfluxDBTestSerializer())
                                         .build());
-        assertEquals(exception.getMessage(), "The InfluxDB username is required but not provided.");
+        assertEquals(exception.getMessage(),
+                "Either the InfluxDB username and password or InfluxDB token are required but neither provided");
     }
 
     @Test
-    void shouldNotBuildSinkWhenPasswordIsNotProvided() {
-        final NullPointerException exception =
+    void shouldNotBuildSinkWhenTokenNotProvidedAndPasswordIsNotProvided() {
+        final IllegalArgumentException exception =
                 assertThrows(
-                        NullPointerException.class,
+                        IllegalArgumentException.class,
                         () ->
                                 InfluxDBSink.builder()
                                         .setInfluxDBUrl("http://localhost:8086")
@@ -70,7 +71,27 @@ class InfluxDBSinkBuilderTest {
                                         .setInfluxDBOrganization(InfluxDBContainer.organization)
                                         .setInfluxDBSchemaSerializer(new InfluxDBTestSerializer())
                                         .build());
-        assertEquals(exception.getMessage(), "The InfluxDB password is required but not provided.");
+        assertEquals(exception.getMessage(),
+                "Either the InfluxDB username and password or InfluxDB token are required but neither provided");
+    }
+
+    @Test
+    void shouldNotBuildSinkWhenTokenProvidedAndUsernamePasswordIsProvided() {
+        final IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                InfluxDBSink.builder()
+                                        .setInfluxDBUrl("http://localhost:8086")
+                                        .setInfluxDBToken(InfluxDBContainer.token)
+                                        .setInfluxDBUsername(InfluxDBContainer.username)
+                                        .setInfluxDBPassword(InfluxDBContainer.password)
+                                        .setInfluxDBBucket(InfluxDBContainer.bucket)
+                                        .setInfluxDBOrganization(InfluxDBContainer.organization)
+                                        .setInfluxDBSchemaSerializer(new InfluxDBTestSerializer())
+                                        .build());
+        assertEquals(exception.getMessage(),
+                "Either the InfluxDB username and password or InfluxDB token are required but both provided");
     }
 
     @Test
