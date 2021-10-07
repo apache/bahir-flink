@@ -80,16 +80,15 @@ public final class InfluxDBWriter<IN> implements SinkWriter<IN, Long, Point> {
      */
     @Override
     public void write(final IN in, final Context context) throws IOException {
+        LOG.trace("Adding elements to buffer. Buffer size: {}", this.elements.size());
+        this.elements.add(this.schemaSerializer.serialize(in, context));
         if (this.elements.size() == this.bufferSize) {
             LOG.debug("Buffer size reached preparing to write the elements.");
             this.writeCurrentElements();
             this.elements.clear();
-        } else {
-            LOG.trace("Adding elements to buffer. Buffer size: {}", this.elements.size());
-            this.elements.add(this.schemaSerializer.serialize(in, context));
-            if (context.timestamp() != null) {
-                this.lastTimestamp = Math.max(this.lastTimestamp, context.timestamp());
-            }
+        }
+        if (context.timestamp() != null) {
+            this.lastTimestamp = Math.max(this.lastTimestamp, context.timestamp());
         }
     }
 
