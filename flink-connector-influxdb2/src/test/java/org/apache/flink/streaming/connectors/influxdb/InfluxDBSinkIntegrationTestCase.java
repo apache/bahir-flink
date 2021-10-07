@@ -31,6 +31,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -52,8 +54,9 @@ class InfluxDBSinkIntegrationTestCase extends TestLogger {
 
     private static final List<Long> SOURCE_DATA = Arrays.asList(1L, 2L, 3L);
 
+    // FiniteTestSource emits list of elements twice
     private static final List<String> EXPECTED_COMMITTED_DATA_IN_STREAMING_MODE =
-            SOURCE_DATA.stream()
+            Stream.concat(SOURCE_DATA.stream(), SOURCE_DATA.stream())
                     .map(x -> new InfluxDBTestSerializer().serialize(x, null).toLineProtocol())
                     .collect(Collectors.toList());
 
@@ -82,6 +85,7 @@ class InfluxDBSinkIntegrationTestCase extends TestLogger {
                         .setInfluxDBPassword(InfluxDBContainer.password)
                         .setInfluxDBBucket(InfluxDBContainer.bucket)
                         .setInfluxDBOrganization(InfluxDBContainer.organization)
+                        .setWriteBufferSize(2)
                         .addCheckpointDataPoint(true)
                         .build();
 
