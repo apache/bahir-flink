@@ -120,7 +120,20 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
             jedisCluster.sadd(setName, value);
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
-                LOG.error("Cannot send Redis message with command RPUSH to set {} error message {}",
+                LOG.error("Cannot send Redis message with command SADD to set {} error message {}",
+                    setName, e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public void srem(final String setName, final String value) {
+        try {
+            jedisCluster.srem(setName, value);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command SREM to set {} error message {}",
                     setName, e.getMessage());
             }
             throw e;

@@ -74,6 +74,17 @@ public interface RedisCommandsContainer extends Serializable {
      */
     void sadd(String setName, String value);
 
+
+    /**
+     * Remove the specified members from the set stored at key.
+     * Specified members that are not a member of this set are ignored.
+     * If the value stored at key is not a set, an exception will be raised.
+     *
+     * @param setName Name of the Set
+     * @param value Value to be added
+     */
+    void srem(String setName, String value);
+
     /**
      * Posts a message to the given channel.
      *
