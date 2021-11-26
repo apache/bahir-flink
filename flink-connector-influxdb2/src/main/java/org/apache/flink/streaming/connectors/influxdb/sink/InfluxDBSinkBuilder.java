@@ -140,6 +140,7 @@ public final class InfluxDBSinkBuilder<IN> {
      * @param influxDBSchemaSerializer the serializer for the input type.
      * @return this InfluxDBSourceBuilder.
      */
+    @SuppressWarnings("unchecked")
     public <T extends IN> InfluxDBSinkBuilder<T> setInfluxDBSchemaSerializer(
             final InfluxDBSchemaSerializer<T> influxDBSchemaSerializer) {
         checkNotNull(influxDBSchemaSerializer);

@@ -60,6 +60,7 @@ public final class InfluxDBSourceBuilder<OUT> {
      *     org.apache.flink.streaming.connectors.influxdb.common.DataPoint DataPoint}.
      * @return this InfluxDBSourceBuilder.
      */
+    @SuppressWarnings("unchecked")
     public <T extends OUT> InfluxDBSourceBuilder<T> setDeserializer(
             final InfluxDBDataPointDeserializer<T> dataPointDeserializer) {
         checkNotNull(dataPointDeserializer);

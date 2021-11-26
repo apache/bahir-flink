@@ -21,8 +21,10 @@ package org.apache.flink.connectors.kudu.table;
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.table.catalog.Catalog;
 import org.apache.flink.table.descriptors.DescriptorProperties;
+import org.apache.flink.table.descriptors.DescriptorValidator;
 import org.apache.flink.table.factories.CatalogFactory;
 
+import org.apache.flink.table.factories.FactoryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +32,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_PROPERTY_VERSION;
-import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_TYPE;
 
 /**
  * Factory for {@link KuduCatalog}.
@@ -45,8 +44,8 @@ public class KuduCatalogFactory implements CatalogFactory {
     @Override
     public Map<String, String> requiredContext() {
         Map<String, String> context = new HashMap<>();
-        context.put(CATALOG_TYPE, KuduTableFactory.KUDU);
-        context.put(CATALOG_PROPERTY_VERSION, "1"); // backwards compatibility
+        context.put("type", KuduTableFactory.KUDU);
+        context.put(FactoryUtil.PROPERTY_VERSION.key(), "1"); // backwards compatibility
         return context;
     }
 
