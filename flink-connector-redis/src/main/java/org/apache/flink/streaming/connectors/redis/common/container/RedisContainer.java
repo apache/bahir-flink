@@ -245,6 +245,23 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
     }
 
     @Override
+    public void del(final String key) {
+        Jedis jedis = null;
+        try {
+            jedis = getInstance();
+            jedis.del(key);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command DEL to key {} error message {}",
+                    key, e.getMessage());
+            }
+            throw e;
+        } finally {
+            releaseInstance(jedis);
+        }
+    }
+
+    @Override
     public void pfadd(final String key, final String element) {
         Jedis jedis = null;
         try {

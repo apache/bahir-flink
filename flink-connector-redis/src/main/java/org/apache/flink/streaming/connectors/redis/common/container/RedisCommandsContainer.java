@@ -115,6 +115,12 @@ public interface RedisCommandsContainer extends Serializable {
     void setex(String key, String value, Integer ttl);
 
     /**
+     * Remove the specified key. A key is ignored if it does not exist.
+     * @param key the key to be removed
+     */
+    void del(String key);
+
+    /**
      * Adds all the element arguments to the HyperLogLog data structure
      * stored at the variable name specified as first argument.
      *

@@ -57,6 +57,11 @@ public enum RedisCommand {
     SETEX(RedisDataType.STRING),
 
     /**
+     * Remove the specified key. A key is ignored if it does not exist.
+     */
+    DEL(RedisDataType.STRING),
+
+    /**
      * Adds the element to the HyperLogLog data structure stored at the variable name specified as first argument.
      */
     PFADD(RedisDataType.HYPER_LOG_LOG),

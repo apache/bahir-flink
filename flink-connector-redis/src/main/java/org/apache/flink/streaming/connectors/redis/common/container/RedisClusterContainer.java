@@ -180,6 +180,19 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
     }
 
     @Override
+    public void del(final String key) {
+        try {
+            jedisCluster.del(key);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command DEL to key {} error message {}",
+                        key, e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    @Override
     public void pfadd(final String key, final String element) {
         try {
             jedisCluster.pfadd(key, element);
