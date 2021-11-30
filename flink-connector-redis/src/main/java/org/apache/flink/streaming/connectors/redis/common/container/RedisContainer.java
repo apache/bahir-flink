@@ -167,7 +167,24 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
             jedis.sadd(setName, value);
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
-                LOG.error("Cannot send Redis message with command RPUSH to set {} error message {}",
+                LOG.error("Cannot send Redis message with command SADD to set {} error message {}",
+                    setName, e.getMessage());
+            }
+            throw e;
+        } finally {
+            releaseInstance(jedis);
+        }
+    }
+
+    @Override
+    public void srem(final String setName, final String value) {
+        Jedis jedis = null;
+        try {
+            jedis = getInstance();
+            jedis.srem(setName, value);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command SREM to set {} error message {}",
                     setName, e.getMessage());
             }
             throw e;
@@ -220,6 +237,23 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
             if (LOG.isErrorEnabled()) {
                 LOG.error("Cannot send Redis message with command SETEX to key {} error message {}",
                         key, e.getMessage());
+            }
+            throw e;
+        } finally {
+            releaseInstance(jedis);
+        }
+    }
+
+    @Override
+    public void del(final String key) {
+        Jedis jedis = null;
+        try {
+            jedis = getInstance();
+            jedis.del(key);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command DEL to key {} error message {}",
+                    key, e.getMessage());
             }
             throw e;
         } finally {

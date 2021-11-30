@@ -152,11 +152,17 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
             case SADD:
                 this.redisCommandsContainer.sadd(key, value);
                 break;
+            case SREM:
+                this.redisCommandsContainer.srem(key, value);
+                break;
             case SET:
                 this.redisCommandsContainer.set(key, value);
                 break;
             case SETEX:
                 this.redisCommandsContainer.setex(key, value, optAdditionalTTL.orElse(this.additionalTTL));
+                break;
+            case DEL:
+                this.redisCommandsContainer.del(key);
                 break;
             case PFADD:
                 this.redisCommandsContainer.pfadd(key, value);

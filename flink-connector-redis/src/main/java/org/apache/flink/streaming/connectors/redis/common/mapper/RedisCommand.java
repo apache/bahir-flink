@@ -40,6 +40,11 @@ public enum RedisCommand {
     SADD(RedisDataType.SET),
 
     /**
+     * Remove the specified members from the set stored at key.
+     */
+    SREM(RedisDataType.SET),
+
+    /**
      * Set key to hold the string value. If key already holds a value,
      * it is overwritten, regardless of its type.
      */
@@ -50,6 +55,11 @@ public enum RedisCommand {
      * it is overwritten, regardless of its type.
      */
     SETEX(RedisDataType.STRING),
+
+    /**
+     * Remove the specified key. A key is ignored if it does not exist.
+     */
+    DEL(RedisDataType.STRING),
 
     /**
      * Adds the element to the HyperLogLog data structure stored at the variable name specified as first argument.
