@@ -68,6 +68,7 @@ public class KuduWriter<T> implements AutoCloseable, Serializable {
         session.setFlushMode(writerConfig.getFlushMode());
         session.setFlushInterval(writerConfig.getFlushIntervalMillis());
         session.setMutationBufferSpace(writerConfig.getMutationBufferMaxOps());
+        session.setTimeoutMillis(writerConfig.getTimeoutMillis());
         return session;
     }
 
@@ -84,7 +85,6 @@ public class KuduWriter<T> implements AutoCloseable, Serializable {
 
     public void write(T input) throws IOException {
         checkAsyncErrors();
-
         for (Operation operation : operationMapper.createOperations(input, table)) {
             checkErrors(session.apply(operation));
         }

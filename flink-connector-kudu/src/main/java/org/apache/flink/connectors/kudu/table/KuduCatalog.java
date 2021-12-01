@@ -237,7 +237,7 @@ public class KuduCatalog extends AbstractReadOnlyCatalog {
 
     @Override
     public void createTable(ObjectPath tablePath, CatalogBaseTable table, boolean ignoreIfExists) throws TableAlreadyExistException {
-        Map<String, String> tableProperties = table.getProperties();
+        Map<String, String> tableProperties = table.getOptions();
         TableSchema tableSchema = table.getSchema();
 
         Set<String> optionalProperties = new HashSet<>(Arrays.asList(KUDU_REPLICAS));

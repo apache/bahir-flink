@@ -29,6 +29,8 @@ import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.LogicalTypeRoot;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.flink.table.types.logical.utils.LogicalTypeChecks.getPrecision;
 import static org.apache.flink.table.types.logical.utils.LogicalTypeChecks.getScale;
@@ -38,6 +40,8 @@ import static org.apache.flink.table.types.logical.utils.LogicalTypeChecks.getSc
  * @date 2021/3/24 10:39
  */
 public class KuduDynamicTableSinkProvider extends RichSinkFunction<RowData> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(KuduDynamicTableSinkProvider.class);
 
     private static final long serialVersionUID = 1L;
     private KuduWriter<Tuple2<Boolean, Row>> kuduWriter;
@@ -80,7 +84,7 @@ public class KuduDynamicTableSinkProvider extends RichSinkFunction<RowData> {
                 kuduWriter.write(new Tuple2<>(false, row));
                 break;
             default:
-                throw new IllegalArgumentException(String.format("unsupport row kind %s.", rowKind));
+                LOG.error(String.format("unsupport row kind %s, value=%s.", rowKind, value));
         }
     }
 

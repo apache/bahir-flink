@@ -87,7 +87,7 @@ public class KuduSink<IN> extends RichSinkFunction<IN> implements CheckpointedFu
 
     @Override
     public void open(Configuration parameters) throws Exception {
-        kuduWriter = new KuduWriter(tableInfo, writerConfig, opsMapper, failureHandler);
+        kuduWriter = new KuduWriter<>(tableInfo, writerConfig, opsMapper, failureHandler);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class KuduSink<IN> extends RichSinkFunction<IN> implements CheckpointedFu
             kuduWriter.write(value);
         } catch (ClassCastException e) {
             failureHandler.onTypeMismatch(e);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("write into kudu error, value:[" + value + "]", e);
             throw e;
         }

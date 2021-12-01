@@ -19,6 +19,7 @@ package org.apache.flink.connectors.kudu.connector.writer;
 import org.apache.flink.annotation.PublicEvolving;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.kudu.client.AsyncKuduClient;
 
 import java.io.Serializable;
 
@@ -36,17 +37,20 @@ public class KuduWriterConfig implements Serializable {
     private final FlushMode flushMode;
     private final int flushIntervalMillis;
     private final int mutationBufferMaxOps;
+    private final long timeoutMillis;
 
     private KuduWriterConfig(
             String masters,
             FlushMode flushMode,
             int flushIntervalMillis,
-            int numOps) {
+            int mutationBufferMaxOps,
+            long timeoutMillis) {
 
         this.masters = checkNotNull(masters, "Kudu masters cannot be null");
         this.flushMode = checkNotNull(flushMode, "Kudu flush mode cannot be null");
-        this.flushIntervalMillis = checkNotNull(flushIntervalMillis, "Kudu flush mode cannot be null");
-        this.mutationBufferMaxOps = checkNotNull(numOps, "Kudu flush mode cannot be null");
+        this.flushIntervalMillis = checkNotNull(flushIntervalMillis, "Kudu flushIntervalMillis cannot be null");
+        this.mutationBufferMaxOps = checkNotNull(mutationBufferMaxOps, "Kudu mutationBufferMaxOps cannot be null");
+        this.timeoutMillis = checkNotNull(timeoutMillis, "Kudu timeoutMillis cannot be null");
     }
 
     public String getMasters() {
@@ -65,6 +69,10 @@ public class KuduWriterConfig implements Serializable {
         return mutationBufferMaxOps;
     }
 
+    public long getTimeoutMillis() {
+        return timeoutMillis;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
@@ -72,6 +80,7 @@ public class KuduWriterConfig implements Serializable {
                 .append("flushMode", flushMode)
                 .append("flushIntervalMillis", flushIntervalMillis)
                 .append("mutationBufferMaxOps", mutationBufferMaxOps)
+                .append("timeoutMillis", timeoutMillis)
                 .toString();
     }
 
@@ -81,8 +90,9 @@ public class KuduWriterConfig implements Serializable {
     public static class Builder {
         private String masters;
         private FlushMode flushMode = FlushMode.AUTO_FLUSH_BACKGROUND;
-        private int flushIntervalMillis=1000;
-        private int mutationBufferMaxOps=1000;
+        private int flushIntervalMillis = 1000;
+        private int mutationBufferMaxOps = 1000;
+        private long timeoutMillis = AsyncKuduClient.DEFAULT_OPERATION_TIMEOUT_MS;
 
         private Builder(String masters) {
             this.masters = masters;
@@ -97,13 +107,18 @@ public class KuduWriterConfig implements Serializable {
             return this;
         }
 
-        public Builder setFlushIntervalMillis(int intervalMillis){
-            this.flushIntervalMillis=intervalMillis;
+        public Builder setFlushIntervalMillis(int intervalMillis) {
+            this.flushIntervalMillis = intervalMillis;
             return this;
         }
 
-        public Builder setMutationBufferMaxOps(int numOps){
-            this.mutationBufferMaxOps=numOps;
+        public Builder setMutationBufferMaxOps(int mutationBufferMaxOps) {
+            this.mutationBufferMaxOps = mutationBufferMaxOps;
+            return this;
+        }
+
+        public Builder setTimeoutMillis(long timeoutMillis) {
+            this.timeoutMillis = timeoutMillis;
             return this;
         }
 
@@ -120,7 +135,8 @@ public class KuduWriterConfig implements Serializable {
                     masters,
                     flushMode,
                     flushIntervalMillis,
-                    mutationBufferMaxOps
+                    mutationBufferMaxOps,
+                    timeoutMillis
             );
         }
     }

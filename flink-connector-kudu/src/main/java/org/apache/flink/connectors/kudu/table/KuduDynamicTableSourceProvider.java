@@ -35,8 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
@@ -127,24 +125,12 @@ public class KuduDynamicTableSourceProvider extends RichSourceFunction<RowData> 
             String k = condition.f0;
             Object v = condition.f1;
             Comparison comparison = condition.f2;
-            if (v instanceof String) {
-                builder.addPredicate(KuduPredicate.newComparisonPredicate(schema.getColumn(k), comparison.getOp(), (String) v));
-            } else if (v instanceof Number) {
-                builder.addPredicate(KuduPredicate.newComparisonPredicate(schema.getColumn(k), comparison.getOp(), (long) v));
-            } else if (v instanceof Boolean) {
-                builder.addPredicate(KuduPredicate.newComparisonPredicate(schema.getColumn(k), comparison.getOp(), (boolean) v));
-            } else if (v instanceof Float) {
-                builder.addPredicate(KuduPredicate.newComparisonPredicate(schema.getColumn(k), comparison.getOp(), (float) v));
-            } else if (v instanceof BigDecimal) {
-                builder.addPredicate(KuduPredicate.newComparisonPredicate(schema.getColumn(k), comparison.getOp(), (BigDecimal) v));
-            } else if (v instanceof Timestamp) {
-                builder.addPredicate(KuduPredicate.newComparisonPredicate(schema.getColumn(k), comparison.getOp(), (Timestamp) v));
+            if (v == null) {
+                throw new IllegalArgumentException("condition param is null，key=" + k);
             } else if (comparison == Comparison.IN && v instanceof List) {
                 builder.addPredicate(KuduPredicate.newInListPredicate(schema.getColumn(k), (List) v));
-            } else if (v == null) {
-                throw new IllegalArgumentException("condition param is null，key=" + k);
             } else {
-                throw new IllegalArgumentException(MessageFormat.format("condition param's type error，value={0}，type={1}", v, v.getClass().getTypeName()));
+                builder.addPredicate(KuduPredicate.newComparisonPredicate(schema.getColumn(k), comparison.getOp(), v));
             }
         }
         KuduScanner scanner = builder.build();
@@ -213,9 +199,6 @@ public class KuduDynamicTableSourceProvider extends RichSourceFunction<RowData> 
     public void snapshotState(FunctionSnapshotContext context) throws Exception {
         state.clear();
         state.putAll(bufferRows);
-//        for (Map.Entry<String, RowData> entry : state.entries()) {
-//            bufferRows.put(entry.getKey(), entry.getValue());
-//        }
     }
 
     @Override
