@@ -98,9 +98,9 @@
     <log4j2.version>2.13.3</log4j2.version>
 
     <!-- Flink version -->
-    <flink.version>1.12.2</flink.version>
+    <flink.version>1.14.0</flink.version>
 
-    <junit.jupiter.version>5.4.1</junit.jupiter.version>
+    <junit.jupiter.version>5.8.2</junit.jupiter.version>
 
     <scalatest.version>3.0.5</scalatest.version>
     <scalacheck.version>1.14.0</scalacheck.version>

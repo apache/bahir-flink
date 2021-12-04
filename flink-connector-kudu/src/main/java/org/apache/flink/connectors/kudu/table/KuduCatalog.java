@@ -42,7 +42,7 @@ import org.apache.flink.table.expressions.Expression;
 import org.apache.flink.table.factories.TableFactory;
 import org.apache.flink.util.StringUtils;
 
-import org.apache.flink.shaded.guava18.com.google.common.collect.Lists;
+import org.apache.flink.shaded.guava30.com.google.common.collect.Lists;
 
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.client.AlterTableOptions;
@@ -237,7 +237,7 @@ public class KuduCatalog extends AbstractReadOnlyCatalog {
 
     @Override
     public void createTable(ObjectPath tablePath, CatalogBaseTable table, boolean ignoreIfExists) throws TableAlreadyExistException {
-        Map<String, String> tableProperties = table.getProperties();
+        Map<String, String> tableProperties = table.getOptions();
         TableSchema tableSchema = table.getSchema();
 
         Set<String> optionalProperties = new HashSet<>(Arrays.asList(KUDU_REPLICAS));

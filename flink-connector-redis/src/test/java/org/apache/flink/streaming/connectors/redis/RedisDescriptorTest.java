@@ -22,18 +22,13 @@ import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
-import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommand;
-import org.apache.flink.streaming.connectors.redis.descriptor.Redis;
-import org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator;
-import org.apache.flink.table.api.EnvironmentSettings;
-import org.apache.flink.table.api.Table;
+import org.apache.flink.table.api.*;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-import org.apache.flink.table.descriptors.Schema;
 import org.apache.flink.types.Row;
 import org.junit.Before;
 import org.junit.Test;
 
-public class RedisDescriptorTest extends  RedisITCaseBase{
+public class RedisDescriptorTest extends  RedisITCaseBase {
 
     private static final String REDIS_KEY = "TEST_KEY";
 
@@ -51,23 +46,26 @@ public class RedisDescriptorTest extends  RedisITCaseBase{
 
         EnvironmentSettings settings = EnvironmentSettings
                 .newInstance()
-                .useOldPlanner()
                 .inStreamingMode()
                 .build();
         StreamTableEnvironment tableEnvironment = StreamTableEnvironment.create(env, settings);
         tableEnvironment.registerDataStream("t1", source, "k, v");
 
-        Redis redis = new Redis()
+        /*Redis redis = new Redis()
                 .mode(RedisValidator.REDIS_CLUSTER)
                 .command(RedisCommand.INCRBY_EX.name())
                 .ttl(100000)
-                .property(RedisValidator.REDIS_NODES, REDIS_HOST+ ":" + REDIS_PORT);
+                .property(RedisValidator.REDIS_NODES, REDIS_HOST+ ":" + REDIS_PORT);*/
 
-        tableEnvironment
-                .connect(redis).withSchema(new Schema()
-                .field("k", TypeInformation.of(String.class))
-                .field("v", TypeInformation.of(Long.class)))
-                .createTemporaryTable("redis");
+        tableEnvironment.executeSql("create table redis " +
+                        "(k string, " +
+                        "v bigint) " +
+                        "with (" +
+                        "'connector.type'='redis'," +
+                        "'redis-mode'='cluster'," +
+                        "'cluster-nodes'='"+String.format("%s:%s",REDIS_HOST, REDIS_PORT)+"'," +
+                        "'command'='INCRBY_EX'," +
+                        "'key.ttl'='100000')");
 
         tableEnvironment.executeSql("insert into redis select k, v from t1");
     }
@@ -79,7 +77,6 @@ public class RedisDescriptorTest extends  RedisITCaseBase{
 
         EnvironmentSettings settings = EnvironmentSettings
                 .newInstance()
-                .useOldPlanner()
                 .inStreamingMode()
                 .build();
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env, settings);

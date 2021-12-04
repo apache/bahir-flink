@@ -44,8 +44,8 @@ import javax.annotation.Nullable;
 public final class DataPoint {
 
     private final String measurement;
-    private final Map<String, String> tags = new HashMap();
-    private final Map<String, Object> fields = new HashMap();
+    private final Map<String, String> tags = new HashMap<>();
+    private final Map<String, Object> fields = new HashMap<>();
     private final Long timestamp;
 
     DataPoint(final String measurementName, @Nullable final Long timestamp) {
