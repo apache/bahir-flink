@@ -17,12 +17,14 @@ See how to link with them for cluster execution [here](https://ci.apache.org/pro
 The sink class is called `PinotSink`.
 
 ## Architecture
+
 The Pinot sink stores elements from upstream Flink tasks in an Apache Pinot table.
 We support two execution modes
 * `RuntimeExecutionMode.BATCH`
 * `RuntimeExecutionMode.STREAMING` which requires checkpointing to be enabled.
 
 ### PinotSinkWriter
+
 Whenever the sink receives elements from upstream tasks, they are received by an instance of the PinotSinkWriter.
 The `PinotSinkWriter` holds a list of `PinotWriterSegment`s where each `PinotWriterSegment` is capable of storing `maxRowsPerSegment` elements.
 Whenever the maximum number of elements to hold is not yet reached the `PinotWriterSegment` is considered to be active.
@@ -33,7 +35,8 @@ Once the maximum number of elements to hold was reached, an active `PinotWriterS
 Thus, there is always one active `PinotWriterSegment` that new incoming elements will go to.
 Over time, the list of `PinotWriterSegment` per `PinotSinkWriter` increases up to the point where a checkpoint is created.
 
-**Checkpointing**  
+**Checkpointing**
+
 On checkpoint creation `PinotSinkWriter.prepareCommit` gets called by the Flink environment.
 This triggers the creation of `PinotSinkCommittable`s where each inactive `PinotWriterSegment` creates exactly one `PinotSinkCommittable`.
 
@@ -45,6 +48,7 @@ A `PinotSinkCommittables` then holds the path to the data file on the shared fil
 
 
 ### PinotSinkGlobalCommitter
+
 In order to be able to follow the guidelines for Pinot segment naming, we need to include the minimum and maximum timestamp of an element in the metadata of a segment and in its name.
 The minimum and maximum timestamp of all elements between two checkpoints is determined at a parallelism of 1 in the `PinotSinkGlobalCommitter`.
 This procedure allows recovering from failure by deleting previously uploaded segments which prevents having duplicate segments in the Pinot table.
@@ -63,10 +67,12 @@ When finally committing a `PinotSinkGlobalCommittable` the following procedure i
 
 
 ## Delivery Guarantees
+
 Resulting from the above described architecture the `PinotSink` provides an at-least-once delivery guarantee.
 While the failure recovery mechanism ensures that duplicate segments are prevented, there might be temporary inconsistencies in the Pinot table which can result in downstream tasks receiving an element multiple times.
 
 ## Options
+
 | Option                 | Description                                                                      |
 | ---------------------- | -------------------------------------------------------------------------------- | 
 | `pinotControllerHost`  | Host of the Pinot controller                                                     |
@@ -81,6 +87,7 @@ While the failure recovery mechanism ensures that duplicate segments are prevent
 | `numCommitThreads`     | Number of threads used in the `PinotSinkGlobalCommitter` for committing segments |
 
 ## Usage
+
 ```java
 StreamExecutionEnvironment env = ...
 // Checkpointing needs to be enabled when executing in STREAMING mode
