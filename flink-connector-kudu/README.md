@@ -154,18 +154,19 @@ The example uses lambda expressions to implement the functional interfaces.
 Read more about Kudu schema design in the [Kudu docs](https://kudu.apache.org/docs/schema_design.html).
 
 ### Supported data types
-| Flink/SQL     | Kudu           | 
-| ------------- |:-------------:| 
-|    STRING     | STRING        | 
-| BOOLEAN       |    BOOL       | 
-| TINYINT       |   INT8        | 
-| SMALLINT      |  INT16        | 
-| INT           |  INT32        | 
-| BIGINT        |   INT64     |
-| FLOAT         |  FLOAT      |
-| DOUBLE        |    DOUBLE    |
-| BYTES        |    BINARY    |
-| TIMESTAMP(3)     |    UNIXTIME_MICROS |
+
+| Flink/SQL            | Kudu                    |
+|----------------------|:-----------------------:|
+| `STRING`             | STRING                  |
+| `BOOLEAN`            | BOOL                    |
+| `TINYINT`            | INT8                    |
+| `SMALLINT`           | INT16                   |
+| `INT`                | INT32                   |
+| `BIGINT`             | INT64                   |
+| `FLOAT`              | FLOAT                   |
+| `DOUBLE`             | DOUBLE                  |
+| `BYTES`              | BINARY                  |
+| `TIMESTAMP(3)`       | UNIXTIME_MICROS         |
 
 Note:
 * `TIMESTAMP`s are fixed to a precision of 3, and the corresponding Java conversion class is `java.sql.Timestamp` 
