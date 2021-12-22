@@ -33,6 +33,7 @@ under the License.
     <artifactId>flink-connector-pinot_2.11</artifactId>
     <name>flink-connector-pinot</name>
 
+
     <packaging>jar</packaging>
 
     <!-- Allow users to pass custom connector versions -->
@@ -126,13 +127,13 @@ under the License.
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>1.16.2</version>
+            <version>1.15.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>1.16.2</version>
+            <version>1.15.2</version>
             <scope>test</scope>
         </dependency>
 

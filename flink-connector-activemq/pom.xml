@@ -35,7 +35,7 @@ under the License.
 
     <!-- Allow users to pass custom connector versions -->
     <properties>
-        <activemq.version>5.16.2</activemq.version>
+        <activemq.version>5.15.10</activemq.version>
     </properties>
 
     <dependencies>
@@ -101,14 +101,14 @@ under the License.
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
-            <version>2.0.9</version>
+            <version>1.5.5</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
-            <version>1.7.4</version>
+            <version>1.5.5</version>
             <scope>test</scope>
         </dependency>
 

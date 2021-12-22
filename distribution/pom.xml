@@ -25,6 +25,7 @@
         <relativePath>..</relativePath>
     </parent>
 
+    <groupId>org.apache.bahir</groupId>
     <artifactId>bahir-flink-assembly_2.11</artifactId>
     <packaging>pom</packaging>
     <name>Apache Bahir - Flink Extensions Distribution</name>
