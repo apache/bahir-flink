@@ -30,7 +30,6 @@ import java.util.Map;
 import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.*;
 import static org.apache.flink.table.descriptors.ConnectorDescriptorValidator.CONNECTOR;
 import static org.apache.flink.table.descriptors.ConnectorDescriptorValidator.CONNECTOR_TYPE;
-import static org.apache.flink.table.descriptors.FormatDescriptorValidator.FORMAT;
 import static org.apache.flink.table.descriptors.Schema.*;
 
 /**
@@ -65,7 +64,7 @@ public class RedisTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bool
         properties.add(SCHEMA + ".#." + SCHEMA_NAME);
         properties.add(SCHEMA + ".#." + SCHEMA_FROM);
         // format wildcard
-        properties.add(FORMAT + ".*");
+        properties.add("format.*");
         properties.add(CONNECTOR + ".*");
         return properties;
     }

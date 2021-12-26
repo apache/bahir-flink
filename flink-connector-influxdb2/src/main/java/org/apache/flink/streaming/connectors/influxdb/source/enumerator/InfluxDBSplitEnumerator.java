@@ -56,7 +56,7 @@ public final class InfluxDBSplitEnumerator
     }
 
     @Override
-    public InfluxDBSourceEnumState snapshotState() {
+    public InfluxDBSourceEnumState snapshotState(long l) throws Exception {
         return new InfluxDBSourceEnumState();
     }
 

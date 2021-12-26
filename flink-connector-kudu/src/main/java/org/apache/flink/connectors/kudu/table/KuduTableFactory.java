@@ -132,7 +132,7 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
     public KuduTableSource createTableSource(ObjectPath tablePath, CatalogTable table) {
         validateTable(table);
         String tableName = table.toProperties().getOrDefault(KUDU_TABLE, tablePath.getObjectName());
-        return createTableSource(tableName, table.getSchema(), table.getProperties());
+        return createTableSource(tableName, table.getSchema(), table.getOptions());
     }
 
     private KuduTableSource createTableSource(String tableName, TableSchema schema, Map<String, String> props) {

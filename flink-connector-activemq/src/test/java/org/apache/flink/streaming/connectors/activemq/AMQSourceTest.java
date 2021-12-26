@@ -37,6 +37,7 @@ import scala.Array;
 
 import javax.jms.*;
 import java.util.Collections;
+import java.util.OptionalLong;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -95,6 +96,11 @@ public class AMQSourceTest {
             @Override
             public boolean isRestored() {
                 return false;
+            }
+
+            @Override
+            public OptionalLong getRestoredCheckpointId() {
+                return mock(OptionalLong.class);
             }
 
             @Override
