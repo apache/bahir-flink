@@ -271,10 +271,10 @@ public abstract class AbstractSiddhiOperator<IN, OUT> extends AbstractStreamOper
     }
 
     @Override
-    public void dispose() throws Exception {
+    public void close() throws Exception {
         shutdownSiddhiRuntime();
         this.siddhiRuntimeState.clear();
-        super.dispose();
+        super.close();
     }
 
     @Override
