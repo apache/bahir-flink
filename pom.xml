@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>21</version>
+    <version>24</version>
   </parent>
   <groupId>org.apache.bahir</groupId>
   <artifactId>bahir-flink-parent_2.11</artifactId>
@@ -84,11 +84,12 @@
   </modules>
 
   <properties>
+    <project.build.outputTimestamp>10</project.build.outputTimestamp>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-    <!-- General project dependencies version -->
     <java.version>1.8</java.version>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
 
     <scala.version>2.11.12</scala.version>
     <scala.binary.version>2.11</scala.binary.version>
