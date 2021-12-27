@@ -36,7 +36,6 @@ under the License.
 	<!-- Allow users to pass custom connector versions -->
 	<properties>
 		<flume-ng.version>1.9.0</flume-ng.version>
-		<testcontainers.version>1.15.3</testcontainers.version>
 	</properties>
 
 	<dependencies>
@@ -71,8 +70,6 @@ under the License.
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers</artifactId>
-			<version>${testcontainers.version}</version>
-			<scope>test</scope>
 		</dependency>
 
 	</dependencies>
