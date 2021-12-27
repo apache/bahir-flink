@@ -99,6 +99,7 @@
     <!-- General dependencies version -->
     <log4j.version>2.17.0</log4j.version>
     <junit.jupiter.version>5.4.1</junit.jupiter.version>
+    <mockito.version>1.10.19</mockito.version>
     <scalacheck.version>1.14.0</scalacheck.version>
     <scalatest.version>3.0.5</scalatest.version>
     <testcontainers.version>1.16.2</testcontainers.version>
@@ -205,6 +206,13 @@
         <scope>test</scope>
       </dependency>
 
+
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-all</artifactId>
+        <version>${mockito.version}</version>
+        <scope>test</scope>
+      </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>junit-jupiter</artifactId>
