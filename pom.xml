@@ -71,6 +71,7 @@
   </mailingLists>
 
   <modules>
+    <module>flink-connector-clickhouse</module>
     <module>flink-connector-activemq</module>
     <module>flink-connector-akka</module>
     <module>flink-connector-flume</module>
@@ -99,6 +100,9 @@
 
     <!-- Flink version -->
     <flink.version>1.14.2</flink.version>
+
+    <!--ClickHouse version-->
+    <clickhouse.version>0.1.50</clickhouse.version>
 
     <junit.jupiter.version>5.4.1</junit.jupiter.version>
 
