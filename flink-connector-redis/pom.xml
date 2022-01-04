@@ -55,12 +55,26 @@ under the License.
             <version>${jedis.version}</version>
         </dependency>
 
+        <!-- embedded-redis -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.github.kstyrc</groupId>
             <artifactId>embedded-redis</artifactId>
             <version>0.6</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+        <!-- end of embedded-redis -->
 
         <dependency>
             <groupId>org.apache.flink</groupId>
