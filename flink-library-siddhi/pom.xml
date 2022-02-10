@@ -20,14 +20,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.apache.bahir</groupId>
-        <artifactId>bahir-flink-parent_2.11</artifactId>
+        <artifactId>bahir-flink-parent</artifactId>
         <version>1.1-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>flink-library-siddhi_2.11</artifactId>
+    <artifactId>flink-library-siddhi_${scala.binary.version}</artifactId>
     <name>flink-library-siddhi</name>
 
     <packaging>jar</packaging>

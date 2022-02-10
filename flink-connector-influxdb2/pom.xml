@@ -25,12 +25,12 @@ under the License.
 
   <parent>
     <groupId>org.apache.bahir</groupId>
-    <artifactId>bahir-flink-parent_2.11</artifactId>
+    <artifactId>bahir-flink-parent</artifactId>
     <version>1.1-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
-  <artifactId>flink-connector-influxdb2_2.11</artifactId>
+  <artifactId>flink-connector-influxdb2_${scala.binary.version}</artifactId>
   <name>flink-connector-influxdb2</name>
 
   <packaging>jar</packaging>

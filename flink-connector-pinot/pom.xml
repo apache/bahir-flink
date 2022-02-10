@@ -25,12 +25,12 @@ under the License.
 
     <parent>
         <groupId>org.apache.bahir</groupId>
-        <artifactId>bahir-flink-parent_2.11</artifactId>
+        <artifactId>bahir-flink-parent</artifactId>
         <version>1.1-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>flink-connector-pinot_2.11</artifactId>
+    <artifactId>flink-connector-pinot_${scala.binary.version}</artifactId>
     <name>flink-connector-pinot</name>
 
 
