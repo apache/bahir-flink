@@ -227,7 +227,7 @@ function checkout_code {
     mkdir target
     cd target
     rm -rf bahir-flink
-    git clone https://git-wip-us.apache.org/repos/asf/bahir-flink.git
+    git clone https://gitbox.apache.org/repos/asf/bahir-flink.git
     cd bahir-flink
     git checkout $GIT_REF
     git_hash=`git rev-parse --short HEAD`

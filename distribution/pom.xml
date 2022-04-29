@@ -49,6 +49,21 @@
         </dependency>
         <dependency>
             <groupId>org.apache.bahir</groupId>
+            <artifactId>flink-connector-influxdb_${scala.binary.version}</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.bahir</groupId>
+            <artifactId>flink-connector-influxdb2_${scala.binary.version}</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.bahir</groupId>
+            <artifactId>flink-connector-kudu_${scala.binary.version}</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.bahir</groupId>
             <artifactId>flink-connector-netty_${scala.binary.version}</artifactId>
             <version>${project.version}</version>
         </dependency>
