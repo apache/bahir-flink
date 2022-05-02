@@ -62,31 +62,6 @@ under the License.
         <artifactId>druid-influx-extensions</artifactId>
         <version>${druid.version}</version>
       </dependency>
-      <!-- Flink  -->
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-connector-base</artifactId>
-        <version>${flink.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-core</artifactId>
-        <version>${flink.version}</version>
-      </dependency>
-      <!-- Flink Test Utils -->
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-        <version>${flink.version}</version>
-        <classifier>tests</classifier>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-test-utils_${scala.binary.version}</artifactId>
-        <version>${flink.version}</version>
-        <scope>test</scope>
-      </dependency>
       <!-- Test container -->
       <dependency>
         <groupId>org.testcontainers</groupId>
@@ -121,7 +96,7 @@ under the License.
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-      <classifier>tests</classifier>
+      <type>test-jar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>

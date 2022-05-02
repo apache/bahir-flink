@@ -41,11 +41,6 @@ under the License.
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.google.code.findbugs</groupId>
-                <artifactId>jsr305</artifactId>
-                <version>3.0.2</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.activemq</groupId>
                 <artifactId>activemq-broker</artifactId>
                 <version>${activemq.version}</version>
@@ -60,38 +55,6 @@ under the License.
                 <groupId>org.apache.activemq.tooling</groupId>
                 <artifactId>activemq-junit</artifactId>
                 <version>${activemq.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-runtime</artifactId>
-                <version>${flink.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-test-utils_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-tests</artifactId>
-                <version>${flink.version}</version>
-                <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
             <dependency>

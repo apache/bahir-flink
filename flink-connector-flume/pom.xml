@@ -41,24 +41,6 @@ under the License.
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>org.apache.flink</groupId>
-				<artifactId>flink-clients_${scala.binary.version}</artifactId>
-				<version>${flink.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.flink</groupId>
-				<artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-				<version>${flink.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.flink</groupId>
-				<artifactId>flink-tests</artifactId>
-				<version>${flink.version}</version>
-				<type>test-jar</type>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
 				<groupId>org.apache.flume</groupId>
 				<artifactId>flume-ng-core</artifactId>
 				<version>${flume-ng.version}</version>

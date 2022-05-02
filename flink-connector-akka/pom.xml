@@ -49,11 +49,6 @@ under the License.
                 <artifactId>akka-remote_${scala.binary.version}</artifactId>
                 <version>${akka.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
