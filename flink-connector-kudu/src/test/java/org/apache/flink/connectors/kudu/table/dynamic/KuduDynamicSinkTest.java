@@ -59,32 +59,30 @@ public class KuduDynamicSinkTest extends KuduTestBase {
     }
 
     @Test
-    public void testKuduSSink() throws Exception {
-        // "id", "title", "author", "price", "quantity"
-        tEnv.executeSql(
-                "CREATE TABLE "
-                        + INPUT_TABLE
-                        + "("
-                        + "id int,"
-                        + "title string,"
-                        + "author string,"
-                        + "price double,"
-                        + "quantity int"
-                        + ") WITH ("
-                        + "  'connector'='kudu',"
-                        + "  'kudu.masters'='"
-                        + getMasterAddress()
-                        + "',"
-                        + "  'kudu.table'='"
-                        + INPUT_TABLE
-                        + "','kudu.primary-key-columns'='id'"
-                        + "','kudu.max-buffer-size'='1024'"
-                        + "','kudu.flush-interval'='1000'"
-                        + "','kudu.operation-timeout'='500'"
-                        + "','kudu.ignore-not-found'='true'"
-                        + "','kudu.ignore-not-found'='true'"
-                        + ")");
-
+    public void testKuduSink() throws Exception {
+        String createSql="CREATE TABLE "
+                + INPUT_TABLE
+                + "("
+                + "id int,"
+                + "title string,"
+                + "author string,"
+                + "price double,"
+                + "quantity int"
+                + ") WITH ("
+                + "  'connector'='kudu',"
+                + "  'kudu.masters'='"
+                + 123245
+                + "',"
+                + "  'kudu.table'='"
+                + INPUT_TABLE
+                + "','kudu.primary-key-columns'='id"
+                + "','kudu.max-buffer-size'='1024"
+                + "','kudu.flush-interval'='1000"
+                + "','kudu.operation-timeout'='500"
+                + "','kudu.ignore-not-found'='true"
+                + "','kudu.ignore-not-found'='true"
+                + ")";
+        tEnv.executeSql(createSql);
         tEnv.executeSql("insert into " + INPUT_TABLE + " values(1006,'test title','test author',10.1,10)");
         CloseableIterator<Row> collected = tEnv.executeSql("select * from " + INPUT_TABLE + " where id =1006").collect();
         assertNotNull(collected);
