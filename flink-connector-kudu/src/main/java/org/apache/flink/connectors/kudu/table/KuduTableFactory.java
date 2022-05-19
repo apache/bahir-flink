@@ -21,6 +21,7 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.connectors.kudu.connector.reader.KuduReaderConfig;
 import org.apache.flink.connectors.kudu.connector.writer.KuduWriterConfig;
+import org.apache.flink.connectors.kudu.table.function.lookup.KuduLookupOptions;
 import org.apache.flink.connectors.kudu.table.utils.KuduTableUtils;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.catalog.CatalogTable;
@@ -72,7 +73,6 @@ public class KuduTableFactory implements TableSourceFactory<Row>, TableSinkFacto
     public static final String KUDU_IGNORE_NOT_FOUND = "kudu.ignore-not-found";
     public static final String KUDU_IGNORE_DUPLICATE = "kudu.ignore-duplicate";
     public static final String KUDU = "kudu";
-
     @Override
     public Map<String, String> requiredContext() {
         Map<String, String> context = new HashMap<>();

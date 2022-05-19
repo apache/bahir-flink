@@ -21,7 +21,9 @@ import org.apache.flink.connectors.kudu.connector.KuduFilterInfo;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.flink.connectors.kudu.connector.convertor.RowResultConvertor;
 import org.apache.kudu.client.KuduClient;
+import org.apache.kudu.client.KuduException;
 import org.apache.kudu.client.KuduScanToken;
 import org.apache.kudu.client.KuduSession;
 import org.apache.kudu.client.KuduTable;
@@ -34,40 +36,50 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Internal
-public class KuduReader implements AutoCloseable {
+public class KuduReader<T> implements AutoCloseable {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final KuduTableInfo tableInfo;
     private final KuduReaderConfig readerConfig;
-    private final List<KuduFilterInfo> tableFilters;
-    private final List<String> tableProjections;
+    private List<KuduFilterInfo> tableFilters;
+    private List<String> tableProjections;
+    private final RowResultConvertor<T> rowResultConvertor;
 
-    private transient KuduClient client;
-    private transient KuduSession session;
-    private transient KuduTable table;
+    private final transient KuduClient client;
+    private final transient KuduSession session;
+    private final transient KuduTable table;
 
-    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig) throws IOException {
-        this(tableInfo, readerConfig, new ArrayList<>(), null);
+    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig, RowResultConvertor<T> rowResultConvertor) throws IOException {
+        this(tableInfo, readerConfig, rowResultConvertor, new ArrayList<>(), null);
     }
 
-    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig, List<KuduFilterInfo> tableFilters) throws IOException {
-        this(tableInfo, readerConfig, tableFilters, null);
+    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig, RowResultConvertor<T> rowResultConvertor, List<KuduFilterInfo> tableFilters) throws IOException {
+        this(tableInfo, readerConfig, rowResultConvertor, tableFilters, null);
     }
 
-    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig, List<KuduFilterInfo> tableFilters, List<String> tableProjections) throws IOException {
+    public KuduReader(KuduTableInfo tableInfo, KuduReaderConfig readerConfig, RowResultConvertor<T> rowResultConvertor, List<KuduFilterInfo> tableFilters, List<String> tableProjections) throws IOException {
         this.tableInfo = tableInfo;
         this.readerConfig = readerConfig;
         this.tableFilters = tableFilters;
         this.tableProjections = tableProjections;
-
+        this.rowResultConvertor = rowResultConvertor;
         this.client = obtainClient();
         this.session = obtainSession();
         this.table = obtainTable();
     }
 
+    public void setTableFilters(List<KuduFilterInfo> tableFilters) {
+        this.tableFilters = tableFilters;
+    }
+
+    public void setTableProjections(List<String> tableProjections) {
+        this.tableProjections = tableProjections;
+    }
+
     private KuduClient obtainClient() {
-        return new KuduClient.KuduClientBuilder(readerConfig.getMasters()).build();
+        return new KuduClient.KuduClientBuilder(readerConfig.getMasters())
+                .build();
     }
 
     private KuduSession obtainSession() {
@@ -85,8 +97,8 @@ public class KuduReader implements AutoCloseable {
         throw new RuntimeException("Table " + tableName + " does not exist.");
     }
 
-    public KuduReaderIterator scanner(byte[] token) throws IOException {
-        return new KuduReaderIterator(KuduScanToken.deserializeIntoScanner(token, client));
+    public KuduReaderIterator<T> scanner(byte[] token) throws IOException {
+        return new KuduReaderIterator<>(KuduScanToken.deserializeIntoScanner(token, client), rowResultConvertor);
     }
 
     public List<KuduScanToken> scanTokens(List<KuduFilterInfo> tableFilters, List<String> tableProjections, Integer rowLimit) {
@@ -152,9 +164,7 @@ public class KuduReader implements AutoCloseable {
      * @return Formatted URL
      */
     private String getLocation(String host, Integer port) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(host).append(":").append(port);
-        return builder.toString();
+        return host + ":" + port;
     }
 
     @Override
@@ -163,7 +173,7 @@ public class KuduReader implements AutoCloseable {
             if (session != null) {
                 session.close();
             }
-        } catch (Exception e) {
+        } catch (KuduException e) {
             log.error("Error while closing session.", e);
         }
         try {
@@ -175,3 +185,4 @@ public class KuduReader implements AutoCloseable {
         }
     }
 }
+
