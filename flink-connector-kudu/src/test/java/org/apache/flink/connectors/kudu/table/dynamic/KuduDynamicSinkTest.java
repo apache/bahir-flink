@@ -72,7 +72,7 @@ public class KuduDynamicSinkTest extends KuduTestBase {
                         + "quantity int"
                         + ") WITH ("
                         + "  'connector'='kudu',"
-                        + "  'kudu.master'='"
+                        + "  'kudu.masters'='"
                         + getMasterAddress()
                         + "',"
                         + "  'kudu.table'='"

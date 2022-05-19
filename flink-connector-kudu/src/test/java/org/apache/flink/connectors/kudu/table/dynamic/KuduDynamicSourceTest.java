@@ -71,7 +71,7 @@ public class KuduDynamicSourceTest extends KuduTestBase {
                         + "quantity int"
                         + ") WITH ("
                         + "  'connector'='kudu',"
-                        + "  'kudu.master'='"
+                        + "  'kudu.masters'='"
                         + getMasterAddress()
                         + "',"
                         + "  'kudu.table'='"
@@ -98,7 +98,7 @@ public class KuduDynamicSourceTest extends KuduTestBase {
                         + "quantity int"
                         + ") WITH ("
                         + "  'connector'='kudu',"
-                        + "  'kudu.master'='"
+                        + "  'kudu.masters'='"
                         + getMasterAddress()
                         + "',"
                         + "  'kudu.table'='"
@@ -142,7 +142,7 @@ public class KuduDynamicSourceTest extends KuduTestBase {
                         + "quantity int"
                         + ") WITH ("
                         + "  'connector'='kudu',"
-                        + "  'kudu.master'='"
+                        + "  'kudu.masters'='"
                         + getMasterAddress()
                         + "',"
                         + "  'kudu.table'='"
