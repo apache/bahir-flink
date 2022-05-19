@@ -18,6 +18,7 @@ package org.apache.flink.connectors.kudu.connector;
 
 import org.apache.flink.api.java.tuple.Tuple5;
 import org.apache.flink.connectors.kudu.connector.convertor.RowResultRowConvertor;
+import org.apache.flink.connectors.kudu.connector.convertor.RowResultRowDataConvertor;
 import org.apache.flink.connectors.kudu.connector.reader.KuduInputSplit;
 import org.apache.flink.connectors.kudu.connector.reader.KuduReader;
 import org.apache.flink.connectors.kudu.connector.reader.KuduReaderConfig;
@@ -288,6 +289,27 @@ public class KuduTestBase {
             KuduReaderIterator<Row> resultIterator = reader.scanner(split.getScanToken());
             while (resultIterator.hasNext()) {
                 Row row = resultIterator.next();
+                if (row != null) {
+                    rows.add(row);
+                }
+            }
+        }
+        reader.close();
+
+        return rows;
+    }
+
+    protected List<RowData> readRowDatas(KuduTableInfo tableInfo) throws Exception {
+        String masterAddresses = getMasterAddress();
+        KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
+        KuduReader<RowData> reader = new KuduReader<>(tableInfo, readerConfig, new RowResultRowDataConvertor());
+
+        KuduInputSplit[] splits = reader.createInputSplits(1);
+        List<RowData> rows = new ArrayList<>();
+        for (KuduInputSplit split : splits) {
+            KuduReaderIterator<RowData> resultIterator = reader.scanner(split.getScanToken());
+            while (resultIterator.hasNext()) {
+                RowData row = resultIterator.next();
                 if (row != null) {
                     rows.add(row);
                 }
