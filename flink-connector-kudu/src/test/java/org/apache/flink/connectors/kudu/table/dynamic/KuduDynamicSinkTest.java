@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Unit Tests for {@link KuduDynamicTableSink}.
  */
 public class KuduDynamicSinkTest extends KuduTestBase {
-    public final static String INPUT_TABLE = "books";
+    public static final String INPUT_TABLE = "books";
     public static StreamExecutionEnvironment env;
     public static TableEnvironment tEnv;
 
