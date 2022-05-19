@@ -80,7 +80,7 @@ public class KuduDynamicSinkTest extends KuduTestBase {
                 + "','kudu.flush-interval'='1000"
                 + "','kudu.operation-timeout'='500"
                 + "','kudu.ignore-not-found'='true"
-                + "','kudu.ignore-not-found'='true"
+                + "','kudu.ignore-not-found'='true'"
                 + ")";
         tEnv.executeSql(createSql);
         tEnv.executeSql("insert into " + INPUT_TABLE + " values(1006,'test title','test author',10.1,10)");
