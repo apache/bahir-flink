@@ -23,17 +23,10 @@ import org.apache.flink.table.api.TableEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.types.Row;
 import org.apache.flink.util.CloseableIterator;
-import org.apache.flink.util.CollectionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
@@ -60,7 +53,7 @@ public class KuduDynamicSinkTest extends KuduTestBase {
 
     @Test
     public void testKuduSink() throws Exception {
-        String createSql="CREATE TABLE "
+        String createSql = "CREATE TABLE "
                 + INPUT_TABLE
                 + "("
                 + "id int,"
@@ -84,7 +77,8 @@ public class KuduDynamicSinkTest extends KuduTestBase {
                 + ")";
         tEnv.executeSql(createSql);
         tEnv.executeSql("insert into " + INPUT_TABLE + " values(1006,'test title','test author',10.1,10)");
-        CloseableIterator<Row> collected = tEnv.executeSql("select * from " + INPUT_TABLE + " where id =1006").collect();
+        CloseableIterator<Row> collected =
+                tEnv.executeSql("select * from " + INPUT_TABLE + " where id =1006").collect();
         assertNotNull(collected);
     }
 }

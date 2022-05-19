@@ -154,8 +154,8 @@ public class KuduDynamicTableSource implements ScanTableSource, SupportsProjecti
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(configBuilder, tableInfo, physicalSchema, kuduLookupOptions, kuduRowDataInputFormat
-                , filters, predicates);
+        int result = Objects.hash(configBuilder, tableInfo, physicalSchema,
+                kuduLookupOptions, kuduRowDataInputFormat, filters, predicates);
         result = 31 * result + Arrays.hashCode(projectedFields);
         return result;
     }

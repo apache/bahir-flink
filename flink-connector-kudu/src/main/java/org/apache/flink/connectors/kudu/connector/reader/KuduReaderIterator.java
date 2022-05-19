@@ -18,9 +18,6 @@ package org.apache.flink.connectors.kudu.connector.reader;
 
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.connectors.kudu.connector.convertor.RowResultConvertor;
-import org.apache.flink.types.Row;
-
-import org.apache.kudu.Schema;
 import org.apache.kudu.client.KuduException;
 import org.apache.kudu.client.KuduScanner;
 import org.apache.kudu.client.RowResult;

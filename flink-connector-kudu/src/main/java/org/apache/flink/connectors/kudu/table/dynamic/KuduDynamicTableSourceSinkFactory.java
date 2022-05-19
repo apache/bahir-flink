@@ -22,8 +22,6 @@ import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
 import org.apache.flink.connectors.kudu.connector.reader.KuduReaderConfig;
 import org.apache.flink.connectors.kudu.connector.writer.KuduWriterConfig;
-import org.apache.flink.connectors.kudu.table.dynamic.KuduDynamicTableSink;
-import org.apache.flink.connectors.kudu.table.dynamic.KuduDynamicTableSource;
 import org.apache.flink.connectors.kudu.table.function.lookup.KuduLookupOptions;
 import org.apache.flink.connectors.kudu.table.utils.KuduTableUtils;
 import org.apache.flink.table.api.TableSchema;

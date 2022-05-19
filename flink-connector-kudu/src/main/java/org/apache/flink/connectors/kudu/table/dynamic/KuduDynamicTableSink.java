@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.flink.connectors.kudu.table.dynamic;
 
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
@@ -25,20 +24,22 @@ import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
-import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.Preconditions;
 
 import java.util.Objects;
 
-/** A {@link KuduDynamicTableSink} for Kudu. */
+/**
+ * A {@link KuduDynamicTableSink} for Kudu.
+ */
 public class KuduDynamicTableSink implements DynamicTableSink {
     private final KuduWriterConfig.Builder writerConfigBuilder;
     private final TableSchema flinkSchema;
     private final KuduTableInfo tableInfo;
 
-    public KuduDynamicTableSink(KuduWriterConfig.Builder writerConfigBuilder, TableSchema flinkSchema, KuduTableInfo tableInfo) {
+    public KuduDynamicTableSink(KuduWriterConfig.Builder writerConfigBuilder, TableSchema flinkSchema,
+                                KuduTableInfo tableInfo) {
         this.writerConfigBuilder = writerConfigBuilder;
         this.flinkSchema = flinkSchema;
         this.tableInfo = tableInfo;
@@ -56,7 +57,8 @@ public class KuduDynamicTableSink implements DynamicTableSink {
 
     @Override
     public SinkRuntimeProvider getSinkRuntimeProvider(Context context) {
-        KuduSink<RowData> upsertKuduSink = new KuduSink<>(writerConfigBuilder.build(), tableInfo, new RowDataUpsertOperationMapper(flinkSchema));
+        KuduSink<RowData> upsertKuduSink = new KuduSink<>(writerConfigBuilder.build(), tableInfo,
+                new RowDataUpsertOperationMapper(flinkSchema));
         return SinkFunctionProvider.of(upsertKuduSink);
     }
 
@@ -75,7 +77,8 @@ public class KuduDynamicTableSink implements DynamicTableSink {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         KuduDynamicTableSink that = (KuduDynamicTableSink) o;
-        return Objects.equals(writerConfigBuilder, that.writerConfigBuilder) && Objects.equals(flinkSchema, that.flinkSchema) && Objects.equals(tableInfo, that.tableInfo);
+        return Objects.equals(writerConfigBuilder, that.writerConfigBuilder) && Objects.equals(flinkSchema,
+                that.flinkSchema) && Objects.equals(tableInfo, that.tableInfo);
     }
 
     @Override

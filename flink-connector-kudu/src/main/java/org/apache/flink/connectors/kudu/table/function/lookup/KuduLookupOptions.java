@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.flink.connectors.kudu.table.function.lookup;
+
 /**
  * Options for the Kudu lookup.
  */

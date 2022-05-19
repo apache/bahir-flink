@@ -15,12 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.flink.connectors.kudu.table.dynamic.catalog;
 
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.configuration.ConfigOption;
-import org.apache.flink.connectors.kudu.table.KuduCatalog;
 import org.apache.flink.table.catalog.Catalog;
 import org.apache.flink.table.factories.CatalogFactory;
 import org.apache.flink.table.factories.FactoryUtil;
@@ -69,6 +67,5 @@ public class KuduCatalogFactory implements CatalogFactory {
         return new KuduDynamicCatalog(context.getName(),
                 helper.getOptions().get(KUDU_MASTERS));
     }
-
 
 }

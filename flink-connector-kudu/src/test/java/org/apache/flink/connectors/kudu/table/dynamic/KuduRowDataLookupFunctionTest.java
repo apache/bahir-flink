@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Unit Tests for {@link KuduRowDataLookupFunction}.
  */
 public class KuduRowDataLookupFunctionTest extends KuduTestBase {
-    public final static String INPUT_TABLE = "books";
+    public static final String INPUT_TABLE = "books";
     public static KuduTableInfo tableInfo;
 
     @BeforeEach

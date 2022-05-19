@@ -26,23 +26,25 @@ import org.apache.flink.types.Row;
 
 import java.util.List;
 
-import static org.apache.flink.util.Preconditions.checkNotNull;
-
 /**
  * InputFormat based on the row object type
  */
 @PublicEvolving
 public class KuduRowInputFormat extends AbstractKuduInputFormat<Row> {
 
-    public KuduRowInputFormat(KuduReaderConfig readerConfig, RowResultConvertor<Row> rowResultConvertor, KuduTableInfo tableInfo) {
+    public KuduRowInputFormat(KuduReaderConfig readerConfig, RowResultConvertor<Row> rowResultConvertor,
+                              KuduTableInfo tableInfo) {
         super(readerConfig, rowResultConvertor, tableInfo);
     }
 
-    public KuduRowInputFormat(KuduReaderConfig readerConfig, RowResultConvertor<Row> rowResultConvertor, KuduTableInfo tableInfo, List<String> tableProjections) {
+    public KuduRowInputFormat(KuduReaderConfig readerConfig, RowResultConvertor<Row> rowResultConvertor,
+                              KuduTableInfo tableInfo, List<String> tableProjections) {
         super(readerConfig, rowResultConvertor, tableInfo, tableProjections);
     }
 
-    public KuduRowInputFormat(KuduReaderConfig readerConfig, RowResultConvertor<Row> rowResultConvertor, KuduTableInfo tableInfo, List<KuduFilterInfo> tableFilters, List<String> tableProjections) {
+    public KuduRowInputFormat(KuduReaderConfig readerConfig, RowResultConvertor<Row> rowResultConvertor,
+                              KuduTableInfo tableInfo, List<KuduFilterInfo> tableFilters,
+                              List<String> tableProjections) {
         super(readerConfig, rowResultConvertor, tableInfo, tableFilters, tableProjections);
     }
 

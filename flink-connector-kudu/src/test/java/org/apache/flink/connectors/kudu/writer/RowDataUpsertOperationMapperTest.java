@@ -17,32 +17,21 @@
 package org.apache.flink.connectors.kudu.writer;
 
 import org.apache.flink.connectors.kudu.connector.KuduTestBase;
-import org.apache.flink.connectors.kudu.connector.writer.AbstractSingleOperationMapper;
 import org.apache.flink.connectors.kudu.connector.writer.RowDataUpsertOperationMapper;
-import org.apache.flink.connectors.kudu.connector.writer.RowOperationMapper;
-import org.apache.flink.connectors.kudu.table.dynamic.KuduDynamicTableSource;
-import org.apache.flink.connectors.kudu.table.utils.KuduTableUtils;
-import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.data.StringData;
-import org.apache.flink.table.types.logical.DecimalType;
-import org.apache.flink.table.types.logical.LogicalType;
-import org.apache.flink.types.Row;
 import org.apache.kudu.client.Operation;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.apache.flink.table.types.logical.utils.LogicalTypeChecks.getPrecision;
 import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 
 /**
  * Unit Tests for {@link RowDataUpsertOperationMapper}.
  */
-public class RowDataUpsertOperationMapperTest  extends AbstractOperationTest {
+public class RowDataUpsertOperationMapperTest extends AbstractOperationTest {
 
     @Test
     void testGetField() {
