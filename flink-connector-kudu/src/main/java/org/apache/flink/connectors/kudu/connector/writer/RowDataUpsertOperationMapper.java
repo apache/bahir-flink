@@ -102,7 +102,7 @@ public class RowDataUpsertOperationMapper extends AbstractSingleOperationMapper<
                 if (timePrecision < MIN_TIME_PRECISION || timePrecision > MAX_TIME_PRECISION) {
                     throw new UnsupportedOperationException(
                             String.format("The precision %s of TIME type is out of the range [%s, %s] supported by " +
-                                    "HBase connector", timePrecision, MIN_TIME_PRECISION, MAX_TIME_PRECISION));
+                                    "kudu connector", timePrecision, MIN_TIME_PRECISION, MAX_TIME_PRECISION));
                 }
                 return input.getInt(i);
             case BIGINT:
