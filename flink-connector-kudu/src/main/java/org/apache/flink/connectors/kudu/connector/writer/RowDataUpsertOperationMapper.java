@@ -118,8 +118,7 @@ public class RowDataUpsertOperationMapper extends AbstractSingleOperationMapper<
                 if (timestampPrecision < MIN_TIMESTAMP_PRECISION || timestampPrecision > MAX_TIMESTAMP_PRECISION) {
                     throw new UnsupportedOperationException(
                             String.format("The precision %s of TIMESTAMP type is out of the range [%s, %s] supported " +
-                                            "by " +
-                                            "kudu connector", timestampPrecision, MIN_TIMESTAMP_PRECISION,
+                                            "by kudu connector", timestampPrecision, MIN_TIMESTAMP_PRECISION,
                                     MAX_TIMESTAMP_PRECISION));
                 }
                 return input.getTimestamp(i, timestampPrecision).toTimestamp();
