@@ -112,14 +112,14 @@ public class KuduDynamicTableSourceSinkFactory implements DynamicTableSourceFact
                     .key("kudu.hash-partition-nums")
                     .intType()
                     .defaultValue(KUDU_REPLICAS.defaultValue() * 2)
-                    .withDescription("kudu's hash partition bucket nums,defaultValue is 2 * replica nums");
+                    .withDescription("kudu's hash partition bucket nums, defaultValue is 2 * replica nums");
 
     public static final ConfigOption<String> KUDU_PRIMARY_KEY_COLS =
             ConfigOptions
                     .key("kudu.primary-key-columns")
                     .stringType()
                     .noDefaultValue()
-                    .withDescription("kudu's primary key,primary key must be ordered");
+                    .withDescription("kudu's primary key, primary key must be ordered");
 
 
     public static final ConfigOption<Integer> KUDU_SCAN_ROW_SIZE =
@@ -203,7 +203,7 @@ public class KuduDynamicTableSourceSinkFactory implements DynamicTableSourceFact
         long kuduCacheTtl = config.get(KUDU_LOOKUP_CACHE_TTL);
         int kuduMaxReties = config.get(KUDU_LOOKUP_MAX_RETRIES);
 
-        // 构造kudu lookup options
+        // build kudu lookup options
         KuduLookupOptions kuduLookupOptions = KuduLookupOptions.Builder.options().withCacheMaxSize(kuduCacheMaxRows)
                 .withCacheExpireMs(kuduCacheTtl)
                 .withMaxRetryTimes(kuduMaxReties)
