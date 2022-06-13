@@ -78,7 +78,7 @@ public abstract class AbstractKuduInputFormat<T> extends RichInputFormat<T, Kudu
                                    List<String> tableProjections) {
 
         this.readerConfig = checkNotNull(readerConfig, "readerConfig could not be null");
-        this.rowResultConvertor = checkNotNull(rowResultConvertor, "readerConfig could not be null");
+        this.rowResultConvertor = checkNotNull(rowResultConvertor, "rowResultConvertor could not be null");
         this.tableInfo = checkNotNull(tableInfo, "tableInfo could not be null");
         this.tableFilters = checkNotNull(tableFilters, "tableFilters could not be null");
         this.tableProjections = tableProjections;
