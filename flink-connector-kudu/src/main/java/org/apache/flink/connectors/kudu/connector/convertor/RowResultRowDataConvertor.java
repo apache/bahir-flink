@@ -80,7 +80,7 @@ public class RowResultRowDataConvertor implements RowResultConvertor<RowData> {
                     values.setField(pos, row.getBoolean(name));
                     break;
                 default:
-                    throw new IllegalArgumentException("columnName:" + name + ",type:" + type.getName() + "Not Support!");
+                    throw new IllegalArgumentException("columnName:" + name + ",type:" + type.getName() + "not support!");
             }
         });
         return values;
