@@ -196,7 +196,7 @@ fi
 # commit ref to checkout when building
 GIT_REF=${GIT_REF:-master}
 if [[ "$RELEASE_PREPARE" == "true" && "$GIT_BRANCH" ]]; then
-    GIT_REF="$GIT_BRANCH"
+    GIT_REF="origin/$GIT_BRANCH"
 fi
 if [[ "$RELEASE_PUBLISH" == "true" && "$GIT_TAG" ]]; then
     GIT_REF="tags/$GIT_TAG"
