@@ -64,7 +64,7 @@
         <connection>scm:git:git@github.com:apache/bahir-flink.git</connection>
         <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/bahir-flink.git</developerConnection>
         <url>https://github.com/apache/bahir-flink</url>
-        <tag>HEAD</tag>
+        <tag>release-1.1</tag>
     </scm>
     <repositories>
         <repository>
@@ -105,7 +105,7 @@
         <module>flink-library-siddhi</module>
     </modules>
     <properties>
-        <project.build.outputTimestamp>10</project.build.outputTimestamp>
+        <project.build.outputTimestamp>1655387053</project.build.outputTimestamp>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
@@ -534,8 +534,8 @@
                                 <dependencyManagementScopePriorities>compile,runtime,provided,test</dependencyManagementScopePriorities>
                                 <!-- PLUGIN_MANAGEMENT_ORDER configuration -->
                                 <pluginManagementOrderBy>groupId,artifactId</pluginManagementOrderBy>
-                                <providedDependencies/>
-                                <testDependencies/>
+                                <providedDependencies />
+                                <testDependencies />
                             </compound>
                             <!--                            <requireUpperBoundDeps combine.children="append"/>-->
                         </rules>
