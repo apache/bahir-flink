@@ -20,12 +20,12 @@
 
   <parent>
     <groupId>org.apache.bahir</groupId>
-    <artifactId>bahir-flink-parent_2.11</artifactId>
+    <artifactId>bahir-flink-parent_2.12</artifactId>
     <version>1.2-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>flink-connector-kudu_2.11</artifactId>
+  <artifactId>flink-connector-kudu_2.12</artifactId>
   <packaging>jar</packaging>
 
   <name>flink-connector-kudu</name>

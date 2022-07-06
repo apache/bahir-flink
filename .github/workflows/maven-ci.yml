@@ -31,7 +31,7 @@ jobs:
       matrix:
        java: ['8', '11']
        flink-version: ['1.14.6']
-       scala-version: ['2.11', '2.12']
+       scala-version: ['2.12']
 
     steps:
     - uses: actions/checkout@v2
