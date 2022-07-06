@@ -20,12 +20,12 @@
 
   <parent>
     <groupId>org.apache.bahir</groupId>
-    <artifactId>bahir-flink-parent_2.11</artifactId>
+    <artifactId>bahir-flink-parent_2.12</artifactId>
     <version>1.2-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
-  <artifactId>flink-connector-netty_2.11</artifactId>
+  <artifactId>flink-connector-netty_2.12</artifactId>
   <packaging>jar</packaging>
 
   <name>flink-connector-netty</name>

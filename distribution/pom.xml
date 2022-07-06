@@ -20,13 +20,13 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.bahir</groupId>
-        <artifactId>bahir-flink-parent_2.11</artifactId>
+        <artifactId>bahir-flink-parent_2.12</artifactId>
         <version>1.2-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
     <groupId>org.apache.bahir</groupId>
-    <artifactId>bahir-flink-assembly_2.11</artifactId>
+    <artifactId>bahir-flink-assembly_2.12</artifactId>
     <packaging>pom</packaging>
     <name>Apache Bahir - Flink Extensions Distribution</name>
     <url>http://bahir.apache.org/</url>

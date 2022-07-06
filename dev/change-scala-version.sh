@@ -18,7 +18,7 @@
 
 set -e
 
-VALID_VERSIONS=( 2.11 2.12 )
+VALID_VERSIONS=( 2.12 )
 
 usage() {
   echo "Usage: $(basename $0) [-h|--help] <version>
