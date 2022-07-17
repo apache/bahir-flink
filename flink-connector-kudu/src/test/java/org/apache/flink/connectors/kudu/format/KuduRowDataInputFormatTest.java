@@ -14,14 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.connectors.kudu.batch;
+package org.apache.flink.connectors.kudu.format;
 
-import org.apache.flink.connectors.kudu.connector.KuduTestBase;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
+import org.apache.flink.connectors.kudu.connector.KuduTestBase;
+import org.apache.flink.connectors.kudu.connector.convertor.RowResultRowConvertor;
+import org.apache.flink.connectors.kudu.connector.convertor.RowResultRowDataConvertor;
 import org.apache.flink.connectors.kudu.connector.reader.KuduInputSplit;
 import org.apache.flink.connectors.kudu.connector.reader.KuduReaderConfig;
+import org.apache.flink.table.data.GenericRowData;
+import org.apache.flink.table.data.RowData;
 import org.apache.flink.types.Row;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -29,19 +32,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class KuduInputFormatTest extends KuduTestBase {
+class KuduRowDataInputFormatTest extends KuduTestBase {
 
     @Test
     void testInvalidKuduMaster() {
         KuduTableInfo tableInfo = booksTableInfo("books", false);
-        Assertions.assertThrows(NullPointerException.class, () -> new KuduRowInputFormat(null, tableInfo));
+        Assertions.assertThrows(NullPointerException.class, () -> new KuduRowDataInputFormat(null,
+                new RowResultRowDataConvertor(), tableInfo));
     }
 
     @Test
     void testInvalidTableInfo() {
         String masterAddresses = getMasterAddress();
         KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
-        Assertions.assertThrows(NullPointerException.class, () -> new KuduRowInputFormat(readerConfig, null));
+        Assertions.assertThrows(NullPointerException.class, () -> new KuduRowDataInputFormat(readerConfig,
+                new RowResultRowDataConvertor(), null));
     }
 
     @Test
@@ -49,7 +54,7 @@ class KuduInputFormatTest extends KuduTestBase {
         KuduTableInfo tableInfo = booksTableInfo("books", true);
         setUpDatabase(tableInfo);
 
-        List<Row> rows = readRows(tableInfo);
+        List<RowData> rows = readRowDatas(tableInfo);
         Assertions.assertEquals(5, rows.size());
 
         cleanDatabase(tableInfo);
@@ -60,21 +65,43 @@ class KuduInputFormatTest extends KuduTestBase {
         KuduTableInfo tableInfo = booksTableInfo("books", true);
         setUpDatabase(tableInfo);
 
-        List<Row> rows = readRows(tableInfo, "title", "id");
+        List<RowData> rows = readRowDatas(tableInfo, "title", "id");
         Assertions.assertEquals(5, rows.size());
 
-        for (Row row : rows) {
+        for (RowData row : rows) {
             Assertions.assertEquals(2, row.getArity());
         }
 
         cleanDatabase(tableInfo);
     }
 
+    private List<RowData> readRowDatas(KuduTableInfo tableInfo, String... fieldProjection) throws Exception {
+        String masterAddresses = getMasterAddress();
+        KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
+        KuduRowDataInputFormat inputFormat = new KuduRowDataInputFormat(readerConfig, new RowResultRowDataConvertor(),
+                tableInfo, new ArrayList<>(), fieldProjection == null ? null : Arrays.asList(fieldProjection));
+
+        KuduInputSplit[] splits = inputFormat.createInputSplits(1);
+        List<RowData> rows = new ArrayList<>();
+        for (KuduInputSplit split : splits) {
+            inputFormat.open(split);
+            while (!inputFormat.reachedEnd()) {
+                RowData row = inputFormat.nextRecord(new GenericRowData(5));
+                if (row != null) {
+                    rows.add(row);
+                }
+            }
+        }
+        inputFormat.close();
+
+        return rows;
+    }
+
     private List<Row> readRows(KuduTableInfo tableInfo, String... fieldProjection) throws Exception {
         String masterAddresses = getMasterAddress();
         KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
-        KuduRowInputFormat inputFormat = new KuduRowInputFormat(readerConfig, tableInfo, new ArrayList<>(),
-                fieldProjection == null ? null : Arrays.asList(fieldProjection));
+        KuduRowInputFormat inputFormat = new KuduRowInputFormat(readerConfig, new RowResultRowConvertor(), tableInfo,
+                new ArrayList<>(), fieldProjection == null ? null : Arrays.asList(fieldProjection));
 
         KuduInputSplit[] splits = inputFormat.createInputSplits(1);
         List<Row> rows = new ArrayList<>();

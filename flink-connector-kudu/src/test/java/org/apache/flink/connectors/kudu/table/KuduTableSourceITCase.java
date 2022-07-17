@@ -56,10 +56,12 @@ public class KuduTableSourceITCase extends KuduTestBase {
         tableEnv.sqlUpdate("DROP TABLE books");
     }
 
+
     @Test
     void testScanWithProjectionAndFilter() throws Exception {
         // (price > 30 and price < 40)
-        CloseableIterator<Row> it = tableEnv.executeSql("SELECT title FROM books WHERE id IN (1003, 1004) and quantity < 40").collect();
+        CloseableIterator<Row> it = tableEnv.executeSql("SELECT title FROM books WHERE id IN (1003, 1004) and " +
+                "quantity < 40").collect();
         List<Row> results = new ArrayList<>();
         it.forEachRemaining(results::add);
         assertEquals(1, results.size());

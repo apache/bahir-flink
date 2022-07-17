@@ -2,18 +2,17 @@
 
 This connector provides a source (```KuduInputFormat```), a sink/output
 (```KuduSink``` and ```KuduOutputFormat```, respectively),
- as well a table source (`KuduTableSource`), an upsert table sink (`KuduTableSink`), and a catalog (`KuduCatalog`),
- to allow reading and writing to [Kudu](https://kudu.apache.org/).
+as well a table source (`KuduTableSource`), an upsert table sink (`KuduTableSink`), and a catalog (`KuduCatalog`),
+to allow reading and writing to [Kudu](https://kudu.apache.org/).
 
 To use this connector, add the following dependency to your project:
 
-    <dependency>
-      <groupId>org.apache.bahir</groupId>
-      <artifactId>flink-connector-kudu_2.11</artifactId>
-      <version>1.1-SNAPSHOT</version>
-    </dependency>
-
- *Version Compatibility*: This module is compatible with Apache Kudu *1.11.1* (last stable version) and Apache Flink 1.10.+.
+<dependency>
+  <groupId>org.apache.bahir</groupId>
+  <artifactId>flink-connector-kudu_2.11</artifactId>
+  <version>1.1-SNAPSHOT</version>
+</dependency>
+*Version Compatibility*: This module is compatible with Apache Kudu *1.11.1* (last stable version) and Apache Flink 1.10.+.
 
 Note that the streaming connectors are not part of the binary distribution of Flink. You need to link them into your job jar for cluster execution.
 See how to link with them for cluster execution [here](https://ci.apache.org/projects/flink/flink-docs-release-1.10/dev/projectsetup/dependencies.html).
@@ -45,7 +44,6 @@ catalogs:
     type: kudu
     kudu.masters: <host>:7051
 ```
-
 Once the SQL CLI is started you can simply switch to the Kudu catalog by calling `USE CATALOG kudu;`
 
 You can also create and use the KuduCatalog directly in the Table environment:
@@ -56,12 +54,12 @@ KuduCatalog catalog = new KuduCatalog(KUDU_MASTERS);
 tableEnv.registerCatalog("kudu", catalog);
 tableEnv.useCatalog("kudu");
 ```
-
 ### DDL operations using SQL
 
 It is possible to manipulate Kudu tables using SQL DDL.
 
 When not using the Kudu catalog, the following additional properties must be specified in the `WITH` clause:
+
 * `'connector.type'='kudu'`
 * `'kudu.masters'='host1:port1,host2:port2,...'`: comma-delimitered list of Kudu masters
 * `'kudu.table'='...'`: The table's name within the Kudu database.
@@ -89,8 +87,8 @@ CREATE TABLE TestTable (
   'kudu.primary-key-columns' = 'first,second'
 )
 ```
-
 Other catalogs
+
 ```
 CREATE TABLE TestTable (
   first STRING,
@@ -104,17 +102,16 @@ CREATE TABLE TestTable (
   'kudu.primary-key-columns' = 'first,second'
 )
 ```
-
 Renaming a table:
+
 ```
 ALTER TABLE TestTable RENAME TO TestTableRen
 ```
-
 Dropping a table:
+
 ```sql
 DROP TABLE TestTableRen
 ```
-
 #### Creating a KuduTable directly with KuduCatalog
 
 The KuduCatalog also exposes a simple `createTable` method that required only the where table configuration,
@@ -123,7 +120,7 @@ including schema, partitioning, replication, etc. can be specified using a `Kudu
 Use the `createTableIfNotExists` method, that takes a `ColumnSchemasFactory` and
 a `CreateTableOptionsFactory` parameter, that implement respectively `getColumnSchemas()`
 returning a list of Kudu [ColumnSchema](https://kudu.apache.org/apidocs/org/apache/kudu/ColumnSchema.html) objects;
- and  `getCreateTableOptions()` returning a
+and  `getCreateTableOptions()` returning a
 [CreateTableOptions](https://kudu.apache.org/apidocs/org/apache/kudu/client/CreateTableOptions.html) object.
 
 This example shows the creation of a table called `ExampleTable` with two columns,
@@ -155,32 +152,46 @@ Read more about Kudu schema design in the [Kudu docs](https://kudu.apache.org/do
 
 ### Supported data types
 
-| Flink/SQL            | Kudu                    |
-|----------------------|:-----------------------:|
-| `STRING`             | STRING                  |
-| `BOOLEAN`            | BOOL                    |
-| `TINYINT`            | INT8                    |
-| `SMALLINT`           | INT16                   |
-| `INT`                | INT32                   |
-| `BIGINT`             | INT64                   |
-| `FLOAT`              | FLOAT                   |
-| `DOUBLE`             | DOUBLE                  |
-| `BYTES`              | BINARY                  |
-| `TIMESTAMP(3)`       | UNIXTIME_MICROS         |
+
+| Flink/SQL      |      Kudu      |
+| ---------------- | :---------------: |
+| `STRING`       |     STRING     |
+| `BOOLEAN`      |      BOOL      |
+| `TINYINT`      |      INT8      |
+| `SMALLINT`     |      INT16      |
+| `INT`          |      INT32      |
+| `BIGINT`       |      INT64      |
+| `FLOAT`        |      FLOAT      |
+| `DOUBLE`       |     DOUBLE     |
+| `BYTES`        |     BINARY     |
+| `TIMESTAMP(3)` | UNIXTIME_MICROS |
 
 Note:
-* `TIMESTAMP`s are fixed to a precision of 3, and the corresponding Java conversion class is `java.sql.Timestamp` 
+
+* `TIMESTAMP`s are fixed to a precision of 3, and the corresponding Java conversion class is `java.sql.Timestamp`
 * `BINARY` and `VARBINARY` are not yet supported - use `BYTES`, which is a `VARBINARY(2147483647)`
-*  `CHAR` and `VARCHAR` are not yet supported - use `STRING`, which is a `VARCHAR(2147483647)`
+* `CHAR` and `VARCHAR` are not yet supported - use `STRING`, which is a `VARCHAR(2147483647)`
 * `DECIMAL` types are not yet supported
 
+### Lookup Cache
+
+Kudu connector can be used in temporal join as a lookup source (aka. dimension table). Currently, only sync lookup mode is supported.
+
+By default, lookup cache is not enabled. You can enable it by setting both `lookup.cache.max-rows` and `lookup.cache.ttl`.
+
+The lookup cache is used to improve performance of temporal join theKudu connector. By default, lookup cache is not enabled, so all the requests are sent to external database. When lookup cache is enabled, each process (i.e. TaskManager) will hold a cache. Flink will lookup the cache first, and only send requests to external database when cache missing, and update cache with the rows returned. The oldest rows in cache will be expired when the cache hit to the max cached rows `kudu.lookup.cache.max-rows` or when the row exceeds the max time to live `kudu.lookup.cache.ttl`. The cached rows might not be the latest, users can tune `kudu.lookup.cache.ttl` to a smaller value to have a better fresh data, but this may increase the number of requests send to database. So this is a balance between throughput and correctness.
+
+Reference :[Flink Jdbc Connector](https://nightlies.apache.org/flink/flink-docs-release-1.15/docs/connectors/table/jdbc/#lookup-cache)
+
+
 ### Known limitations
+
 * Data type limitations (see above).
 * SQL Create table: primary keys can only be set by the `kudu.primary-key-columns` property, using the
-`PRIMARY KEY` constraint is not yet possible.
+  `PRIMARY KEY` constraint is not yet possible.
 * SQL Create table: range partitioning is not supported.
 * When getting a table through the Catalog, NOT NULL and PRIMARY KEY constraints are ignored. All columns
-are described as being nullable, and not being primary keys.
+  are described as being nullable, and not being primary keys.
 * Kudu tables cannot be altered through the catalog other than simple renaming
 
 ## DataStream API
@@ -192,13 +203,15 @@ with Kudu data.
 ### Reading tables into a DataStreams
 
 There are 2 main ways of reading a Kudu Table into a DataStream
- 1. Using the `KuduCatalog` and the Table API
- 2. Using the `KuduRowInputFormat` directly
+
+1. Using the `KuduCatalog` and the Table API
+2. Using the `KuduRowInputFormat` directly
 
 Using the `KuduCatalog` and Table API is the recommended way of reading tables as it automatically
 guarantees type safety and takes care of configuration of our readers.
 
 This is how it works in practice:
+
 ```java
 StreamTableEnvironment tableEnv = StreamTableEnvironment.create(streamEnv, tableSettings);
 
@@ -208,7 +221,6 @@ tableEnv.useCatalog("kudu");
 Table table = tableEnv.sqlQuery("SELECT * FROM MyKuduTable");
 DataStream<Row> rows = tableEnv.toAppendStream(table, Row.class);
 ```
-
 The second way of achieving the same thing is by using the `KuduRowInputFormat` directly.
 In this case we have to manually provide all information about our table:
 
@@ -219,18 +231,19 @@ KuduRowInputFormat inputFormat = new KuduRowInputFormat(readerConfig, tableInfo)
 
 DataStream<Row> rowStream = env.createInput(inputFormat, rowTypeInfo);
 ```
-
 At the end of the day the `KuduTableSource` is just a convenient wrapper around the `KuduRowInputFormat`.
 
 ### Kudu Sink
+
 The connector provides a `KuduSink` class that can be used to consume DataStreams
 and write the results into a Kudu table.
 
 The constructor takes 3 or 4 arguments.
- * `KuduWriterConfig` is used to specify the Kudu masters and the flush mode.
- * `KuduTableInfo` identifies the table to be written
- * `KuduOperationMapper` maps the records coming from the DataStream to a list of Kudu operations.
- * `KuduFailureHandler` (optional): If you want to provide your own logic for handling writing failures.
+
+* `KuduWriterConfig` is used to specify the Kudu masters and the flush mode.
+* `KuduTableInfo` identifies the table to be written
+* `KuduOperationMapper` maps the records coming from the DataStream to a list of Kudu operations.
+* `KuduFailureHandler` (optional): If you want to provide your own logic for handling writing failures.
 
 The example below shows the creation of a sink for Row type records of 3 fields. It Upserts each record.
 It is assumed that a Kudu table with columns `col1, col2, col3` called `AlreadyExistingTable` exists. Note that if this were not the case,
@@ -248,7 +261,6 @@ KuduSink<Row> sink = new KuduSink<>(
             AbstractSingleOperationMapper.KuduOperation.UPSERT)
 )
 ```
-
 #### KuduOperationMapper
 
 This section describes the Operation mapping logic in more detail.
@@ -272,12 +284,13 @@ It is also possible to implement your own logic by overriding the
 `createBaseOperation` method that returns a Kudu [Operation](https://kudu.apache.org/apidocs/org/apache/kudu/client/Operation.html).
 
 There are pre-defined operation mappers for Pojo, Flink Row, and Flink Tuple types for constant operation, 1-to-1 sinks.
+
 * `PojoOperationMapper`: Each table column must correspond to a POJO field
-with the same name. The  `columnNames` array should contain those fields of the POJO that
-are present as table columns (the POJO fields can be a superset of table columns).
+  with the same name. The  `columnNames` array should contain those fields of the POJO that
+  are present as table columns (the POJO fields can be a superset of table columns).
 * `RowOperationMapper` and `TupleOperationMapper`: the mapping is based on position. The
-`i`th field of the Row/Tuple corresponds to the column of the table at the `i`th
-position in the `columnNames` array.
+  `i`th field of the Row/Tuple corresponds to the column of the table at the `i`th
+  position in the `columnNames` array.
 
 ## Building the connector
 
@@ -287,7 +300,6 @@ The connector can be easily built by using maven:
 cd bahir-flink
 mvn clean install
 ```
-
 ### Running the tests
 
 The integration tests rely on the Kudu test harness which requires the current user to be able to ssh to localhost.

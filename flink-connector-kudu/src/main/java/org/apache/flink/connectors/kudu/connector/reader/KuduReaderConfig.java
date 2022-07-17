@@ -25,7 +25,7 @@ import java.io.Serializable;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
- * Configuration used by {@link org.apache.flink.connectors.kudu.batch.KuduRowInputFormat}. Specifies connection and other necessary properties.
+ * Configuration used by {@link org.apache.flink.connectors.kudu.format.KuduRowInputFormat}. Specifies connection and other necessary properties.
  */
 @PublicEvolving
 public class KuduReaderConfig implements Serializable {
