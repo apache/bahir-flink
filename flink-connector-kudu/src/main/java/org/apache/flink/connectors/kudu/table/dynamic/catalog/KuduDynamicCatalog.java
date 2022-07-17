@@ -86,7 +86,7 @@ public class KuduDynamicCatalog extends AbstractReadOnlyCatalog {
      * @param kuduMasters Connection address to Kudu
      */
     public KuduDynamicCatalog(String catalogName, String kuduMasters) {
-        super(catalogName, EnvironmentSettings.DEFAULT_BUILTIN_DATABASE);
+        super(catalogName, "default_database");
         this.kuduMasters = kuduMasters;
         this.kuduClient = createClient();
     }

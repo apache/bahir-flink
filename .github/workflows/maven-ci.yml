@@ -30,8 +30,20 @@ jobs:
     strategy:
       matrix:
        java: ['8', '11']
-       flink-version: ['1.14.4']
+       flink-version: ['1.15.1']
        scala-version: ['2.12']
+       connector: [
+         'flink-connector-activemq',
+         'flink-connector-akka',
+         'flink-connector-flume',
+         'flink-connector-influxdb',
+         'flink-connector-influxdb2',
+         'flink-connector-kudu',
+         'flink-connector-netty',
+         'flink-connector-pinot',
+         'flink-connector-redis',
+         'flink-library-siddhi'
+       ]
 
     steps:
     - uses: actions/checkout@v2
@@ -41,8 +53,8 @@ jobs:
         java-version: ${{ matrix.java }}
         distribution: 'adopt'
         cache: maven 
-    - name: Change scala version to ${{ matrix.scala-version }}
-      run: ./dev/change-scala-version.sh ${{ matrix.scala-version }}
-      shell: bash
+#    - name: Change scala version to ${{ matrix.scala-version }}
+#      run: ./dev/change-scala-version.sh ${{ matrix.scala-version }}
+#      shell: bash
     - name: Build with flink ${{ matrix.flink-version }}
-      run: mvn -B clean verify -Dscala-${{ matrix.scala-version }} -Dflink.version=${{ matrix.flink-version }}
+      run: mvn -B clean verify -pl ${{ matrix.connector }} -am -Dscala-${{ matrix.scala-version }} -Dflink.version=${{ matrix.flink-version }}

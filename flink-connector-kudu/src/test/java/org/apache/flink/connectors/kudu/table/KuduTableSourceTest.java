@@ -68,7 +68,7 @@ public class KuduTableSourceTest extends KuduTestBase {
         KuduTableInfo tableInfo = booksTableInfo("books", true);
         setUpDatabase(tableInfo);
         catalog = new KuduCatalog(getMasterAddress());
-        ObjectPath op = new ObjectPath(EnvironmentSettings.DEFAULT_BUILTIN_DATABASE, "books");
+        ObjectPath op = new ObjectPath("default_database", "books");
         try {
             kuduTableSource = catalog.getKuduTableFactory().createTableSource(op, catalog.getTable(op));
         } catch (TableNotExistException e) {

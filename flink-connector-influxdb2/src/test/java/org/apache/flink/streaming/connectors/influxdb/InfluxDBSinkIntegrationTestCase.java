@@ -33,6 +33,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSink;
 import org.apache.flink.streaming.connectors.influxdb.util.InfluxDBContainer;
@@ -85,7 +86,7 @@ class InfluxDBSinkIntegrationTestCase extends TestLogger {
                         .addCheckpointDataPoint(true)
                         .build();
 
-        env.addSource(new FiniteTestSource(SOURCE_DATA), BasicTypeInfo.LONG_TYPE_INFO)
+        env.addSource(new FiniteTestSource<>(SOURCE_DATA), BasicTypeInfo.LONG_TYPE_INFO)
                 .sinkTo(influxDBSink);
 
         env.execute();

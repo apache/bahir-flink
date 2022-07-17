@@ -17,10 +17,10 @@
 package org.apache.flink.streaming.connectors.netty.example
 
 import org.apache.flink.api.java.utils.ParameterTool
-import org.apache.flink.api.scala._
-import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
+import org.apache.flink.streaming.api.datastream.DataStream
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment
 import org.apache.flink.table.api.EnvironmentSettings
-import org.apache.flink.table.api.bridge.scala._
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment
 
 /**
  * Simple example for demonstrating the use of SQL on a Stream Table.
@@ -40,7 +40,7 @@ object StreamSqlExample {
     val param = ParameterTool.fromArgs(args)
 
     // set up execution environment
-    val envSettings = EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build()
+    val envSettings = EnvironmentSettings.newInstance().inStreamingMode().build()
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     val tEnv = StreamTableEnvironment.create(env, envSettings)
 
@@ -62,8 +62,7 @@ object StreamSqlExample {
 
     // union the two tables
     val result = tEnv.sqlQuery("SELECT * FROM OrderA WHERE amount > 2")
-
-    result.toAppendStream[Order].print()
+    tEnv.toDataStream(result).print()
 
     env.execute()
   }
