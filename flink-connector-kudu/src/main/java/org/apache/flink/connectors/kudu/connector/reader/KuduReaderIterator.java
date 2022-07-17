@@ -17,22 +17,24 @@
 package org.apache.flink.connectors.kudu.connector.reader;
 
 import org.apache.flink.annotation.Internal;
-import org.apache.flink.types.Row;
-
-import org.apache.kudu.Schema;
+import org.apache.flink.connectors.kudu.connector.convertor.RowResultConvertor;
 import org.apache.kudu.client.KuduException;
 import org.apache.kudu.client.KuduScanner;
 import org.apache.kudu.client.RowResult;
 import org.apache.kudu.client.RowResultIterator;
 
-@Internal
-public class KuduReaderIterator {
+import java.io.Serializable;
 
-    private KuduScanner scanner;
+@Internal
+public class KuduReaderIterator<T> implements Serializable {
+
+    private final KuduScanner scanner;
+    private final RowResultConvertor<T> rowResultConvertor;
     private RowResultIterator rowIterator;
 
-    public KuduReaderIterator(KuduScanner scanner) throws KuduException {
+    public KuduReaderIterator(KuduScanner scanner, RowResultConvertor<T> rowResultConvertor) throws KuduException {
         this.scanner = scanner;
+        this.rowResultConvertor = rowResultConvertor;
         nextRows();
     }
 
@@ -51,24 +53,12 @@ public class KuduReaderIterator {
         }
     }
 
-    public Row next() {
+    public T next() {
         RowResult row = this.rowIterator.next();
-        return toFlinkRow(row);
+        return rowResultConvertor.convertor(row);
     }
 
     private void nextRows() throws KuduException {
         this.rowIterator = scanner.nextRows();
-    }
-
-    private Row toFlinkRow(RowResult row) {
-        Schema schema = row.getColumnProjection();
-
-        Row values = new Row(schema.getColumnCount());
-        schema.getColumns().forEach(column -> {
-            String name = column.getName();
-            int pos = schema.getColumnIndex(name);
-            values.setField(pos, row.getObject(name));
-        });
-        return values;
     }
 }

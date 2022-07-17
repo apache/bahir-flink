@@ -17,6 +17,8 @@
 package org.apache.flink.connectors.kudu.connector;
 
 import org.apache.flink.api.java.tuple.Tuple5;
+import org.apache.flink.connectors.kudu.connector.convertor.RowResultRowConvertor;
+import org.apache.flink.connectors.kudu.connector.convertor.RowResultRowDataConvertor;
 import org.apache.flink.connectors.kudu.connector.reader.KuduInputSplit;
 import org.apache.flink.connectors.kudu.connector.reader.KuduReader;
 import org.apache.flink.connectors.kudu.connector.reader.KuduReaderConfig;
@@ -25,11 +27,20 @@ import org.apache.flink.connectors.kudu.connector.writer.AbstractSingleOperation
 import org.apache.flink.connectors.kudu.connector.writer.KuduWriter;
 import org.apache.flink.connectors.kudu.connector.writer.KuduWriterConfig;
 import org.apache.flink.connectors.kudu.connector.writer.RowOperationMapper;
+import org.apache.flink.table.api.DataTypes;
+import org.apache.flink.table.api.TableSchema;
+import org.apache.flink.table.data.GenericRowData;
+import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.StringData;
 import org.apache.flink.types.Row;
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
 import org.apache.kudu.Type;
-import org.apache.kudu.client.*;
+import org.apache.kudu.client.CreateTableOptions;
+import org.apache.kudu.client.KuduClient;
+import org.apache.kudu.client.KuduScanner;
+import org.apache.kudu.client.KuduTable;
+import org.apache.kudu.client.RowResult;
 import org.apache.kudu.shaded.com.google.common.collect.Lists;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -52,25 +63,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class KuduTestBase {
 
-    private static final String DOCKER_IMAGE = "apache/kudu:1.11.1";
+    private static final String DOCKER_IMAGE = "apache/kudu:1.13.0";
     private static final Integer KUDU_MASTER_PORT = 7051;
     private static final Integer KUDU_TSERVER_PORT = 7050;
     private static final Integer NUMBER_OF_REPLICA = 3;
-
-    private static GenericContainer<?> master;
-    private static List<GenericContainer<?>> tServers;
-
-    private static String masterAddress;
-    private static KuduClient kuduClient;
-
     private static final Object[][] booksTableData = {
             {1001, "Java for dummies", "Tan Ah Teck", 11.11, 11},
             {1002, "More Java for dummies", "Tan Ah Teck", 22.22, 22},
             {1003, "More Java for more dummies", "Mohammad Ali", 33.33, 33},
             {1004, "A Cup of Java", "Kumar", 44.44, 44},
             {1005, "A Teaspoon of Java", "Kevin Jones", 55.55, 55}};
-
     public static String[] columns = new String[]{"id", "title", "author", "price", "quantity"};
+    private static GenericContainer<?> master;
+    private static List<GenericContainer<?>> tServers;
+    private static String masterAddress;
+    private static KuduClient kuduClient;
 
     @BeforeAll
     public static void beforeClass() throws Exception {
@@ -91,7 +98,8 @@ public class KuduTestBase {
                     .withExposedPorts(KUDU_TSERVER_PORT)
                     .withCommand("tserver")
                     .withEnv("KUDU_MASTERS", "kudu-master:" + KUDU_MASTER_PORT)
-                    .withEnv("TSERVER_ARGS", "--fs_wal_dir=/var/lib/kudu/tserver --use_hybrid_clock=false --rpc_advertised_addresses=" + instanceName)
+                    .withEnv("TSERVER_ARGS", "--fs_wal_dir=/var/lib/kudu/tserver --use_hybrid_clock=false " +
+                            "--rpc_advertised_addresses=" + instanceName)
                     .withNetwork(network)
                     .withNetworkAliases(instanceName)
                     .dependsOn(master);
@@ -114,15 +122,6 @@ public class KuduTestBase {
             throw new RuntimeException(e);
         }
     }
-
-    public String getMasterAddress() {
-        return masterAddress;
-    }
-
-    public KuduClient getClient() {
-        return kuduClient;
-    }
-
 
     public static KuduTableInfo booksTableInfo(String tableName, boolean createIfNotExist) {
 
@@ -159,7 +158,7 @@ public class KuduTestBase {
                                         (String) row[1],
                                         (String) row[2],
                                         (Double) row[3],
-                                        (Integer)row[4]);
+                                        (Integer) row[4]);
                         return values;
                     } else {
                         Tuple5<Integer, String, String, Double, Integer> values =
@@ -167,6 +166,39 @@ public class KuduTestBase {
                                         (String) row[1],
                                         (String) row[2],
                                         null, null);
+                        return values;
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
+    public static TableSchema booksTableSchema(){
+        return TableSchema.builder()
+                .field("id", DataTypes.INT())
+                .field("title", DataTypes.STRING())
+                .field( "author", DataTypes.STRING())
+                .field("price", DataTypes.DOUBLE())
+                .field("quantity", DataTypes.INT())
+                .build();
+    }
+
+    public static List<RowData> booksRowData() {
+        return Arrays.stream(booksTableData)
+                .map(row -> {
+                    Integer rowId = (Integer) row[0];
+                    if (rowId % 2 == 1) {
+                        GenericRowData values = new GenericRowData(5);
+                        values.setField(0, row[0]);
+                        values.setField(1, StringData.fromString(row[1].toString()));
+                        values.setField(2, StringData.fromString(row[2].toString()));
+                        values.setField(3, row[3]);
+                        values.setField(4, row[4]);
+                        return values;
+                    } else {
+                        GenericRowData values = new GenericRowData(5);
+                        values.setField(0, row[0]);
+                        values.setField(1,  StringData.fromString(row[1].toString()));
+                        values.setField(2, StringData.fromString(row[2].toString()));
                         return values;
                     }
                 })
@@ -198,19 +230,28 @@ public class KuduTestBase {
 
     public static List<BookInfo> booksDataPojo() {
         return Arrays.stream(booksTableData).map(row -> new BookInfo(
-                (int) row[0],
-                (String) row[1],
-                (String) row[2],
-                (Double) row[3],
-                (int) row[4]))
+                        (int) row[0],
+                        (String) row[1],
+                        (String) row[2],
+                        (Double) row[3],
+                        (int) row[4]))
                 .collect(Collectors.toList());
+    }
+
+    public String getMasterAddress() {
+        return masterAddress;
+    }
+
+    public KuduClient getClient() {
+        return kuduClient;
     }
 
     protected void setUpDatabase(KuduTableInfo tableInfo) {
         try {
             String masterAddresses = getMasterAddress();
             KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
-            KuduWriter kuduWriter = new KuduWriter(tableInfo, writerConfig, new RowOperationMapper(columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
+            KuduWriter kuduWriter = new KuduWriter(tableInfo, writerConfig, new RowOperationMapper(columns,
+                    AbstractSingleOperationMapper.KuduOperation.INSERT));
             booksDataRow().forEach(row -> {
                 try {
                     kuduWriter.write(row);
@@ -228,7 +269,8 @@ public class KuduTestBase {
         try {
             String masterAddresses = getMasterAddress();
             KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
-            KuduWriter kuduWriter = new KuduWriter(tableInfo, writerConfig, new RowOperationMapper(columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
+            KuduWriter kuduWriter = new KuduWriter(tableInfo, writerConfig, new RowOperationMapper(columns,
+                    AbstractSingleOperationMapper.KuduOperation.INSERT));
             kuduWriter.deleteTable();
             kuduWriter.close();
         } catch (Exception e) {
@@ -239,14 +281,35 @@ public class KuduTestBase {
     protected List<Row> readRows(KuduTableInfo tableInfo) throws Exception {
         String masterAddresses = getMasterAddress();
         KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
-        KuduReader reader = new KuduReader(tableInfo, readerConfig);
+        KuduReader<Row> reader = new KuduReader<>(tableInfo, readerConfig, new RowResultRowConvertor());
 
         KuduInputSplit[] splits = reader.createInputSplits(1);
         List<Row> rows = new ArrayList<>();
         for (KuduInputSplit split : splits) {
-            KuduReaderIterator resultIterator = reader.scanner(split.getScanToken());
+            KuduReaderIterator<Row> resultIterator = reader.scanner(split.getScanToken());
             while (resultIterator.hasNext()) {
                 Row row = resultIterator.next();
+                if (row != null) {
+                    rows.add(row);
+                }
+            }
+        }
+        reader.close();
+
+        return rows;
+    }
+
+    protected List<RowData> readRowDatas(KuduTableInfo tableInfo) throws Exception {
+        String masterAddresses = getMasterAddress();
+        KuduReaderConfig readerConfig = KuduReaderConfig.Builder.setMasters(masterAddresses).build();
+        KuduReader<RowData> reader = new KuduReader<>(tableInfo, readerConfig, new RowResultRowDataConvertor());
+
+        KuduInputSplit[] splits = reader.createInputSplits(1);
+        List<RowData> rows = new ArrayList<>();
+        for (KuduInputSplit split : splits) {
+            KuduReaderIterator<RowData> resultIterator = reader.scanner(split.getScanToken());
+            while (resultIterator.hasNext()) {
+                RowData row = resultIterator.next();
                 if (row != null) {
                     rows.add(row);
                 }

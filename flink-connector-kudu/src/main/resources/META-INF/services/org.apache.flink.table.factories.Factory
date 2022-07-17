@@ -13,5 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-org.apache.flink.connectors.kudu.table.KuduTableFactory
-org.apache.flink.connectors.kudu.table.dynamic.catalog.KuduCatalogFactory
+org.apache.flink.connectors.kudu.table.dynamic.KuduDynamicTableSourceSinkFactory
