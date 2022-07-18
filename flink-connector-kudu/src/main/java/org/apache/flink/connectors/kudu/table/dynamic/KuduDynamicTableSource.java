@@ -36,7 +36,10 @@ import org.apache.flink.table.connector.source.abilities.SupportsFilterPushDown;
 import org.apache.flink.table.connector.source.abilities.SupportsLimitPushDown;
 import org.apache.flink.table.connector.source.abilities.SupportsProjectionPushDown;
 import org.apache.flink.table.expressions.ResolvedExpression;
-import org.apache.flink.table.utils.TableSchemaUtils;
+import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.types.FieldsDataType;
+import org.apache.flink.table.types.logical.RowType;
+import org.apache.flink.table.types.utils.DataTypeUtils;
 import org.apache.flink.util.Preconditions;
 import org.apache.kudu.shaded.com.google.common.collect.Lists;
 import org.slf4j.Logger;
@@ -47,6 +50,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+
+import static org.apache.flink.calcite.shaded.com.google.common.base.Preconditions.checkArgument;
+import static org.apache.flink.table.utils.TableSchemaUtils.containsPhysicalColumnsOnly;
 
 /**
  * A {@link DynamicTableSource} for Kudu.
@@ -138,10 +144,26 @@ public class KuduDynamicTableSource implements ScanTableSource, SupportsProjecti
     }
 
     @Override
-    public void applyProjection(int[][] projectedFields) {
+    public void applyProjection(int[][] projectedFields, DataType producedDataType) {
         // parser projectFields
-        this.physicalSchema = TableSchemaUtils.projectSchema(this.physicalSchema, projectedFields);
+        this.physicalSchema = projectSchema(this.physicalSchema, projectedFields);
         this.projectedFields = physicalSchema.getFieldNames();
+    }
+
+    private TableSchema projectSchema(TableSchema tableSchema, int[][] projectedFields) {
+        checkArgument(
+                containsPhysicalColumnsOnly(tableSchema),
+                "Projection is only supported for physical columns.");
+        TableSchema.Builder builder = TableSchema.builder();
+
+        FieldsDataType fields =
+                (FieldsDataType)
+                        DataTypeUtils.projectRow(tableSchema.toRowDataType(), projectedFields);
+        RowType topFields = (RowType) fields.getLogicalType();
+        for (int i = 0; i < topFields.getFieldCount(); i++) {
+            builder.field(topFields.getFieldNames().get(i), fields.getChildren().get(i));
+        }
+        return builder.build();
     }
 
     @Override
