@@ -37,6 +37,7 @@
                 <exclude>**/conf/*.properties</exclude>
                 <exclude>**/conf/*.xml</exclude>
                 <exclude>**/dependency-reduced-pom.xml</exclude>
+                <exclude>**/pom.xml.releaseBackup</exclude>
                 <exclude>**/scratch_space</exclude>
                 <exclude>**/scratch_space/**/*</exclude>
                 <exclude>**/target</exclude>
