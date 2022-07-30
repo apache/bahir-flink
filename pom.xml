@@ -652,7 +652,6 @@
                             <exclude>.project</exclude>
                             <exclude>**/dependency-reduced-pom.xml</exclude>
                             <exclude>**/target/**</exclude>
-                            <exclude>**/README.md</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
