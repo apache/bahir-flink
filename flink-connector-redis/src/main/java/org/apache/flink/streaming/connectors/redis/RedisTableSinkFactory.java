@@ -59,6 +59,7 @@ public class RedisTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bool
         properties.add(REDIS_CLUSTER_PASSWORD);
         properties.add(REDIS_SENTINEL);
         properties.add(REDIS_KEY_TTL);
+        properties.add(REDIS_KEY_ADDITIONAL);
         // schema
         properties.add(SCHEMA + ".#." + SCHEMA_DATA_TYPE);
         properties.add(SCHEMA + ".#." + SCHEMA_NAME);

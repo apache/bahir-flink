@@ -32,5 +32,6 @@ public class RedisValidator {
     public static final String SENTINELS_PASSWORD = "sentinels.password";
     public static final String REDIS_CLUSTER_PASSWORD = "cluster.password";
     public static final String REDIS_KEY_TTL = "key.ttl";
+    public static final String REDIS_KEY_ADDITIONAL = "key.additional";
 
 }

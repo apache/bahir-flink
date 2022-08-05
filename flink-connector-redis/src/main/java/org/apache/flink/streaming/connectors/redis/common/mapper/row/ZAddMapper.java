@@ -28,4 +28,8 @@ public class ZAddMapper extends RowRedisMapper {
     public ZAddMapper() {
         super(RedisCommand.ZADD);
     }
+
+    public ZAddMapper(String additionalKey) {
+        super(additionalKey, RedisCommand.ZADD);
+    }
 }

@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 
+import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_KEY_ADDITIONAL;
 import static org.apache.flink.streaming.connectors.redis.descriptor.RedisValidator.REDIS_KEY_TTL;
 
 /**
@@ -40,14 +41,21 @@ public interface RedisMapperHandler extends RedisHandler {
      */
     default RedisMapper createRedisMapper(Map<String, String> properties) {
         String ttl = properties.get(REDIS_KEY_TTL);
+        String additionalKey = properties.get(REDIS_KEY_ADDITIONAL);
         try {
             Class redisMapper = Class.forName(this.getClass().getCanonicalName());
 
-            if (ttl == null) {
-                return (RedisMapper) redisMapper.newInstance();
+            if (ttl != null) {
+                Constructor c = redisMapper.getConstructor(Integer.class);
+                return (RedisMapper) c.newInstance(Integer.parseInt(ttl));
             }
-            Constructor c = redisMapper.getConstructor(Integer.class);
-            return (RedisMapper) c.newInstance(Integer.parseInt(ttl));
+
+            if (additionalKey != null) {
+                Constructor c = redisMapper.getConstructor(String.class);
+                return (RedisMapper) c.newInstance(additionalKey);
+            }
+
+            return (RedisMapper) redisMapper.newInstance();
         } catch (Exception e) {
             LOGGER.error("create redis mapper failed", e);
             throw new RuntimeException(e);

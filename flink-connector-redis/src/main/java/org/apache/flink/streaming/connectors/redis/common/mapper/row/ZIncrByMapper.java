@@ -28,4 +28,7 @@ public class ZIncrByMapper extends RowRedisMapper {
     public ZIncrByMapper() {
         super(RedisCommand.ZINCRBY);
     }
+    public ZIncrByMapper(String additionalKey) {
+        super(additionalKey, RedisCommand.ZINCRBY);
+    }
 }
