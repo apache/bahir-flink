@@ -27,6 +27,7 @@ import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommandDes
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisMapper;
 import org.apache.flink.util.TestLogger;
 import org.junit.Test;
+import redis.clients.jedis.exceptions.JedisClusterOperationException;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.net.InetSocketAddress;
@@ -78,7 +79,25 @@ public class RedisSinkTest extends TestLogger {
             .setMaxTotal(1)
             .setMinIdle(1).build();
 
-        testDownBehavior(wrongJedisClusterConfig);
+        RedisSink<Tuple2<String, String>> redisSink = new RedisSink<>(wrongJedisClusterConfig,
+                new RedisSinkITCase.RedisCommandMapper(RedisCommand.SADD));
+
+        try {
+            redisSink.open(new Configuration());
+        } catch (Exception e) {
+
+            // search for nested JedisClusterOperationException
+            // because this is the expected behavior
+
+            Throwable t = e;
+            int depth = 0;
+            while (!(t instanceof JedisClusterOperationException)) {
+                t = t.getCause();
+                if (t == null || depth++ == 20) {
+                    throw e;
+                }
+            }
+        }
     }
 
     @Test

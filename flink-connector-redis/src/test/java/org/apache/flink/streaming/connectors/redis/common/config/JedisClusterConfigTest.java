@@ -25,6 +25,8 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 public class JedisClusterConfigTest extends TestLogger {
 
@@ -79,6 +81,37 @@ public class JedisClusterConfigTest extends TestLogger {
                 .setNodes(set)
                 .build();
         assertNull(clusterConfig.getPassword());
+    }
+
+    @Test
+    public void shouldSetSslSuccessfully() {
+        Set<InetSocketAddress> set = new HashSet<>();
+        InetSocketAddress address = InetSocketAddress.createUnresolved("localhost", 8080);
+        set.add(address);
+        FlinkJedisClusterConfig.Builder builder = new FlinkJedisClusterConfig.Builder();
+        FlinkJedisClusterConfig clusterConfig = builder.setMinIdle(0)
+                .setMaxIdle(0)
+                .setMaxTotal(0)
+                .setTimeout(0)
+                .setNodes(set)
+                .setSsl(true)
+                .build();
+        assertTrue(clusterConfig.getSsl());
+    }
+
+    @Test
+    public void shouldSslNotBeenSet() {
+        Set<InetSocketAddress> set = new HashSet<>();
+        InetSocketAddress address = InetSocketAddress.createUnresolved("localhost", 8080);
+        set.add(address);
+        FlinkJedisClusterConfig.Builder builder = new FlinkJedisClusterConfig.Builder();
+        FlinkJedisClusterConfig clusterConfig = builder.setMinIdle(0)
+                .setMaxIdle(0)
+                .setMaxTotal(0)
+                .setTimeout(0)
+                .setNodes(set)
+                .build();
+        assertFalse(clusterConfig.getSsl());
     }
 
 }
