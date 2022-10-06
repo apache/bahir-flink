@@ -69,7 +69,7 @@ public class RedisSinkITCase extends RedisITCaseBase {
         source.addSink(redisSink);
         env.execute("Test Redis List Data Type");
 
-        assertEquals(NUM_ELEMENTS, jedis.llen(REDIS_KEY));
+        assertEquals(NUM_ELEMENTS.longValue(), jedis.llen(REDIS_KEY));
 
         jedis.del(REDIS_KEY);
     }
@@ -83,7 +83,7 @@ public class RedisSinkITCase extends RedisITCaseBase {
         source.addSink(redisSink);
         env.execute("Test Redis Set Data Type");
 
-        assertEquals(NUM_ELEMENTS, jedis.scard(REDIS_KEY));
+        assertEquals(NUM_ELEMENTS.longValue(), jedis.scard(REDIS_KEY));
 
         jedis.del(REDIS_KEY);
     }
@@ -97,8 +97,8 @@ public class RedisSinkITCase extends RedisITCaseBase {
         source.addSink(redisSink);
         env.execute("Test Redis Set Data Type With TTL");
 
-        assertEquals(TEST_MESSAGE_LENGTH, jedis.strlen(REDIS_KEY));
-        assertEquals(REDIS_TTL_IN_SECS, jedis.ttl(REDIS_KEY));
+        assertEquals(TEST_MESSAGE_LENGTH.longValue(), jedis.strlen(REDIS_KEY));
+        assertEquals(REDIS_TTL_IN_SECS.longValue(), jedis.ttl(REDIS_KEY));
 
         jedis.del(REDIS_KEY);
     }
@@ -126,7 +126,7 @@ public class RedisSinkITCase extends RedisITCaseBase {
         source.addSink(redisZaddSink);
         env.execute("Test ZADD");
 
-        assertEquals(NUM_ELEMENTS, jedis.zcard(REDIS_ADDITIONAL_KEY));
+        assertEquals(NUM_ELEMENTS.longValue(), jedis.zcard(REDIS_ADDITIONAL_KEY));
 
         RedisSink<Tuple2<String, String>> redisZremSink = new RedisSink<>(jedisPoolConfig,
                 new RedisAdditionalDataMapper(RedisCommand.ZREM));
@@ -134,7 +134,7 @@ public class RedisSinkITCase extends RedisITCaseBase {
         source.addSink(redisZremSink);
         env.execute("Test ZREM");
 
-        assertEquals(ZERO, jedis.zcard(REDIS_ADDITIONAL_KEY));
+        assertEquals(ZERO.longValue(), jedis.zcard(REDIS_ADDITIONAL_KEY));
 
         jedis.del(REDIS_ADDITIONAL_KEY);
     }
@@ -148,8 +148,8 @@ public class RedisSinkITCase extends RedisITCaseBase {
         source.addSink(redisSink);
         env.execute("Test Redis Hash Data Type");
 
-        assertEquals(NUM_ELEMENTS, jedis.hlen(REDIS_ADDITIONAL_KEY));
-        assertEquals(REDIS_NOT_ASSOCIATED_EXPIRE_FLAG, jedis.ttl(REDIS_ADDITIONAL_KEY));
+        assertEquals(NUM_ELEMENTS.longValue(), jedis.hlen(REDIS_ADDITIONAL_KEY));
+        assertEquals(REDIS_NOT_ASSOCIATED_EXPIRE_FLAG.longValue(), jedis.ttl(REDIS_ADDITIONAL_KEY));
 
         jedis.del(REDIS_ADDITIONAL_KEY);
     }
@@ -163,8 +163,8 @@ public class RedisSinkITCase extends RedisITCaseBase {
         source.addSink(redisSink);
         env.execute("Test Redis Hash Data Type");
 
-        assertEquals(NUM_ELEMENTS, jedis.hlen(REDIS_ADDITIONAL_KEY));
-        assertEquals(REDIS_TTL_IN_SECS, jedis.ttl(REDIS_ADDITIONAL_KEY));
+        assertEquals(NUM_ELEMENTS.longValue(), jedis.hlen(REDIS_ADDITIONAL_KEY));
+        assertEquals(REDIS_TTL_IN_SECS.longValue(), jedis.ttl(REDIS_ADDITIONAL_KEY));
 
         jedis.del(REDIS_ADDITIONAL_KEY);
     }
@@ -178,8 +178,8 @@ public class RedisSinkITCase extends RedisITCaseBase {
         source.addSink(redisSink);
         env.execute("Test Redis Hash Data Type 2");
 
-        assertEquals(NUM_ELEMENTS, jedis.hlen(REDIS_ADDITIONAL_KEY));
-        assertEquals(REDIS_TTL_IN_SECS, jedis.ttl(REDIS_ADDITIONAL_KEY));
+        assertEquals(NUM_ELEMENTS.longValue(), jedis.hlen(REDIS_ADDITIONAL_KEY));
+        assertEquals(REDIS_TTL_IN_SECS.longValue(), jedis.ttl(REDIS_ADDITIONAL_KEY));
 
         jedis.del(REDIS_ADDITIONAL_KEY);
     }

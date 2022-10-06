@@ -34,7 +34,7 @@ under the License.
     <name>flink-connector-redis</name>
 
     <properties>
-        <jedis.version>2.9.0</jedis.version>
+        <jedis.version>4.2.3</jedis.version>
     </properties>
 
     <dependencyManagement>
