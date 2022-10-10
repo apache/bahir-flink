@@ -46,6 +46,7 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
         this.jedisCluster = jedisCluster;
     }
 
+    @Override
     public void open() {}
 
     @Override
