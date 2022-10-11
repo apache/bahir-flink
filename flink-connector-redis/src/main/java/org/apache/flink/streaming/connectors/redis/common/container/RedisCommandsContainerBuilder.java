@@ -92,7 +92,8 @@ public class RedisCommandsContainerBuilder {
           jedisClusterConfig.getMaxRedirections(),
           jedisClusterConfig.getPassword(),
           DEFAULT_CLIENT_NAME,
-          genericObjectPoolConfig);
+          genericObjectPoolConfig,
+          jedisClusterConfig.getSsl());
         return new RedisClusterContainer(jedisCluster);
     }
 
