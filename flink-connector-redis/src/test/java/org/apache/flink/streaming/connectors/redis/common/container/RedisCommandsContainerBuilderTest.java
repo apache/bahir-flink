@@ -25,13 +25,14 @@ import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisPoolC
 import org.apache.flink.test.util.AbstractTestBase;
 import org.junit.Test;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Jedis;
 
 public class RedisCommandsContainerBuilderTest extends AbstractTestBase {
 
     @Test
     public void testNotTestWhileIdle() {
         FlinkJedisPoolConfig flinkJedisPoolConfig = new FlinkJedisPoolConfig.Builder().setHost("host").setPort(0).setDatabase(0).build();
-        GenericObjectPoolConfig genericObjectPoolConfig = RedisCommandsContainerBuilder.getGenericObjectPoolConfig(flinkJedisPoolConfig);
+        GenericObjectPoolConfig<Jedis> genericObjectPoolConfig = RedisCommandsContainerBuilder.getGenericObjectPoolConfig(flinkJedisPoolConfig);
         assertFalse(genericObjectPoolConfig.getTestWhileIdle());
         assertEqualConfig(flinkJedisPoolConfig, genericObjectPoolConfig);
     }
@@ -39,7 +40,7 @@ public class RedisCommandsContainerBuilderTest extends AbstractTestBase {
     @Test
     public void testTestWhileIdle() {
         FlinkJedisPoolConfig flinkJedisPoolConfig = new FlinkJedisPoolConfig.Builder().setHost("host").setPort(0).setDatabase(0).setTestWhileIdle(true).build();
-        GenericObjectPoolConfig genericObjectPoolConfig = RedisCommandsContainerBuilder.getGenericObjectPoolConfig(flinkJedisPoolConfig);
+        GenericObjectPoolConfig<Jedis> genericObjectPoolConfig = RedisCommandsContainerBuilder.getGenericObjectPoolConfig(flinkJedisPoolConfig);
         assertTrue(genericObjectPoolConfig.getTestWhileIdle());
         assertEqualConfig(flinkJedisPoolConfig, genericObjectPoolConfig);
 
@@ -49,7 +50,7 @@ public class RedisCommandsContainerBuilderTest extends AbstractTestBase {
         assertEquals(genericObjectPoolConfig.getNumTestsPerEvictionRun(), jedisPoolConfig.getNumTestsPerEvictionRun());
     }
 
-    private void assertEqualConfig(FlinkJedisPoolConfig flinkJedisPoolConfig, GenericObjectPoolConfig genericObjectPoolConfig) {
+    private <T> void assertEqualConfig(FlinkJedisPoolConfig flinkJedisPoolConfig, GenericObjectPoolConfig<T> genericObjectPoolConfig) {
         assertEquals(genericObjectPoolConfig.getMaxIdle(), flinkJedisPoolConfig.getMaxIdle());
         assertEquals(genericObjectPoolConfig.getMinIdle(), flinkJedisPoolConfig.getMinIdle());
         assertEquals(genericObjectPoolConfig.getMaxTotal(), flinkJedisPoolConfig.getMaxTotal());
