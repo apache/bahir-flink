@@ -35,6 +35,7 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
 
     private final Set<InetSocketAddress> nodes;
     private final int maxRedirections;
+    private final boolean ssl;
 
 
     /**
@@ -48,13 +49,14 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
      * @param maxIdle the cap on the number of "idle" instances in the pool
      * @param minIdle the minimum number of idle objects to maintain in the pool
      * @param password the password of redis cluster
+     * @param ssl Whether SSL connection should be established, default value is false
      * @param testOnBorrow Whether objects borrowed from the pool will be validated before being returned, default value is false
      * @param testOnReturn Whether objects borrowed from the pool will be validated when they are returned to the pool, default value is false
      * @param testWhileIdle Whether objects sitting idle in the pool will be validated by the idle object evictor, default value is false
      * @throws NullPointerException if parameter {@code nodes} is {@code null}
      */
     private FlinkJedisClusterConfig(Set<InetSocketAddress> nodes, int connectionTimeout, int maxRedirections,
-                                    int maxTotal, int maxIdle, int minIdle, String password,
+                                    int maxTotal, int maxIdle, int minIdle, String password, boolean ssl,
                                     boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
         super(connectionTimeout, maxTotal, maxIdle, minIdle, password, testOnBorrow, testOnReturn, testWhileIdle);
 
@@ -62,6 +64,7 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
         Util.checkArgument(!nodes.isEmpty(), "Redis cluster hosts should not be empty");
         this.nodes = new HashSet<>(nodes);
         this.maxRedirections = maxRedirections;
+        this.ssl = ssl;
     }
 
 
@@ -88,6 +91,14 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
         return maxRedirections;
     }
 
+    /**
+     * Returns ssl.
+     *
+     * @return ssl
+     */
+    public boolean getSsl() {
+        return ssl;
+    }
 
     /**
      * Builder for initializing  {@link FlinkJedisClusterConfig}.
@@ -103,6 +114,7 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
         private boolean testOnReturn = GenericObjectPoolConfig.DEFAULT_TEST_ON_RETURN;
         private boolean testWhileIdle = GenericObjectPoolConfig.DEFAULT_TEST_WHILE_IDLE;
         private String password;
+        private boolean ssl = false;
 
         /**
          * Sets list of node.
@@ -186,6 +198,17 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
         }
 
         /**
+         * Sets value for the {@code ssl} configuration attribute.
+         *
+         * @param ssl flag if an SSL connection should be established
+         * @return Builder itself
+         */
+        public Builder setSsl(boolean ssl){
+            this.ssl = ssl;
+            return this;
+        }
+
+        /**
          * Sets value for the {@code testOnBorrow} configuration attribute
          * for pools to be created with this configuration instance.
          *
@@ -230,7 +253,7 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
          * @return JedisClusterConfig
          */
         public FlinkJedisClusterConfig build() {
-            return new FlinkJedisClusterConfig(nodes, timeout, maxRedirections, maxTotal, maxIdle, minIdle, password, testOnBorrow, testOnReturn, testWhileIdle);
+            return new FlinkJedisClusterConfig(nodes, timeout, maxRedirections, maxTotal, maxIdle, minIdle, password, ssl, testOnBorrow, testOnReturn, testWhileIdle);
         }
     }
 
@@ -244,6 +267,7 @@ public class FlinkJedisClusterConfig extends FlinkJedisConfigBase {
           ", minIdle=" + minIdle +
           ", connectionTimeout=" + connectionTimeout +
           ", password=" + password +
+          ", ssl=" + ssl +
           ", testOnBorrow=" + testOnBorrow +
           ", testOnReturn=" + testOnReturn +
           ", testWhileIdle=" + testWhileIdle +
