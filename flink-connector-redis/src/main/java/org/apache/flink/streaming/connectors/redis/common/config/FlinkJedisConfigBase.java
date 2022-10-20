@@ -32,12 +32,13 @@ public abstract class FlinkJedisConfigBase implements Serializable {
     protected final int minIdle;
     protected final int connectionTimeout;
     protected final String password;
+    protected final boolean useSsl;
 
     protected final boolean testOnBorrow;
     protected final boolean testOnReturn;
     protected final boolean testWhileIdle;
 
-    protected FlinkJedisConfigBase(int connectionTimeout, int maxTotal, int maxIdle, int minIdle, String password, boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
+    protected FlinkJedisConfigBase(int connectionTimeout, int maxTotal, int maxIdle, int minIdle, String password, boolean useSsl, boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
 
         Util.checkArgument(connectionTimeout >= 0, "connection timeout can not be negative");
         Util.checkArgument(maxTotal >= 0, "maxTotal value can not be negative");
@@ -52,6 +53,7 @@ public abstract class FlinkJedisConfigBase implements Serializable {
         this.testOnReturn = testOnReturn;
         this.testWhileIdle = testWhileIdle;
         this.password = password;
+        this.useSsl = useSsl;
     }
 
     /**
@@ -106,6 +108,15 @@ public abstract class FlinkJedisConfigBase implements Serializable {
      */
     public String getPassword() {
         return password;
+    }
+
+
+    /**
+     * Whether connection to Redis should use SSL
+     * @return true if connection to Redis uses SSL, false otherwise
+     */
+    public boolean getUseSsl() {
+        return useSsl;
     }
 
     /**

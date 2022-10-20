@@ -94,9 +94,9 @@ public class JedisClusterConfigTest extends TestLogger {
                 .setMaxTotal(0)
                 .setTimeout(0)
                 .setNodes(set)
-                .setSsl(true)
+                .setUseSsl(true)
                 .build();
-        assertTrue(clusterConfig.getSsl());
+        assertTrue(clusterConfig.getUseSsl());
     }
 
     @Test
@@ -111,7 +111,7 @@ public class JedisClusterConfigTest extends TestLogger {
                 .setTimeout(0)
                 .setNodes(set)
                 .build();
-        assertFalse(clusterConfig.getSsl());
+        assertFalse(clusterConfig.getUseSsl());
     }
 
 }

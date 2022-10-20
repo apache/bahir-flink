@@ -69,8 +69,11 @@ public class RedisCommandsContainerBuilder {
         GenericObjectPoolConfig<Jedis> genericObjectPoolConfig = getGenericObjectPoolConfig(jedisPoolConfig);
 
         JedisPool jedisPool = new JedisPool(genericObjectPoolConfig, jedisPoolConfig.getHost(),
-          jedisPoolConfig.getPort(), jedisPoolConfig.getConnectionTimeout(), jedisPoolConfig.getPassword(),
-          jedisPoolConfig.getDatabase());
+          jedisPoolConfig.getPort(),
+          jedisPoolConfig.getConnectionTimeout(),
+          jedisPoolConfig.getPassword(),
+          jedisPoolConfig.getDatabase(),
+          jedisPoolConfig.getUseSsl());
         return new RedisContainer(jedisPool);
     }
 
@@ -93,7 +96,7 @@ public class RedisCommandsContainerBuilder {
           jedisClusterConfig.getPassword(),
           DEFAULT_CLIENT_NAME,
           genericObjectPoolConfig,
-          jedisClusterConfig.getSsl());
+          jedisClusterConfig.getUseSsl());
         return new RedisClusterContainer(jedisCluster);
     }
 
@@ -108,6 +111,10 @@ public class RedisCommandsContainerBuilder {
         Objects.requireNonNull(jedisSentinelConfig, "Redis sentinel config should not be Null");
 
         GenericObjectPoolConfig<Jedis> genericObjectPoolConfig = getGenericObjectPoolConfig(jedisSentinelConfig);
+
+        if (jedisSentinelConfig.getUseSsl()) {
+            throw new RuntimeException("JedisSentinelPool does not support SSL connections yet.");
+        }
 
         JedisSentinelPool jedisSentinelPool = new JedisSentinelPool(jedisSentinelConfig.getMasterName(),
           jedisSentinelConfig.getSentinels(), genericObjectPoolConfig,
