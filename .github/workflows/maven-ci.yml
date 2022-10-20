@@ -30,7 +30,7 @@ jobs:
     strategy:
       matrix:
        java: ['8', '11']
-       flink-version: ['1.14.4']
+       flink-version: ['1.14.6']
        scala-version: ['2.11', '2.12']
 
     steps:
