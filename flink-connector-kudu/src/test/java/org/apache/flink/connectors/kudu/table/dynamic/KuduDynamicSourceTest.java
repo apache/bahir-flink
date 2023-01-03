@@ -161,4 +161,61 @@ public class KuduDynamicSourceTest extends KuduTestBase {
                         .collect(Collectors.toList());
         assertEquals(1, result.size());
     }
+
+    @Test
+    public void testLookupJoin() {
+        tEnv.executeSql(
+                "CREATE TABLE "
+                        + INPUT_TABLE
+                        + "("
+                        + "id int,"
+                        + "title string,"
+                        + "author string,"
+                        + "price double,"
+                        + "quantity int"
+                        + ") WITH ("
+                        + "  'connector'='kudu',"
+                        + "  'kudu.masters'='"
+                        + getMasterAddress()
+                        + "',"
+                        + "  'kudu.table'='"
+                        + INPUT_TABLE
+                        + "',"
+                        + "'kudu.scan.row-size'='10'," +
+                        "'kudu.primary-key-columns'='id'"
+                        + ")");
+
+        tEnv.executeSql(
+                "CREATE TABLE datagen"
+                        + "("
+                        + "id int,"
+                        + "isbn string,"
+                        + "proctime as PROCTIME()"
+                        + ") WITH ("
+                        + "  'connector'='datagen',"
+                        + "  'number-of-rows'='5',"
+                        + "  'fields.id.kind'='sequence',"
+                        + "  'fields.isbn.kind'='sequence',"
+                        + "  'fields.id.start'='1001',"
+                        + "  'fields.isbn.start'='1',"
+                        + "  'fields.id.end'='1005',"
+                        + "  'fields.isbn.end'='5'"
+                        + ")");
+
+        Iterator<Row> collected =
+                tEnv.executeSql("SELECT d.id, isbn, title FROM datagen as d"
+                                + " JOIN " + INPUT_TABLE
+                                + " FOR SYSTEM_TIME AS OF d.proctime AS k"
+                                + " ON d.id=k.id"
+                                + " WHERE k.title='Java for dummies'")
+                        .collect();
+        assertNotNull(collected);
+        List<String> result =
+                CollectionUtil.iteratorToList(collected).stream()
+                        .map(Row::toString)
+                        .sorted()
+                        .collect(Collectors.toList());
+        assertEquals(1, result.size());
+        assertEquals("+I[1001, 1, Java for dummies]", result.get(0));
+    }
 }
