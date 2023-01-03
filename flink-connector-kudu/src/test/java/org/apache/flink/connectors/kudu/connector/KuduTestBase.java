@@ -261,7 +261,7 @@ public class KuduTestBase {
             });
             kuduWriter.close();
         } catch (Exception e) {
-            Assertions.fail();
+            Assertions.fail(e.getMessage());
         }
     }
 

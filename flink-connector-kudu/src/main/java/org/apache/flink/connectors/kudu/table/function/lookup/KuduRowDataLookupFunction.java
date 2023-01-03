@@ -178,9 +178,11 @@ public class KuduRowDataLookupFunction extends TableFunction<RowData> {
         if (null != this.kuduReader) {
             try {
                 this.kuduReader.close();
-                this.cache.cleanUp();
-                // help gc
-                this.cache = null;
+                if (cache != null) {
+                    this.cache.cleanUp();
+                    // help gc
+                    this.cache = null;
+                }
                 this.kuduReader = null;
             } catch (IOException e) {
                 // ignore exception when close.
