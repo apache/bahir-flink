@@ -30,7 +30,7 @@ To use this connector, add the following dependency to your project:
 <dependency>
   <groupId>org.apache.bahir</groupId>
   <artifactId>flink-connector-influxdb2_2.12</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.2-SNAPSHOT</version>
 </dependency>
 ```
 
