@@ -63,7 +63,7 @@ public class FlinkJedisSentinelConfig extends FlinkJedisConfigBase {
                                      String password, int database,
                                      int maxTotal, int maxIdle, int minIdle,
                                      boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
-        super(connectionTimeout, maxTotal, maxIdle, minIdle, password, testOnBorrow, testOnReturn, testWhileIdle);
+        super(connectionTimeout, maxTotal, maxIdle, minIdle, password, false, testOnBorrow, testOnReturn, testWhileIdle);
 
         Objects.requireNonNull(masterName, "Master name should be presented");
         Objects.requireNonNull(sentinels, "Sentinels information should be presented");

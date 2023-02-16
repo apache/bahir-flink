@@ -32,7 +32,7 @@ Use maven infrastructure to create a project release package and publish
 to staging release location (https://dist.apache.org/repos/dist/dev/bahir/bahir-flink)
 and maven staging release repository.
 
---release-prepare --releaseVersion="1.0" --developmentVersion="1.1-SNAPSHOT" [--releaseRc="rc1"] [--tag="v1.0"] [--gitCommitHash="a874b73"]
+--release-prepare --releaseVersion="1.0" --developmentVersion="1.1-SNAPSHOT" [--releaseRc="rc1"] [--tag="v1.0"] [--gitCommitHash="a874b73"] [--gitBranch="release-1.0"]
 This form execute maven release:prepare and upload the release candidate distribution
 to the staging release location.
 
@@ -51,6 +51,7 @@ OPTIONS
 --releaseRc          - Release RC identifier used when publishing, default 'rc1'
 --tag                - Release Tag identifier used when taging the release, default 'v$releaseVersion'
 --gitCommitHash      - Release tag or commit to build from, default master HEAD
+--gitBranch          - Release branch used when checking out the code to be released
 --dryRun             - Dry run only, mostly used for testing.
 
 A GPG passphrase is expected as an environment variable
@@ -60,7 +61,7 @@ GPG_PASSPHRASE - Passphrase for GPG key used to sign release
 EXAMPLES
 
 release-build.sh --release-prepare --releaseVersion="1.0" --developmentVersion="1.1-SNAPSHOT"
-release-build.sh --release-prepare --releaseVersion="1.0" --developmentVersion="1.1-SNAPSHOT" --releaseRc="rc1" --tag="v1.0"
+release-build.sh --release-prepare --releaseVersion="1.0" --developmentVersion="1.1-SNAPSHOT" --releaseRc="rc1" --tag="v1.0" --gitBranch="release-1.0"
 release-build.sh --release-prepare --releaseVersion="1.0" --developmentVersion="1.1-SNAPSHOT" --releaseRc="rc1" --tag="v1.0"  --gitCommitHash="a874b73" --dryRun
 
 release-build.sh --release-publish --gitCommitHash="a874b73"
@@ -101,6 +102,10 @@ while [ "${1+defined}" ]; do
       ;;
     --gitCommitHash)
       GIT_REF="${PARTS[1]}"
+      shift
+      ;;
+    --gitBranch)
+      GIT_BRANCH="${PARTS[1]}"
       shift
       ;;
     --gitTag)
@@ -160,6 +165,13 @@ if [[ "$RELEASE_PREPARE" == "true" && -z "$DEVELOPMENT_VERSION" ]]; then
     exit_with_usage
 fi
 
+if [[ "$RELEASE_PREPARE" == "true"  ]]; then
+    if [[ "$GIT_REF" && "$GIT_BRANCH" ]]; then
+        echo "ERROR: Only one argument permitted when publishing : --gitCommitHash or --gitBranch"
+        exit_with_usage
+    fi
+fi
+
 if [[ "$RELEASE_PUBLISH" == "true"  ]]; then
     if [[ "$GIT_REF" && "$GIT_TAG" ]]; then
         echo "ERROR: Only one argumented permitted when publishing : --gitCommitHash or --gitTag"
@@ -181,8 +193,11 @@ if [[ "$RELEASE_SNAPSHOT" == "true" && "$DRY_RUN" ]]; then
     exit_with_usage
 fi
 
-# Commit ref to checkout when building
+# commit ref to checkout when building
 GIT_REF=${GIT_REF:-master}
+if [[ "$RELEASE_PREPARE" == "true" && "$GIT_BRANCH" ]]; then
+    GIT_REF="origin/$GIT_BRANCH"
+fi
 if [[ "$RELEASE_PUBLISH" == "true" && "$GIT_TAG" ]]; then
     GIT_REF="tags/$GIT_TAG"
 fi
@@ -227,7 +242,7 @@ function checkout_code {
     mkdir target
     cd target
     rm -rf bahir-flink
-    git clone https://git-wip-us.apache.org/repos/asf/bahir-flink.git
+    git clone https://gitbox.apache.org/repos/asf/bahir-flink.git
     cd bahir-flink
     git checkout $GIT_REF
     git_hash=`git rev-parse --short HEAD`

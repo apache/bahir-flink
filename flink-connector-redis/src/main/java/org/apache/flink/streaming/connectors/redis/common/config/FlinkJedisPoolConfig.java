@@ -32,7 +32,6 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
     private final int port;
     private final int database;
 
-
     /**
      * Jedis pool configuration.
      * The host is mandatory, and when host is not set, it throws NullPointerException.
@@ -41,6 +40,7 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
      * @param port port, default value is 6379
      * @param connectionTimeout socket / connection timeout, default value is 2000 milli second
      * @param password password, if any
+     * @param useSsl Whether SSL connection should be established, default value is false
      * @param database database index
      * @param maxTotal the maximum number of objects that can be allocated by the pool, default value is 8
      * @param maxIdle the cap on the number of "idle" instances in the pool, default value is 8
@@ -50,10 +50,10 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
      * @param testWhileIdle Whether objects sitting idle in the pool will be validated by the idle object evictor, default value is false
      * @throws NullPointerException if parameter {@code host} is {@code null}
      */
-    private FlinkJedisPoolConfig(String host, int port, int connectionTimeout, String password, int database,
+    private FlinkJedisPoolConfig(String host, int port, int connectionTimeout, String password, boolean useSsl, int database,
                                  int maxTotal, int maxIdle, int minIdle,
                                  boolean testOnBorrow, boolean testOnReturn, boolean testWhileIdle) {
-        super(connectionTimeout, maxTotal, maxIdle, minIdle, password, testOnBorrow, testOnReturn, testWhileIdle);
+        super(connectionTimeout, maxTotal, maxIdle, minIdle, password, useSsl, testOnBorrow, testOnReturn, testWhileIdle);
 
         Objects.requireNonNull(host, "Host information should be presented");
         this.host = host;
@@ -104,6 +104,7 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
         private boolean testOnBorrow = GenericObjectPoolConfig.DEFAULT_TEST_ON_BORROW;
         private boolean testOnReturn = GenericObjectPoolConfig.DEFAULT_TEST_ON_RETURN;
         private boolean testWhileIdle = GenericObjectPoolConfig.DEFAULT_TEST_WHILE_IDLE;
+        private boolean useSsl = false;
 
         /**
          * Sets value for the {@code maxTotal} configuration attribute
@@ -235,13 +236,25 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
             return this;
         }
 
+
+        /**
+         * Sets value for the {@code ssl} configuration attribute.
+         *
+         * @param useSsl flag if an SSL connection should be established
+         * @return Builder itself
+         */
+        public Builder setUseSsl(boolean useSsl) {
+            this.useSsl = useSsl;
+            return this;
+        }
+
         /**
          * Builds JedisPoolConfig.
          *
          * @return JedisPoolConfig
          */
         public FlinkJedisPoolConfig build() {
-            return new FlinkJedisPoolConfig(host, port, timeout, password, database, maxTotal, maxIdle, minIdle, testOnBorrow, testOnReturn, testWhileIdle);
+            return new FlinkJedisPoolConfig(host, port, timeout, password, useSsl, database, maxTotal, maxIdle, minIdle, testOnBorrow, testOnReturn, testWhileIdle);
         }
     }
 
@@ -250,6 +263,7 @@ public class FlinkJedisPoolConfig extends FlinkJedisConfigBase {
         return "FlinkJedisPoolConfig{" +
           "host=" + host +
           ", port=" + port +
+          ", useSsl=" + useSsl +
           ", database=" + database +
           ", maxTotal=" + maxTotal +
           ", maxIdle=" + maxIdle +

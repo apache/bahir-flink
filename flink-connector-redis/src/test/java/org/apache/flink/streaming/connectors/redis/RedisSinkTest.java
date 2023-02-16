@@ -27,7 +27,7 @@ import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommandDes
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisMapper;
 import org.apache.flink.util.TestLogger;
 import org.junit.Test;
-import redis.clients.jedis.exceptions.JedisConnectionException;
+import redis.clients.jedis.exceptions.JedisException;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
@@ -110,7 +110,7 @@ public class RedisSinkTest extends TestLogger {
 
             Throwable t = e;
             int depth = 0;
-            while (!(t instanceof JedisConnectionException)) {
+            while (!(t instanceof JedisException)) {
                 t = t.getCause();
                 if (t == null || depth++ == 20) {
                     throw e;

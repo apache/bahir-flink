@@ -14,4 +14,4 @@
 # limitations under the License.
 
 org.apache.flink.connectors.kudu.table.KuduTableFactory
-org.apache.flink.connectors.kudu.table.KuduCatalogFactory
+org.apache.flink.connectors.kudu.table.dynamic.catalog.KuduCatalogFactory

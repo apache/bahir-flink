@@ -17,6 +17,7 @@
 package org.apache.flink.connectors.kudu.connector;
 
 import org.apache.flink.annotation.PublicEvolving;
+import org.apache.flink.table.data.binary.BinaryStringData;
 
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
@@ -65,7 +66,8 @@ public class KuduFilterInfo implements Serializable {
 
         switch (column.getType()) {
             case STRING:
-                predicate = KuduPredicate.newComparisonPredicate(column, comparison, (String) this.value);
+                predicate = KuduPredicate.newComparisonPredicate(column, comparison,
+                        (this.value instanceof BinaryStringData) ? this.value.toString() : (String) this.value);
                 break;
             case FLOAT:
                 predicate = KuduPredicate.newComparisonPredicate(column, comparison, (float) this.value);

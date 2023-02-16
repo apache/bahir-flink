@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.connectors.kudu.batch;
+package org.apache.flink.connectors.kudu.format;
 
 import org.apache.flink.connectors.kudu.connector.KuduTestBase;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
@@ -39,14 +39,14 @@ class KuduOutputFormatTest extends KuduTestBase {
 
     @Test
     void testInvalidTableInfo() {
-        String masterAddresses = harness.getMasterAddressesAsString();
+        String masterAddresses = getMasterAddress();
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
         Assertions.assertThrows(NullPointerException.class, () -> new KuduOutputFormat<>(writerConfig, null, null));
     }
 
     @Test
     void testNotTableExist() {
-        String masterAddresses = harness.getMasterAddressesAsString();
+        String masterAddresses = getMasterAddress();
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), false);
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder.setMasters(masterAddresses).build();
         KuduOutputFormat<Row> outputFormat = new KuduOutputFormat<>(writerConfig, tableInfo, new RowOperationMapper(KuduTestBase.columns, AbstractSingleOperationMapper.KuduOperation.INSERT));
@@ -55,7 +55,7 @@ class KuduOutputFormatTest extends KuduTestBase {
 
     @Test
     void testOutputWithStrongConsistency() throws Exception {
-        String masterAddresses = harness.getMasterAddressesAsString();
+        String masterAddresses = getMasterAddress();
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), true);
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder
@@ -80,7 +80,7 @@ class KuduOutputFormatTest extends KuduTestBase {
 
     @Test
     void testOutputWithEventualConsistency() throws Exception {
-        String masterAddresses = harness.getMasterAddressesAsString();
+        String masterAddresses = getMasterAddress();
 
         KuduTableInfo tableInfo = booksTableInfo(UUID.randomUUID().toString(), true);
         KuduWriterConfig writerConfig = KuduWriterConfig.Builder

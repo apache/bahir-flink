@@ -20,10 +20,12 @@ package org.apache.flink.streaming.connectors.influxdb.sink;
 import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.INFLUXDB_BUCKET;
 import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.INFLUXDB_ORGANIZATION;
 import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.INFLUXDB_PASSWORD;
+import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.INFLUXDB_TOKEN;
 import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.INFLUXDB_URL;
 import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.INFLUXDB_USERNAME;
 import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.WRITE_BUFFER_SIZE;
 import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.WRITE_DATA_POINT_CHECKPOINT;
+import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 import org.apache.flink.configuration.Configuration;
@@ -59,6 +61,7 @@ public final class InfluxDBSinkBuilder<IN> {
     private String influxDBUrl;
     private String influxDBUsername;
     private String influxDBPassword;
+    private String influxDBToken;
     private String bucketName;
     private String organizationName;
     private final Configuration configuration;
@@ -67,6 +70,7 @@ public final class InfluxDBSinkBuilder<IN> {
         this.influxDBUrl = null;
         this.influxDBUsername = null;
         this.influxDBPassword = null;
+        this.influxDBToken = null;
         this.bucketName = null;
         this.organizationName = null;
         this.influxDBSchemaSerializer = null;
@@ -106,6 +110,18 @@ public final class InfluxDBSinkBuilder<IN> {
     public InfluxDBSinkBuilder<IN> setInfluxDBPassword(final String influxDBPassword) {
         this.influxDBPassword = influxDBPassword;
         this.configuration.setString(INFLUXDB_PASSWORD, checkNotNull(influxDBPassword));
+        return this;
+    }
+
+    /**
+     * Sets the InfluxDB token.
+     *
+     * @param influxDBToken the token of the InfluxDB instance.
+     * @return this InfluxDBSinkBuilder.
+     */
+    public InfluxDBSinkBuilder<IN> setInfluxDBToken(final String influxDBToken) {
+        this.influxDBToken = influxDBToken;
+        this.configuration.setString(INFLUXDB_TOKEN, checkNotNull(influxDBToken));
         return this;
     }
 
@@ -190,8 +206,18 @@ public final class InfluxDBSinkBuilder<IN> {
     private void sanityCheck() {
         // Check required settings.
         checkNotNull(this.influxDBUrl, "The InfluxDB URL is required but not provided.");
-        checkNotNull(this.influxDBUsername, "The InfluxDB username is required but not provided.");
-        checkNotNull(this.influxDBPassword, "The InfluxDB password is required but not provided.");
+        // check that either username/password or token is provided for authentication
+        checkArgument(
+                this.influxDBToken != null
+                        || (this.influxDBUsername != null && this.influxDBPassword != null),
+                "Either the InfluxDB username and password or InfluxDB token are required but neither provided"
+        );
+        // check that both username/password and token are not both provided for authentication
+        checkArgument(
+                ! (this.influxDBToken != null
+                        && (this.influxDBUsername != null || this.influxDBPassword != null)),
+                "Either the InfluxDB username and password or InfluxDB token are required but both provided"
+        );
         checkNotNull(this.bucketName, "The Bucket name is required but not provided.");
         checkNotNull(this.organizationName, "The Organization name is required but not provided.");
         checkNotNull(

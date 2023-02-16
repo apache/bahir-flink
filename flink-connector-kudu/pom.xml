@@ -21,100 +21,121 @@
   <parent>
     <groupId>org.apache.bahir</groupId>
     <artifactId>bahir-flink-parent_2.11</artifactId>
-    <version>1.1-SNAPSHOT</version>
-    <relativePath>..</relativePath>
+    <version>1.2-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>flink-connector-kudu_2.11</artifactId>
-  <name>flink-connector-kudu</name>
   <packaging>jar</packaging>
+
+  <name>flink-connector-kudu</name>
 
   <properties>
     <kudu.version>1.13.0</kudu.version>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.kudu</groupId>
+        <artifactId>kudu-binary</artifactId>
+        <version>${kudu.version}</version>
+        <classifier>${os.detected.classifier}</classifier>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kudu</groupId>
+        <artifactId>kudu-client</artifactId>
+        <version>${kudu.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kudu</groupId>
+        <artifactId>kudu-test-utils</artifactId>
+        <version>${kudu.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>${log4j.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j-impl</artifactId>
+        <version>${log4j.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <!-- this is added because test cluster use @Rule from junit4 -->
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-migrationsupport</artifactId>
+        <version>${junit.jupiter.version}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
-
     <dependency>
-      <groupId>org.apache.kudu</groupId>
-      <artifactId>kudu-client</artifactId>
-      <version>${kudu.version}</version>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-clients_${scala.binary.version}</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-      <version>${flink.version}</version>
-      <scope>provided</scope>
     </dependency>
-
-    <dependency>
-      <groupId>org.apache.flink</groupId>
-      <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
-      <version>${flink.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-table-common</artifactId>
-      <version>${flink.version}</version>
-      <scope>provided</scope>
     </dependency>
-
-    <!--test dependencies-->
     <dependency>
-      <groupId>org.apache.kudu</groupId>
-      <artifactId>kudu-test-utils</artifactId>
-      <version>${kudu.version}</version>
-      <scope>test</scope>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.apache.kudu</groupId>
       <artifactId>kudu-binary</artifactId>
-      <version>${kudu.version}</version>
       <classifier>${os.detected.classifier}</classifier>
-      <scope>test</scope>
     </dependency>
-
     <dependency>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-clients_${scala.binary.version}</artifactId>
-        <version>${flink.version}</version>
-        <scope>test</scope>
+      <groupId>org.apache.kudu</groupId>
+      <artifactId>kudu-client</artifactId>
     </dependency>
-
-    <!-- this is added because test cluster use @Rule from junit4 -->
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-migrationsupport</artifactId>
-      <version>${junit.jupiter.version}</version>
-      <scope>test</scope>
+      <groupId>org.apache.kudu</groupId>
+      <artifactId>kudu-test-utils</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
-      <version>${log4j.version}</version>
-    	<scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
-      <version>${log4j.version}</version>
-    	<scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
-      <version>${log4j.version}</version>
-      <scope>test</scope>
+    </dependency>
+    <!-- this is added because test cluster use @Rule from junit4 -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-migrationsupport</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
     </dependency>
   </dependencies>
 

@@ -71,8 +71,13 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
  * Catalog for reading and creating Kudu tables.
+ * @deprecated After this class based on {@link KuduTableFactory},
+ *      but flink upgrade {@link org.apache.flink.connectors.kudu.table.dynamic.KuduDynamicTableSourceSinkFactory}
+ *      {@link KuduCatalog} underlying the use of TableFactory also needs to
+ *      update,So this class is replaced by the {@link org.apache.flink.connectors.kudu.table.dynamic.catalog.KuduDynamicCatalog} class
  */
 @PublicEvolving
+@Deprecated
 public class KuduCatalog extends AbstractReadOnlyCatalog {
 
     private static final Logger LOG = LoggerFactory.getLogger(KuduCatalog.class);

@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.flink.connectors.kudu.table.utils;
 
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -22,7 +21,7 @@ import org.apache.flink.connectors.kudu.connector.ColumnSchemasFactory;
 import org.apache.flink.connectors.kudu.connector.CreateTableOptionsFactory;
 import org.apache.flink.connectors.kudu.connector.KuduFilterInfo;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
-import org.apache.flink.connectors.kudu.table.KuduTableFactory;
+import org.apache.flink.shaded.guava30.com.google.common.collect.Lists;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.expressions.CallExpression;
 import org.apache.flink.table.expressions.Expression;
@@ -34,9 +33,6 @@ import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.DecimalType;
 import org.apache.flink.table.types.logical.TimestampType;
 import org.apache.flink.table.utils.TableSchemaUtils;
-
-import org.apache.flink.shaded.guava30.com.google.common.collect.Lists;
-
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.ColumnTypeAttributes;
 import org.apache.kudu.Schema;
@@ -54,8 +50,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.apache.flink.connectors.kudu.table.KuduTableFactory.KUDU_HASH_COLS;
-import static org.apache.flink.connectors.kudu.table.KuduTableFactory.KUDU_PRIMARY_KEY_COLS;
+import static org.apache.flink.connectors.kudu.table.dynamic.KuduDynamicTableSourceSinkFactory.KUDU_HASH_COLS;
+import static org.apache.flink.connectors.kudu.table.dynamic.KuduDynamicTableSourceSinkFactory.KUDU_HASH_PARTITION_NUMS;
+import static org.apache.flink.connectors.kudu.table.dynamic.KuduDynamicTableSourceSinkFactory.KUDU_PRIMARY_KEY_COLS;
+import static org.apache.flink.connectors.kudu.table.dynamic.KuduDynamicTableSourceSinkFactory.KUDU_REPLICAS;
+
 
 public class KuduTableUtils {
 
@@ -63,8 +62,7 @@ public class KuduTableUtils {
 
     public static KuduTableInfo createTableInfo(String tableName, TableSchema schema, Map<String, String> props) {
         // Since KUDU_HASH_COLS is a required property for table creation, we use it to infer whether to create table
-        boolean createIfMissing = props.containsKey(KUDU_HASH_COLS);
-
+        boolean createIfMissing = props.containsKey(KUDU_PRIMARY_KEY_COLS.key()) || schema.getPrimaryKey().isPresent();
         KuduTableInfo tableInfo = KuduTableInfo.forTable(tableName);
 
         if (createIfMissing) {
@@ -77,34 +75,35 @@ public class KuduTableUtils {
 
             List<String> keyColumns = getPrimaryKeyColumns(props, schema);
             ColumnSchemasFactory schemasFactory = () -> toKuduConnectorColumns(columns, keyColumns);
-            List<String> hashColumns = getHashColumns(props);
-            int replicas = Optional.ofNullable(props.get(KuduTableFactory.KUDU_REPLICAS)).map(Integer::parseInt).orElse(1);
-
+            int replicas = Optional.ofNullable(props.get(KUDU_REPLICAS.key())).map(Integer::parseInt).orElse(1);
+            // if hash partitions nums not exists,default 3;
+            int hashPartitionNums =
+                    Optional.ofNullable(props.get(KUDU_HASH_PARTITION_NUMS.key())).map(Integer::parseInt).orElse(3);
             CreateTableOptionsFactory optionsFactory = () -> new CreateTableOptions()
                     .setNumReplicas(replicas)
-                    .addHashPartitions(hashColumns, replicas * 2);
-
+                    .addHashPartitions(getHashColumns(props), hashPartitionNums);
             tableInfo.createTableIfNotExists(schemasFactory, optionsFactory);
         } else {
-            LOG.debug("Property {} is missing, assuming the table is already created.", KUDU_HASH_COLS);
+            LOG.debug("Property {} is missing, assuming the table is already created.", KUDU_HASH_COLS.key());
         }
 
         return tableInfo;
     }
 
-    public static List<ColumnSchema> toKuduConnectorColumns(List<Tuple2<String, DataType>> columns, Collection<String> keyColumns) {
+    public static List<ColumnSchema> toKuduConnectorColumns(List<Tuple2<String, DataType>> columns,
+                                                            Collection<String> keyColumns) {
         return columns.stream()
                 .map(t -> {
                             ColumnSchema.ColumnSchemaBuilder builder = new ColumnSchema
                                     .ColumnSchemaBuilder(t.f0, KuduTypeUtils.toKuduType(t.f1))
                                     .key(keyColumns.contains(t.f0))
                                     .nullable(!keyColumns.contains(t.f0) && t.f1.getLogicalType().isNullable());
-                            if(t.f1.getLogicalType() instanceof DecimalType) {
+                            if (t.f1.getLogicalType() instanceof DecimalType) {
                                 DecimalType decimalType = ((DecimalType) t.f1.getLogicalType());
                                 builder.typeAttributes(new ColumnTypeAttributes.ColumnTypeAttributesBuilder()
-                                    .precision(decimalType.getPrecision())
-                                    .scale(decimalType.getScale())
-                                    .build());
+                                        .precision(decimalType.getPrecision())
+                                        .scale(decimalType.getScale())
+                                        .build());
                             }
                             return builder.build();
                         }
@@ -123,12 +122,15 @@ public class KuduTableUtils {
     }
 
     public static List<String> getPrimaryKeyColumns(Map<String, String> tableProperties, TableSchema tableSchema) {
-        return tableProperties.containsKey(KUDU_PRIMARY_KEY_COLS) ? Arrays.asList(tableProperties.get(KUDU_PRIMARY_KEY_COLS).split(",")) : tableSchema.getPrimaryKey().get().getColumns();
+        return tableProperties.containsKey(KUDU_PRIMARY_KEY_COLS.key()) ?
+                Arrays.asList(tableProperties.get(KUDU_PRIMARY_KEY_COLS.key()).split(",")) :
+                tableSchema.getPrimaryKey().get().getColumns();
     }
 
     public static List<String> getHashColumns(Map<String, String> tableProperties) {
-        return Lists.newArrayList(tableProperties.get(KUDU_HASH_COLS).split(","));
+        return Lists.newArrayList(tableProperties.get(KUDU_HASH_COLS.key()).split(","));
     }
+
 
     public static TableSchema getSchemaWithSqlTimestamp(TableSchema schema) {
         TableSchema.Builder builder = new TableSchema.Builder();
@@ -149,7 +151,7 @@ public class KuduTableUtils {
     @Nullable
     public static Optional<KuduFilterInfo> toKuduFilterInfo(Expression predicate) {
         LOG.debug("predicate summary: [{}], class: [{}], children: [{}]",
-            predicate.asSummaryString(), predicate.getClass(), predicate.getChildren());
+                predicate.asSummaryString(), predicate.getClass(), predicate.getChildren());
         if (predicate instanceof CallExpression) {
             CallExpression callExpression = (CallExpression) predicate;
             FunctionDefinition functionDefinition = callExpression.getFunctionDefinition();
@@ -157,7 +159,7 @@ public class KuduTableUtils {
             if (children.size() == 1) {
                 return convertUnaryIsNullExpression(functionDefinition, children);
             } else if (children.size() == 2 &&
-                !functionDefinition.equals(BuiltInFunctionDefinitions.OR)) {
+                    !functionDefinition.equals(BuiltInFunctionDefinitions.OR)) {
                 return convertBinaryComparison(functionDefinition, children);
             } else if (children.size() > 0 && functionDefinition.equals(BuiltInFunctionDefinitions.OR)) {
                 return convertIsInExpression(children);
@@ -175,7 +177,7 @@ public class KuduTableUtils {
     }
 
     private static Optional<KuduFilterInfo> convertUnaryIsNullExpression(
-        FunctionDefinition functionDefinition, List<Expression> children) {
+            FunctionDefinition functionDefinition, List<Expression> children) {
         FieldReferenceExpression fieldReferenceExpression;
         if (isFieldReferenceExpression(children.get(0))) {
             fieldReferenceExpression = (FieldReferenceExpression) children.get(0);
@@ -194,15 +196,15 @@ public class KuduTableUtils {
     }
 
     private static Optional<KuduFilterInfo> convertBinaryComparison(
-        FunctionDefinition functionDefinition, List<Expression> children) {
+            FunctionDefinition functionDefinition, List<Expression> children) {
         FieldReferenceExpression fieldReferenceExpression;
         ValueLiteralExpression valueLiteralExpression;
         if (isFieldReferenceExpression(children.get(0)) &&
-            isValueLiteralExpression(children.get(1))) {
+                isValueLiteralExpression(children.get(1))) {
             fieldReferenceExpression = (FieldReferenceExpression) children.get(0);
             valueLiteralExpression = (ValueLiteralExpression) children.get(1);
         } else if (isValueLiteralExpression(children.get(0)) &&
-            isFieldReferenceExpression(children.get(1))) {
+                isFieldReferenceExpression(children.get(1))) {
             fieldReferenceExpression = (FieldReferenceExpression) children.get(1);
             valueLiteralExpression = (ValueLiteralExpression) children.get(0);
         } else {
@@ -243,8 +245,8 @@ public class KuduTableUtils {
                 FieldReferenceExpression fieldReferenceExpression;
                 ValueLiteralExpression valueLiteralExpression;
                 if (functionDefinition.equals(BuiltInFunctionDefinitions.EQUALS) &&
-                    subChildren.size() == 2 && isFieldReferenceExpression(subChildren.get(0)) &&
-                    isValueLiteralExpression(subChildren.get(1))) {
+                        subChildren.size() == 2 && isFieldReferenceExpression(subChildren.get(0)) &&
+                        isValueLiteralExpression(subChildren.get(1))) {
                     fieldReferenceExpression = (FieldReferenceExpression) subChildren.get(0);
                     valueLiteralExpression = (ValueLiteralExpression) subChildren.get(1);
                     String fieldName = fieldReferenceExpression.getName();
@@ -254,13 +256,13 @@ public class KuduTableUtils {
                         columnName = fieldName;
                     }
                     Object value = extractValueLiteral(fieldReferenceExpression,
-                        valueLiteralExpression);
+                            valueLiteralExpression);
                     if (value == null) {
                         return Optional.empty();
                     }
                     values.add(i, value);
                 } else {
-                   return Optional.empty();
+                    return Optional.empty();
                 }
             } else {
                 return Optional.empty();
@@ -271,7 +273,7 @@ public class KuduTableUtils {
     }
 
     private static Object extractValueLiteral(FieldReferenceExpression fieldReferenceExpression,
-        ValueLiteralExpression valueLiteralExpression) {
+                                              ValueLiteralExpression valueLiteralExpression) {
         DataType fieldType = fieldReferenceExpression.getOutputDataType();
         return valueLiteralExpression.getValueAs(fieldType.getConversionClass()).orElse(null);
     }
