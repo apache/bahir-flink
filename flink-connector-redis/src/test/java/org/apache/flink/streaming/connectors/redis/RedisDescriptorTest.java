@@ -49,7 +49,9 @@ public class RedisDescriptorTest extends  RedisITCaseBase {
                 .inStreamingMode()
                 .build();
         StreamTableEnvironment tableEnvironment = StreamTableEnvironment.create(env, settings);
-        tableEnvironment.registerDataStream("t1", source, "k, v");
+
+        Table table = tableEnvironment.fromDataStream(source);
+        tableEnvironment.createTemporaryView("t1", table);
 
         /*Redis redis = new Redis()
                 .mode(RedisValidator.REDIS_CLUSTER)
@@ -57,17 +59,17 @@ public class RedisDescriptorTest extends  RedisITCaseBase {
                 .ttl(100000)
                 .property(RedisValidator.REDIS_NODES, REDIS_HOST+ ":" + REDIS_PORT);*/
 
-        tableEnvironment.executeSql("create table redis " +
-                        "(k string, " +
-                        "v bigint) " +
-                        "with (" +
-                        "'connector.type'='redis'," +
-                        "'redis-mode'='cluster'," +
-                        "'cluster-nodes'='"+String.format("%s:%s",REDIS_HOST, REDIS_PORT)+"'," +
-                        "'command'='INCRBY_EX'," +
-                        "'key.ttl'='100000')");
+        tableEnvironment.executeSql(
+                "create table redis (key string, number bigint) " +
+                "with (" +
+                "'connector.type'='redis'," +
+                "'redis-mode'='cluster'," +
+                "'cluster-nodes'='"+String.format("%s:%s",REDIS_HOST, REDIS_PORT)+"'," +
+                "'command'='INCRBY_EX'," +
+                "'key.ttl'='100000'" +
+                ")");
 
-        tableEnvironment.executeSql("insert into redis select k, v from t1");
+        tableEnvironment.executeSql("insert into redis select * from t1");
     }
 
     @Test
