@@ -18,15 +18,16 @@
 package org.apache.flink.streaming.connectors.influxdb.sink.writer;
 
 import com.influxdb.client.write.Point;
+import org.apache.flink.annotation.Internal;
+import org.apache.flink.core.io.SimpleVersionedSerializer;
+import org.apache.flink.streaming.connectors.influxdb.common.InfluxParser;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
-import org.apache.flink.annotation.Internal;
-import org.apache.flink.core.io.SimpleVersionedSerializer;
-import org.apache.flink.streaming.connectors.influxdb.common.InfluxParser;
 
 @Internal
 public final class InfluxDBPointSerializer implements SimpleVersionedSerializer<Point> {

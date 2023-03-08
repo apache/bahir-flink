@@ -17,21 +17,7 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.source.reader;
 
-import static org.apache.flink.streaming.connectors.influxdb.source.InfluxDBSourceOptions.ENQUEUE_WAIT_TIME;
-import static org.apache.flink.streaming.connectors.influxdb.source.InfluxDBSourceOptions.INGEST_QUEUE_CAPACITY;
-import static org.apache.flink.streaming.connectors.influxdb.source.InfluxDBSourceOptions.MAXIMUM_LINES_PER_REQUEST;
-import static org.apache.flink.streaming.connectors.influxdb.source.InfluxDBSourceOptions.PORT;
-
 import com.sun.net.httpserver.HttpServer;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import javax.annotation.Nullable;
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.base.source.reader.RecordsWithSplitIds;
@@ -42,6 +28,14 @@ import org.apache.flink.streaming.connectors.influxdb.common.DataPoint;
 import org.apache.flink.streaming.connectors.influxdb.source.http.HealthCheckHandler;
 import org.apache.flink.streaming.connectors.influxdb.source.http.WriteAPIHandler;
 import org.apache.flink.streaming.connectors.influxdb.source.split.InfluxDBSplit;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+
+import static org.apache.flink.streaming.connectors.influxdb.source.InfluxDBSourceOptions.*;
 
 /**
  * A {@link SplitReader} implementation that reads records from InfluxDB splits.

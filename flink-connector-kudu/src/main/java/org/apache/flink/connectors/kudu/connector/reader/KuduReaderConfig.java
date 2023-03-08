@@ -16,9 +16,8 @@
  */
 package org.apache.flink.connectors.kudu.connector.reader;
 
-import org.apache.flink.annotation.PublicEvolving;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.flink.annotation.PublicEvolving;
 
 import java.io.Serializable;
 

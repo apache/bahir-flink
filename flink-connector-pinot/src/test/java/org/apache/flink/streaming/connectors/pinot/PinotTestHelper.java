@@ -156,7 +156,11 @@ public class PinotTestHelper implements Closeable {
             return pinotResultSetGroup.getResultSet(0);
         } finally {
             if (brokerConnection != null) {
-                brokerConnection.close();
+                try {
+                    brokerConnection.close();
+                } catch (Exception e) {
+                    LOG.warn(e.getLocalizedMessage());
+                }
             }
         }
     }

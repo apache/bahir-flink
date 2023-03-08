@@ -16,32 +16,17 @@
  * limitations under the License.
  */
 
-package org.apache.flink.streaming.connectors.pinot.writer;
+package org.apache.flink.streaming.connectors.pinot.v2.external;
 
 import java.io.Serializable;
-import java.util.List;
 
-public class PinotSinkWriterState implements Serializable {
+/**
+ * Defines the interface for serializing incoming elements to JSON format.
+ * The JSON format is expected during Pinot segment creation.
+ *
+ * @param <IN> Type of incoming elements
+ */
+public abstract class JsonSerializer<IN> implements Serializable {
 
-    private final List<String> serializedElements;
-    private final long minTimestamp;
-    private final long maxTimestamp;
-
-    public PinotSinkWriterState(List<String> serializedElements, long minTimestamp, long maxTimestamp) {
-        this.serializedElements = serializedElements;
-        this.minTimestamp = minTimestamp;
-        this.maxTimestamp = maxTimestamp;
-    }
-
-    public List<String> getSerializedElements() {
-        return serializedElements;
-    }
-
-    public long getMinTimestamp() {
-        return minTimestamp;
-    }
-
-    public long getMaxTimestamp() {
-        return maxTimestamp;
-    }
+    public abstract String toJson(IN element);
 }

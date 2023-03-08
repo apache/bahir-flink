@@ -19,10 +19,11 @@ package org.apache.flink.streaming.connectors.influxdb.source.http;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import java.io.IOException;
-import java.io.OutputStream;
 import org.apache.flink.annotation.Internal;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 /** Abstract base handle class for creating a response */
 @Internal

@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-package org.apache.flink.streaming.connectors.pinot;
+package org.apache.flink.streaming.connectors.pinot.v2;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.flink.streaming.connectors.pinot.external.JsonSerializer;
+import org.apache.flink.streaming.connectors.pinot.PinotClusterContainer;
+import org.apache.flink.streaming.connectors.pinot.PinotTestHelper;
+import org.apache.flink.streaming.connectors.pinot.v2.external.JsonSerializer;
 import org.apache.flink.util.TestLogger;
 import org.apache.pinot.spi.config.table.*;
 import org.apache.pinot.spi.data.DimensionFieldSpec;
@@ -28,61 +29,29 @@ import org.apache.pinot.spi.data.FieldSpec;
 import org.apache.pinot.spi.data.Schema;
 import org.apache.pinot.spi.utils.JsonUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
-import java.time.Duration;
 
 /**
  * Base class for PinotSink e2e tests
  */
-@Testcontainers
 public class PinotTestBase extends TestLogger {
 
     protected static final Logger LOG = LoggerFactory.getLogger(PinotTestBase.class);
 
-    private static final String DOCKER_IMAGE_NAME = "apachepinot/pinot:0.6.0";
-    private static final Integer PINOT_INTERNAL_BROKER_PORT = 8000;
-    private static final Integer PINOT_INTERNAL_CONTROLLER_PORT = 9000;
-
+    private static final PinotClusterContainer pinotCluster = new PinotClusterContainer();
     protected static TableConfig TABLE_CONFIG;
     protected static final Schema TABLE_SCHEMA = PinotTableConfig.getTableSchema();
     protected static PinotTestHelper pinotHelper;
 
-    /**
-     * Creates the Pinot testcontainer. We delay the start of tests until Pinot has started all
-     * internal components. This is identified through a log statement.
-     */
-    @Container
-    public static GenericContainer<?> pinot = new GenericContainer<>(DockerImageName.parse(DOCKER_IMAGE_NAME))
-            .withCommand("QuickStart", "-type", "batch")
-            .withExposedPorts(PINOT_INTERNAL_BROKER_PORT, PINOT_INTERNAL_CONTROLLER_PORT)
-            .waitingFor(
-                    // Wait for controller, server and broker instances to be available
-                    new HttpWaitStrategy()
-                            .forPort(PINOT_INTERNAL_CONTROLLER_PORT)
-                            .forPath("/instances")
-                            .forStatusCode(200)
-                            .forResponsePredicate(res -> {
-                                try {
-                                    JsonNode instances = JsonUtils.stringToJsonNode(res).get("instances");
-                                    // Expect 3 instances to be up and running (controller, broker and server)
-                                    return instances.size() == 3;
-                                } catch (IOException e) {
-                                    LOG.error("Error while reading json response in HttpWaitStrategy.", e);
-                                }
-                                return false;
-                            })
-                            // Allow Pinot to take up to 180s for starting up
-                            .withStartupTimeout(Duration.ofSeconds(180))
-            );
+    @BeforeAll
+    public static void setUpAll() {
+        pinotCluster.start();
+    }
 
     /**
      * Creates a new instance of the {@link PinotTestHelper} using the testcontainer port mappings
@@ -122,7 +91,7 @@ public class PinotTestBase extends TestLogger {
      * @return Pinot container host
      */
     protected String getPinotHost() {
-        return pinot.getHost();
+        return pinotCluster.getControllerHostAndPort().getHostText();
     }
 
 
@@ -132,7 +101,7 @@ public class PinotTestBase extends TestLogger {
      * @return Pinot controller port
      */
     protected String getPinotControllerPort() {
-        return pinot.getMappedPort(PINOT_INTERNAL_CONTROLLER_PORT).toString();
+        return String.valueOf(pinotCluster.getControllerHostAndPort().getPort());
     }
 
     /**
@@ -141,7 +110,7 @@ public class PinotTestBase extends TestLogger {
      * @return Pinot broker port
      */
     private String getPinotBrokerPort() {
-        return pinot.getMappedPort(PINOT_INTERNAL_BROKER_PORT).toString();
+        return String.valueOf(pinotCluster.getBrokerHostAndPort().getPort());
     }
 
     /**
@@ -174,6 +143,14 @@ public class PinotTestBase extends TestLogger {
 
         public void setTimestamp(Long timestamp) {
             this._timestamp = timestamp;
+        }
+
+        @Override
+        public String toString() {
+            return "SingleColumnTableRow{" +
+                    "_col1='" + _col1 + '\'' +
+                    ", _timestamp=" + _timestamp +
+                    '}';
         }
     }
 

@@ -17,9 +17,10 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.source.split;
 
-import java.nio.ByteBuffer;
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.core.io.SimpleVersionedSerializer;
+
+import java.nio.ByteBuffer;
 
 /**
  * The {@link org.apache.flink.core.io.SimpleVersionedSerializer serializer} for {@link

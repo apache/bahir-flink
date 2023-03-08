@@ -17,9 +17,10 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.sink.commiter;
 
-import java.nio.ByteBuffer;
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.core.io.SimpleVersionedSerializer;
+
+import java.nio.ByteBuffer;
 
 /**
  * This class Serialize and deserializes the commit values. Since we are sending the timestamp value

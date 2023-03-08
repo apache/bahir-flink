@@ -16,13 +16,12 @@
  */
 package org.apache.flink.connectors.kudu.format;
 
-import org.apache.flink.connectors.kudu.connector.KuduTestBase;
 import org.apache.flink.connectors.kudu.connector.KuduTableInfo;
+import org.apache.flink.connectors.kudu.connector.KuduTestBase;
 import org.apache.flink.connectors.kudu.connector.writer.AbstractSingleOperationMapper;
 import org.apache.flink.connectors.kudu.connector.writer.KuduWriterConfig;
 import org.apache.flink.connectors.kudu.connector.writer.RowOperationMapper;
 import org.apache.flink.types.Row;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

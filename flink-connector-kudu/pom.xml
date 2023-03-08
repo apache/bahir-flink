@@ -38,13 +38,6 @@
     <dependencies>
       <dependency>
         <groupId>org.apache.kudu</groupId>
-        <artifactId>kudu-binary</artifactId>
-        <version>${kudu.version}</version>
-        <classifier>${os.detected.classifier}</classifier>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.kudu</groupId>
         <artifactId>kudu-client</artifactId>
         <version>${kudu.version}</version>
       </dependency>
@@ -85,11 +78,11 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-clients_${scala.binary.version}</artifactId>
+      <artifactId>flink-clients</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
+      <artifactId>flink-streaming-java</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
@@ -98,11 +91,6 @@
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kudu</groupId>
-      <artifactId>kudu-binary</artifactId>
-      <classifier>${os.detected.classifier}</classifier>
     </dependency>
     <dependency>
       <groupId>org.apache.kudu</groupId>

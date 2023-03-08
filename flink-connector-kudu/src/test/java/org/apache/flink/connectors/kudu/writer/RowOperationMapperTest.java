@@ -20,7 +20,6 @@ import org.apache.flink.connectors.kudu.connector.KuduTestBase;
 import org.apache.flink.connectors.kudu.connector.writer.AbstractSingleOperationMapper;
 import org.apache.flink.connectors.kudu.connector.writer.RowOperationMapper;
 import org.apache.flink.types.Row;
-
 import org.apache.kudu.client.Operation;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

@@ -1,12 +1,13 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,27 +16,27 @@
  * limitations under the License.
  */
 
-
-package org.apache.flink.streaming.connectors.pinot;
+package org.apache.flink.streaming.connectors.pinot.v2;
 
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.typeutils.base.IntSerializer;
-import org.apache.flink.api.connector.sink.SinkWriter;
+import org.apache.flink.api.connector.sink2.SinkWriter;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
+import org.apache.flink.streaming.connectors.pinot.LocalFileSystemAdapter;
 import org.apache.flink.streaming.connectors.pinot.exceptions.PinotControllerApiException;
-import org.apache.flink.streaming.connectors.pinot.external.EventTimeExtractor;
-import org.apache.flink.streaming.connectors.pinot.external.JsonSerializer;
 import org.apache.flink.streaming.connectors.pinot.filesystem.FileSystemAdapter;
 import org.apache.flink.streaming.connectors.pinot.segment.name.PinotSinkSegmentNameGenerator;
 import org.apache.flink.streaming.connectors.pinot.segment.name.SimpleSegmentNameGenerator;
+import org.apache.flink.streaming.connectors.pinot.v2.external.EventTimeExtractor;
+import org.apache.flink.streaming.connectors.pinot.v2.external.JsonSerializer;
 import org.apache.pinot.client.PinotClientException;
 import org.apache.pinot.client.ResultSet;
 import org.junit.jupiter.api.Assertions;
@@ -54,10 +55,7 @@ import java.util.stream.IntStream;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 
-/**
- * E2e tests for Pinot Sink using BATCH and STREAMING execution mode
- */
-public class PinotSinkTest extends PinotTestBase {
+class PinotSinkTest extends PinotTestBase {
 
     private static final int MAX_ROWS_PER_SEGMENT = 5;
     private static final long STREAMING_CHECKPOINTING_INTERVAL = 50;
@@ -157,7 +155,7 @@ public class PinotSinkTest extends PinotTestBase {
     public void testFailureRecoveryInStreamingSink() throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
-        env.setParallelism(1);
+        env.setParallelism(2);
         env.enableCheckpointing(STREAMING_CHECKPOINTING_INTERVAL);
 
         List<String> rawData = getRawTestData(20);
@@ -193,7 +191,7 @@ public class PinotSinkTest extends PinotTestBase {
      * @return resulting data stream
      */
     private DataStream<SingleColumnTableRow> setupStreamingDataSource(StreamExecutionEnvironment env, List<String> rawDataValues) {
-        StreamingSource source = new StreamingSource.Builder(rawDataValues, 10).build();
+        PinotSinkTest.StreamingSource source = new PinotSinkTest.StreamingSource.Builder(rawDataValues, 10).build();
         return env.addSource(source)
                 .name("Test input");
     }
@@ -207,7 +205,7 @@ public class PinotSinkTest extends PinotTestBase {
      * @return resulting data stream
      */
     private DataStream<SingleColumnTableRow> setupFailingStreamingDataSource(StreamExecutionEnvironment env, List<String> rawDataValues, int failOnceAtNthElement) {
-        StreamingSource source = new StreamingSource.Builder(rawDataValues, 10)
+        PinotSinkTest.StreamingSource source = new PinotSinkTest.StreamingSource.Builder(rawDataValues, 10)
                 .raiseFailureOnce(failOnceAtNthElement)
                 .build();
         return env.addSource(source)
@@ -257,9 +255,9 @@ public class PinotSinkTest extends PinotTestBase {
         FileSystemAdapter fsAdapter = new LocalFileSystemAdapter(tempDirPrefix);
         JsonSerializer<SingleColumnTableRow> jsonSerializer = new SingleColumnTableRowSerializer();
 
-        EventTimeExtractor<SingleColumnTableRow> eventTimeExtractor = new SingleColumnTableRowEventTimeExtractor();
+        EventTimeExtractor<SingleColumnTableRow> eventTimeExtractor = new PinotSinkTest.SingleColumnTableRowEventTimeExtractor();
 
-        PinotSink<SingleColumnTableRow> sink = new PinotSink.Builder<SingleColumnTableRow>(getPinotHost(), getPinotControllerPort(), getTableName())
+        PinotSink<SingleColumnTableRow> sink = new PinotSinkBuilder<SingleColumnTableRow>(getPinotHost(), getPinotControllerPort(), getTableName())
                 .withMaxRowsPerSegment(MAX_ROWS_PER_SEGMENT)
                 .withTempDirectoryPrefix(tempDirPrefix)
                 .withJsonSerializer(jsonSerializer)
@@ -405,9 +403,9 @@ public class PinotSinkTest extends PinotTestBase {
          * to Pinot by then, as we require {@link #failOnceAtNthElement} to be greater than
          * {@link #MAX_ROWS_PER_SEGMENT} (at a parallelism of 1). This allows to check whether the
          * snapshot creation and failure recovery in
-         * {@link org.apache.flink.streaming.connectors.pinot.writer.PinotSinkWriter} works properly,
+         * {@link org.apache.flink.streaming.connectors.pinot.v2.writer.PinotWriter} works properly,
          * respecting the already committed elements and those that are stored in an active
-         * {@link org.apache.flink.streaming.connectors.pinot.writer.PinotWriterSegment}. Committed
+         * {@link org.apache.flink.streaming.connectors.pinot.v2.writer.PinotWriterSegment}. Committed
          * elements must not be saved to the snapshot while those in an active segment must be saved
          * to the snapshot in order to enable later-on recovery.
          *
@@ -460,15 +458,15 @@ public class PinotSinkTest extends PinotTestBase {
                 this.sleepDurationMs = sleepDurationMs;
             }
 
-            public Builder raiseFailureOnce(int failOnceAtNthElement) {
+            public PinotSinkTest.StreamingSource.Builder raiseFailureOnce(int failOnceAtNthElement) {
                 checkArgument(failOnceAtNthElement > MAX_ROWS_PER_SEGMENT,
                         "failOnceAtNthElement (if set) is required to be larger than the number of elements per segment (MAX_ROWS_PER_SEGMENT).");
                 this.failOnceAtNthElement = failOnceAtNthElement;
                 return this;
             }
 
-            public StreamingSource build() {
-                return new StreamingSource(rawDataValues, sleepDurationMs, failOnceAtNthElement);
+            public PinotSinkTest.StreamingSource build() {
+                return new PinotSinkTest.StreamingSource(rawDataValues, sleepDurationMs, failOnceAtNthElement);
             }
         }
     }

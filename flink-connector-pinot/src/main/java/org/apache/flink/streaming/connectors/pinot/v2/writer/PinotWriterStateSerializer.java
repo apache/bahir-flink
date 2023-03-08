@@ -16,21 +16,20 @@
  * limitations under the License.
  */
 
-package org.apache.flink.streaming.connectors.pinot.serializer;
+package org.apache.flink.streaming.connectors.pinot.v2.writer;
 
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.core.io.SimpleVersionedSerializer;
-import org.apache.flink.streaming.connectors.pinot.committer.PinotSinkGlobalCommittable;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Serializer for {@link PinotSinkGlobalCommittable}
+ * Serializer for {@link PinotWriterState}
  */
 @Internal
-public class PinotSinkGlobalCommittableSerializer implements SimpleVersionedSerializer<PinotSinkGlobalCommittable> {
+public class PinotWriterStateSerializer implements SimpleVersionedSerializer<PinotWriterState> {
 
     private static final int CURRENT_VERSION = 1;
 
@@ -40,24 +39,24 @@ public class PinotSinkGlobalCommittableSerializer implements SimpleVersionedSeri
     }
 
     @Override
-    public byte[] serialize(PinotSinkGlobalCommittable pinotSinkGlobalCommittable) throws IOException {
+    public byte[] serialize(PinotWriterState writerState) throws IOException {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              DataOutputStream out = new DataOutputStream(baos)) {
-            out.writeLong(pinotSinkGlobalCommittable.getMinTimestamp());
-            out.writeLong(pinotSinkGlobalCommittable.getMaxTimestamp());
+            out.writeLong(writerState.getMinTimestamp());
+            out.writeLong(writerState.getMaxTimestamp());
 
-            int size = pinotSinkGlobalCommittable.getDataFilePaths().size();
-            out.writeInt(size);
-            for (String dataFilePath : pinotSinkGlobalCommittable.getDataFilePaths()) {
-                out.writeUTF(dataFilePath);
+            out.writeInt(writerState.getSerializedElements().size());
+            for (String serialized : writerState.getSerializedElements()) {
+                out.writeUTF(serialized);
             }
+
             out.flush();
             return baos.toByteArray();
         }
     }
 
     @Override
-    public PinotSinkGlobalCommittable deserialize(int version, byte[] serialized) throws IllegalStateException, IOException {
+    public PinotWriterState deserialize(int version, byte[] serialized) throws IllegalStateException, IOException {
         switch (version) {
             case 1:
                 return deserializeV1(serialized);
@@ -66,18 +65,18 @@ public class PinotSinkGlobalCommittableSerializer implements SimpleVersionedSeri
         }
     }
 
-    private PinotSinkGlobalCommittable deserializeV1(byte[] serialized) throws IOException {
+    private PinotWriterState deserializeV1(byte[] serialized) throws IOException {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(serialized);
              DataInputStream in = new DataInputStream(bais)) {
             long minTimestamp = in.readLong();
             long maxTimestamp = in.readLong();
 
             long size = in.readInt();
-            List<String> dataFilePaths = new ArrayList<>();
+            List<String> serializedElements = new ArrayList<>();
             for (int i = 0; i < size; i++) {
-                dataFilePaths.add(in.readUTF());
+                serializedElements.add(in.readUTF());
             }
-            return new PinotSinkGlobalCommittable(dataFilePaths, minTimestamp, maxTimestamp);
+            return new PinotWriterState(serializedElements, minTimestamp, maxTimestamp);
         }
     }
 }

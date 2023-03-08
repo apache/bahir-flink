@@ -16,9 +16,8 @@
  */
 package org.apache.flink.connectors.kudu.connector;
 
-import org.apache.flink.annotation.PublicEvolving;
-
 import org.apache.commons.lang3.Validate;
+import org.apache.flink.annotation.PublicEvolving;
 import org.apache.kudu.Schema;
 import org.apache.kudu.client.CreateTableOptions;
 

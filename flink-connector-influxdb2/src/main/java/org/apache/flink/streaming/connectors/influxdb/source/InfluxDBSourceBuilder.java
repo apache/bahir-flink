@@ -17,10 +17,10 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.source;
 
-import static org.apache.flink.util.Preconditions.checkNotNull;
-
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.connectors.influxdb.source.reader.deserializer.InfluxDBDataPointDeserializer;
+
+import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
  * The @builder class for {@link InfluxDBSource} to make it easier for the users to construct a

@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package org.apache.flink.streaming.connectors.pinot.writer;
+package org.apache.flink.streaming.connectors.pinot.v2.writer;
 
 import org.apache.flink.annotation.Internal;
-import org.apache.flink.streaming.connectors.pinot.committer.PinotSinkCommittable;
-import org.apache.flink.streaming.connectors.pinot.external.JsonSerializer;
+import org.apache.flink.streaming.connectors.pinot.v2.committer.PinotSinkCommittable;
+import org.apache.flink.streaming.connectors.pinot.v2.external.JsonSerializer;
 import org.apache.flink.streaming.connectors.pinot.filesystem.FileSystemAdapter;
 
 import java.io.IOException;
@@ -143,11 +143,11 @@ public class PinotWriterSegment<IN> implements Serializable {
      *
      * @return List of elements currently stored within the {@link PinotWriterSegment}
      */
-    public PinotSinkWriterState snapshotState() {
+    public PinotWriterState snapshotState() {
         if (!acceptsElements()) {
             throw new IllegalStateException("Snapshots can only be created of in-progress segments.");
         }
 
-        return new PinotSinkWriterState(serializedElements, minTimestamp, maxTimestamp);
+        return new PinotWriterState(serializedElements, minTimestamp, maxTimestamp);
     }
 }

@@ -15,17 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.influxdb;
-
-import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.getInfluxDBClient;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+package org.apache.flink.streaming.connectors.influxdb.sink;
 
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.client.write.Point;
 import com.influxdb.query.FluxRecord;
 import com.influxdb.query.FluxTable;
+import org.apache.flink.api.common.RuntimeExecutionMode;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.connectors.influxdb.sink.writer.InfluxDBTestSerializer;
+import org.apache.flink.streaming.connectors.influxdb.util.InfluxDBContainer;
+import org.apache.flink.streaming.util.FiniteTestSource;
+import org.apache.flink.util.TestLogger;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,23 +41,14 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.flink.api.common.RuntimeExecutionMode;
-import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSink;
-import org.apache.flink.streaming.connectors.influxdb.util.InfluxDBContainer;
-import org.apache.flink.streaming.connectors.influxdb.util.InfluxDBTestSerializer;
-import org.apache.flink.streaming.util.FiniteTestSource;
-import org.apache.flink.util.TestLogger;
-import org.junit.jupiter.api.Test;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.getInfluxDBClient;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Testcontainers
 class InfluxDBSinkIntegrationTestCase extends TestLogger {
 
     @Container
-    public static final InfluxDBContainer<?> influxDBContainer =
+    public static final InfluxDBContainer influxDBContainer =
             InfluxDBContainer.createWithDefaultTag();
 
     private static final List<Long> SOURCE_DATA = Arrays.asList(1L, 2L, 3L);
@@ -81,15 +80,17 @@ class InfluxDBSinkIntegrationTestCase extends TestLogger {
                 InfluxDBSink.builder()
                         .setInfluxDBSchemaSerializer(new InfluxDBTestSerializer())
                         .setInfluxDBUrl(influxDBContainer.getUrl())
-                        .setInfluxDBUsername(InfluxDBContainer.username)
-                        .setInfluxDBPassword(InfluxDBContainer.password)
-                        .setInfluxDBBucket(InfluxDBContainer.bucket)
-                        .setInfluxDBOrganization(InfluxDBContainer.organization)
+                        .setInfluxDBUsername(influxDBContainer.getUsername())
+                        .setInfluxDBPassword(influxDBContainer.getPassword())
+                        .setInfluxDBBucket(influxDBContainer.getBucket())
+                        .setInfluxDBOrganization(influxDBContainer.getOrganization())
                         .setWriteBufferSize(2)
                         .addCheckpointDataPoint(true)
                         .build();
 
-        env.addSource(new FiniteTestSource(SOURCE_DATA), BasicTypeInfo.LONG_TYPE_INFO)
+        env.addSource(new FiniteTestSource<>(SOURCE_DATA), BasicTypeInfo.LONG_TYPE_INFO)
+                .assignTimestampsAndWatermarks(WatermarkStrategy.<Long>noWatermarks()
+                        .withTimestampAssigner((event, timestamp) -> System.currentTimeMillis()))
                 .sinkTo(influxDBSink);
 
         env.execute();
@@ -100,7 +101,9 @@ class InfluxDBSinkIntegrationTestCase extends TestLogger {
         assertEquals(actualWrittenPoints.size(), EXPECTED_COMMITTED_DATA_IN_STREAMING_MODE.size());
 
         final List<String> actualCheckpoints = queryCheckpoints(client);
-        assertTrue(actualCheckpoints.size() >= 4);
+
+        // Checkpoints are called 4 (or more) times. but as no watermark changes this should be 2 effective points
+        assertEquals(2, actualCheckpoints.size());
     }
 
     // ---------------- private helper methods --------------------
@@ -121,7 +124,7 @@ class InfluxDBSinkIntegrationTestCase extends TestLogger {
                         "from(bucket: \"%s\") |> "
                                 + "range(start: -1h) |> "
                                 + "filter(fn:(r) => r._measurement == \"test\")",
-                        InfluxDBContainer.bucket);
+                        influxDBContainer.getBucket());
         final List<FluxTable> tables = influxDBClient.getQueryApi().query(query);
         for (final FluxTable table : tables) {
             for (final FluxRecord record : table.getRecords()) {
@@ -139,7 +142,7 @@ class InfluxDBSinkIntegrationTestCase extends TestLogger {
                         "from(bucket: \"%s\") |> "
                                 + "range(start: -1h) |> "
                                 + "filter(fn:(r) => r._measurement == \"checkpoint\")",
-                        InfluxDBContainer.bucket);
+                        influxDBContainer.getBucket());
 
         final List<FluxTable> tables = influxDBClient.getQueryApi().query(query);
         for (final FluxTable table : tables) {

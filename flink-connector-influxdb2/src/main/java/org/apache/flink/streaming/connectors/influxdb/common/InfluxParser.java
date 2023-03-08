@@ -17,10 +17,6 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.common;
 
-import java.text.ParseException;
-import java.util.List;
-import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -29,6 +25,11 @@ import org.apache.druid.data.input.influx.InfluxLineProtocolLexer;
 import org.apache.druid.data.input.influx.InfluxLineProtocolParser;
 import org.apache.druid.data.input.influx.InfluxLineProtocolParser.TimestampContext;
 import org.apache.flink.annotation.Internal;
+
+import javax.annotation.Nullable;
+import java.text.ParseException;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * This is an InfluxDB line protocol parser.

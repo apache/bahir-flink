@@ -17,21 +17,22 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.sink.commiter;
 
-import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.WRITE_DATA_POINT_CHECKPOINT;
-import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.getInfluxDBClient;
-
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.WriteApi;
 import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.client.write.Point;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.connector.sink.Committer;
 import org.apache.flink.configuration.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.WRITE_DATA_POINT_CHECKPOINT;
+import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.getInfluxDBClient;
 
 /**
  * The InfluxDBCommitter implements the {@link Committer} interface The InfluxDBCommitter is called
@@ -89,7 +90,7 @@ public final class InfluxDBCommitter implements Committer<Long> {
         try (final WriteApi writeApi = this.influxDBClient.getWriteApi()) {
             final Point point = new Point("checkpoint");
             point.addField("checkpoint", "flink");
-            timestamp.ifPresent(aTime -> point.time(aTime, WritePrecision.NS));
+            timestamp.ifPresent(aTime -> point.time(aTime, WritePrecision.MS));
             writeApi.writePoint(point);
             LOG.debug("Checkpoint data point write at {}", point.toLineProtocol());
         }

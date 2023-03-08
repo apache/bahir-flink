@@ -53,7 +53,7 @@ public class KuduTableSourceITCase extends KuduTestBase {
         it.forEachRemaining(results::add);
         assertEquals(5, results.size());
         assertEquals("1001,Java for dummies,Tan Ah Teck,11.11,11", results.get(0).toString());
-        tableEnv.sqlUpdate("DROP TABLE books");
+        tableEnv.executeSql("DROP TABLE books");
     }
 
 
@@ -66,6 +66,6 @@ public class KuduTableSourceITCase extends KuduTestBase {
         it.forEachRemaining(results::add);
         assertEquals(1, results.size());
         assertEquals("More Java for more dummies", results.get(0).toString());
-        tableEnv.sqlUpdate("DROP TABLE books");
+        tableEnv.executeSql("DROP TABLE books");
     }
 }
