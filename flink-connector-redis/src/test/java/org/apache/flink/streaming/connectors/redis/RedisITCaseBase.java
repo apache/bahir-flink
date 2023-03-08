@@ -27,7 +27,7 @@ import static org.apache.flink.util.NetUtils.getAvailablePort;
 
 public abstract class RedisITCaseBase extends AbstractTestBase {
 
-    public static final int REDIS_PORT = getAvailablePort();
+    public static final int REDIS_PORT = getAvailablePort().getPort();
     public static final String REDIS_HOST = "127.0.0.1";
 
     private static RedisServer redisServer;

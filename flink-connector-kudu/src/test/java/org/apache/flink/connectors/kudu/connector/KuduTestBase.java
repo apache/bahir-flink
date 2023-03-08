@@ -36,11 +36,7 @@ import org.apache.flink.types.Row;
 import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
 import org.apache.kudu.Type;
-import org.apache.kudu.client.CreateTableOptions;
-import org.apache.kudu.client.KuduClient;
-import org.apache.kudu.client.KuduScanner;
-import org.apache.kudu.client.KuduTable;
-import org.apache.kudu.client.RowResult;
+import org.apache.kudu.client.*;
 import org.apache.kudu.shaded.com.google.common.collect.Lists;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -76,7 +72,7 @@ public class KuduTestBase {
     public static String[] columns = new String[]{"id", "title", "author", "price", "quantity"};
     private static GenericContainer<?> master;
     private static List<GenericContainer<?>> tServers;
-    private static String masterAddress;
+    private static HostAndPort masterAddress;
     private static KuduClient kuduClient;
 
     @BeforeAll
@@ -90,7 +86,7 @@ public class KuduTestBase {
                 .withNetwork(network)
                 .withNetworkAliases("kudu-master");
         master.start();
-        masterAddress = HostAndPort.fromParts(master.getHost(), master.getMappedPort(KUDU_MASTER_PORT)).toString();
+        masterAddress = HostAndPort.fromParts(master.getHost(), master.getMappedPort(KUDU_MASTER_PORT));
 
         for (int instance = 1; instance <= NUMBER_OF_REPLICA; instance++) {
             String instanceName = "kudu-tserver-" + instance;
@@ -98,8 +94,8 @@ public class KuduTestBase {
                     .withExposedPorts(KUDU_TSERVER_PORT)
                     .withCommand("tserver")
                     .withEnv("KUDU_MASTERS", "kudu-master:" + KUDU_MASTER_PORT)
-                    .withEnv("TSERVER_ARGS", "--fs_wal_dir=/var/lib/kudu/tserver --use_hybrid_clock=false " +
-                            "--rpc_advertised_addresses=" + instanceName)
+                    .withEnv("TSERVER_ARGS", "--fs_wal_dir=/var/lib/kudu/tserver --logtostderr "
+                            +" --use_hybrid_clock=false --rpc_advertised_addresses=" + instanceName)
                     .withNetwork(network)
                     .withNetworkAliases(instanceName)
                     .dependsOn(master);
@@ -108,8 +104,7 @@ public class KuduTestBase {
         }
         tServers = tServersBuilder.build();
 
-        System.out.println(HostAndPort.fromParts(master.getHost(), master.getMappedPort(8051)).toString());
-        kuduClient = new KuduClient.KuduClientBuilder(masterAddress).build();
+        kuduClient = new KuduClient.KuduClientBuilder(masterAddress.toString()).build();
     }
 
     @AfterAll
@@ -239,7 +234,7 @@ public class KuduTestBase {
     }
 
     public String getMasterAddress() {
-        return masterAddress;
+        return masterAddress.toString();
     }
 
     public KuduClient getClient() {

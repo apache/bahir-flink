@@ -15,11 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.flink.streaming.connectors.pinot.committer;
+package org.apache.flink.streaming.connectors.pinot.v2.committer;
 
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.connector.sink.GlobalCommitter;
+import org.apache.flink.api.connector.sink2.Committer;
 import org.apache.flink.streaming.connectors.pinot.PinotControllerClient;
+import org.apache.flink.streaming.connectors.pinot.committer.PinotSinkGlobalCommittable;
 import org.apache.flink.streaming.connectors.pinot.filesystem.FileSystemAdapter;
 import org.apache.flink.streaming.connectors.pinot.filesystem.FileSystemUtils;
 import org.apache.pinot.common.segment.ReadMode;
@@ -39,26 +41,24 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
- * Global committer takes committables from {@link org.apache.flink.streaming.connectors.pinot.writer.PinotSinkWriter},
+ * Global committer takes committables from {@link org.apache.flink.streaming.connectors.pinot.v2.writer.PinotWriter},
  * generates segments and pushed them to the Pinot controller.
  * Note: We use a custom multithreading approach to parallelize the segment creation and upload to
  * overcome the performance limitations resulting from using a {@link GlobalCommitter} always
  * running at a parallelism of 1.
  */
 @Internal
-public class PinotSinkGlobalCommitter implements GlobalCommitter<PinotSinkCommittable, PinotSinkGlobalCommittable> {
+public class PinotSinkCommitter implements Committer<PinotSinkCommittable> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PinotSinkGlobalCommitter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PinotSinkCommitter.class);
 
     private final String pinotControllerHost;
     private final String pinotControllerPort;
@@ -84,11 +84,11 @@ public class PinotSinkGlobalCommitter implements GlobalCommitter<PinotSinkCommit
      * @param segmentTimeUnit      Unit of the time column
      * @param numCommitThreads     Number of threads used to commit the committables
      */
-    public PinotSinkGlobalCommitter(String pinotControllerHost, String pinotControllerPort,
-                                    String tableName, SegmentNameGenerator segmentNameGenerator,
-                                    String tempDirPrefix, FileSystemAdapter fsAdapter,
-                                    String timeColumnName, TimeUnit segmentTimeUnit,
-                                    int numCommitThreads) throws IOException {
+    public PinotSinkCommitter(String pinotControllerHost, String pinotControllerPort,
+                              String tableName, SegmentNameGenerator segmentNameGenerator,
+                              String tempDirPrefix, FileSystemAdapter fsAdapter,
+                              String timeColumnName, TimeUnit segmentTimeUnit,
+                              int numCommitThreads) throws IOException {
         this.pinotControllerHost = checkNotNull(pinotControllerHost);
         this.pinotControllerPort = checkNotNull(pinotControllerPort);
         this.tableName = checkNotNull(tableName);
@@ -110,45 +110,98 @@ public class PinotSinkGlobalCommitter implements GlobalCommitter<PinotSinkCommit
         this.pool = Executors.newFixedThreadPool(numCommitThreads);
     }
 
-    /**
-     * Identifies global committables that need to be re-committed from a list of recovered committables.
-     *
-     * @param globalCommittables List of global committables that are checked for required re-commit
-     * @return List of global committable that need to be re-committed
-     * @throws IOException
-     */
+
     @Override
-    public List<PinotSinkGlobalCommittable> filterRecoveredCommittables(List<PinotSinkGlobalCommittable> globalCommittables) throws IOException {
-        // Holds identified global committables whose commit needs to be retried
-        List<PinotSinkGlobalCommittable> committablesToRetry = new ArrayList<>();
+    public void commit(Collection<CommitRequest<PinotSinkCommittable>> collection) throws IOException, InterruptedException {
+        Collection<PinotSinkCommittable> committables = collection.stream()
+                .map(CommitRequest::getCommittable)
+                .collect(Collectors.toList());
 
-        for (PinotSinkGlobalCommittable globalCommittable : globalCommittables) {
-            CommitStatus commitStatus = getCommitStatus(globalCommittable);
+        this.commitSink(committables);
 
-            if (commitStatus.getMissingSegmentNames().isEmpty()) {
-                // All segments were already committed. Thus, we do not need to retry the commit.
-                continue;
-            }
+    }
 
-            for (String existingSegment : commitStatus.getExistingSegmentNames()) {
-                // Some but not all segments were already committed. As we cannot assure the data
-                // files containing the same data as originally when recovering from failure,
-                // we delete the already committed segments in order to recommit them later on.
-                pinotControllerClient.deleteSegment(tableName, existingSegment);
-            }
-            committablesToRetry.add(globalCommittable);
+    public void commitSink(Collection<PinotSinkCommittable> collection) throws IOException, InterruptedException {
+        if (collection.isEmpty()) return;
+
+        // List of failed global committables that can be retried later on
+        List<PinotSinkGlobalCommittable> failedCommits = new ArrayList<>();
+
+        PinotSinkGlobalCommittable globalCommittable = this.combine(new ArrayList<>(collection));
+
+        filterRecoveredCommittables(globalCommittable);
+
+        Set<Future<Boolean>> resultFutures = new HashSet<>();
+        // Commit all segments in globalCommittable
+        for (int sequenceId = 0; sequenceId < globalCommittable.getDataFilePaths().size(); sequenceId++) {
+            String dataFilePath = globalCommittable.getDataFilePaths().get(sequenceId);
+            // Get segment names with increasing sequenceIds
+            String segmentName = getSegmentName(globalCommittable, sequenceId);
+            // Segment committer handling the whole commit process for a single segment
+            Callable<Boolean> segmentCommitter = new SegmentCommitter(
+                    pinotControllerHost, pinotControllerPort, tempDirectory, fsAdapter,
+                    dataFilePath, segmentName, tableSchema, tableConfig, timeColumnName,
+                    segmentTimeUnit
+            );
+            // Submits the segment committer to the thread pool
+            resultFutures.add(pool.submit(segmentCommitter));
         }
-        return committablesToRetry;
+
+        boolean commitSucceeded = true;
+        try {
+            for (Future<Boolean> wasSuccessful : resultFutures) {
+                // In case any of the segment commits wasn't successful we mark the whole
+                // globalCommittable as failed
+                if (!wasSuccessful.get()) {
+                    commitSucceeded = false;
+                    failedCommits.add(globalCommittable);
+                    // Once any of the commits failed, we do not need to check the remaining
+                    // ones, as we try to commit the globalCommittable next time
+                    break;
+                }
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            // In case of an exception thrown while accessing commit status, mark the whole
+            // globalCommittable as failed
+            failedCommits.add(globalCommittable);
+            LOG.error("Accessing a SegmentCommitter thread errored with {}", e.getMessage(), e);
+        }
+
+        if (commitSucceeded) {
+            // If commit succeeded, cleanup the data files stored on the shared file system. In
+            // case the commit of at least one of the segments failed, nothing will be cleaned
+            // up here to enable retrying failed commits (data files must therefore stay
+            // available on the shared filesystem).
+            for (String path : globalCommittable.getDataFilePaths()) {
+                fsAdapter.deleteFromSharedFileSystem(path);
+            }
+        }
+
+        if (failedCommits.size() > 0) {
+            LOG.error(failedCommits.toString());
+        }
+
+    }
+
+    /**
+     * Helper method for generating segment names using the segment name generator.
+     *
+     * @param globalCommittable Global committable the segment name shall be generated from
+     * @param sequenceId        Incrementing counter
+     * @return generated segment name
+     */
+    private String getSegmentName(PinotSinkGlobalCommittable globalCommittable, int sequenceId) {
+        return segmentNameGenerator.generateSegmentName(sequenceId,
+                globalCommittable.getMinTimestamp(), globalCommittable.getMaxTimestamp());
     }
 
     /**
      * Combines multiple {@link PinotSinkCommittable}s into one {@link PinotSinkGlobalCommittable}
      * by finding the minimum and maximum timestamps from the provided {@link PinotSinkCommittable}s.
      *
-     * @param committables Committables created by {@link org.apache.flink.streaming.connectors.pinot.writer.PinotSinkWriter}
+     * @param committables Committables created by {@link org.apache.flink.streaming.connectors.pinot.v2.writer.PinotWriter}
      * @return Global committer committable
      */
-    @Override
     public PinotSinkGlobalCommittable combine(List<PinotSinkCommittable> committables) {
         List<String> dataFilePaths = new ArrayList<>();
         long minTimestamp = Long.MAX_VALUE;
@@ -167,100 +220,26 @@ public class PinotSinkGlobalCommitter implements GlobalCommitter<PinotSinkCommit
     }
 
     /**
-     * Copies data files from shared filesystem to the local filesystem, generates segments with names
-     * according to the segment naming schema and finally pushes the segments to the Pinot cluster.
-     * Before pushing a segment it is checked whether there already exists a segment with that name
-     * in the Pinot cluster by calling the Pinot controller. In case there is one, it gets deleted.
+     * Identifies global committables that need to be re-committed from a list of recovered committables.
      *
-     * @param globalCommittables List of global committables
-     * @return Global committables whose commit failed
+     * @param globalCommittable List of global committables that are checked for required re-commit
+     * @return List of global committable that need to be re-committed
      * @throws IOException
      */
-    @Override
-    public List<PinotSinkGlobalCommittable> commit(List<PinotSinkGlobalCommittable> globalCommittables) throws IOException {
-        // List of failed global committables that can be retried later on
-        List<PinotSinkGlobalCommittable> failedCommits = new ArrayList<>();
+    private PinotSinkGlobalCommittable filterRecoveredCommittables(PinotSinkGlobalCommittable globalCommittable) throws IOException {
 
-        for (PinotSinkGlobalCommittable globalCommittable : globalCommittables) {
-            Set<Future<Boolean>> resultFutures = new HashSet<>();
-            // Commit all segments in globalCommittable
-            for (int sequenceId = 0; sequenceId < globalCommittable.getDataFilePaths().size(); sequenceId++) {
-                String dataFilePath = globalCommittable.getDataFilePaths().get(sequenceId);
-                // Get segment names with increasing sequenceIds
-                String segmentName = getSegmentName(globalCommittable, sequenceId);
-                // Segment committer handling the whole commit process for a single segment
-                Callable<Boolean> segmentCommitter = new SegmentCommitter(
-                        pinotControllerHost, pinotControllerPort, tempDirectory, fsAdapter,
-                        dataFilePath, segmentName, tableSchema, tableConfig, timeColumnName,
-                        segmentTimeUnit
-                );
-                // Submits the segment committer to the thread pool
-                resultFutures.add(pool.submit(segmentCommitter));
-            }
+        CommitStatus commitStatus = getCommitStatus(globalCommittable);
 
-            boolean commitSucceeded = true;
-            try {
-                for (Future<Boolean> wasSuccessful : resultFutures) {
-                    // In case any of the segment commits wasn't successful we mark the whole
-                    // globalCommittable as failed
-                    if (!wasSuccessful.get()) {
-                        commitSucceeded = false;
-                        failedCommits.add(globalCommittable);
-                        // Once any of the commits failed, we do not need to check the remaining
-                        // ones, as we try to commit the globalCommittable next time
-                        break;
-                    }
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                // In case of an exception thrown while accessing commit status, mark the whole
-                // globalCommittable as failed
-                failedCommits.add(globalCommittable);
-                LOG.error("Accessing a SegmentCommitter thread errored with {}", e.getMessage(), e);
-            }
-
-            if (commitSucceeded) {
-                // If commit succeeded, cleanup the data files stored on the shared file system. In
-                // case the commit of at least one of the segments failed, nothing will be cleaned
-                // up here to enable retrying failed commits (data files must therefore stay
-                // available on the shared filesystem).
-                for (String path : globalCommittable.getDataFilePaths()) {
-                    fsAdapter.deleteFromSharedFileSystem(path);
-                }
+        if (!commitStatus.getMissingSegmentNames().isEmpty()) {
+            for (String existingSegment : commitStatus.getExistingSegmentNames()) {
+                // Some but not all segments were already committed. As we cannot assure the data
+                // files containing the same data as originally when recovering from failure,
+                // we delete the already committed segments in order to recommit them later on.
+                pinotControllerClient.deleteSegment(tableName, existingSegment);
             }
         }
 
-        // Return failed commits so that they can be retried later on
-        return failedCommits;
-    }
-
-    /**
-     * Empty method.
-     */
-    @Override
-    public void endOfInput() {
-    }
-
-    /**
-     * Closes the Pinot controller http client, clears the created temporary directory and
-     * shuts the thread pool down.
-     */
-    @Override
-    public void close() throws IOException {
-        pinotControllerClient.close();
-        tempDirectory.delete();
-        pool.shutdown();
-    }
-
-    /**
-     * Helper method for generating segment names using the segment name generator.
-     *
-     * @param globalCommittable Global committable the segment name shall be generated from
-     * @param sequenceId        Incrementing counter
-     * @return generated segment name
-     */
-    private String getSegmentName(PinotSinkGlobalCommittable globalCommittable, int sequenceId) {
-        return segmentNameGenerator.generateSegmentName(sequenceId,
-                globalCommittable.getMinTimestamp(), globalCommittable.getMaxTimestamp());
+        return globalCommittable;
     }
 
     /**
@@ -290,6 +269,13 @@ public class PinotSinkGlobalCommitter implements GlobalCommitter<PinotSinkCommit
         return new CommitStatus(existingSegmentNames, missingSegmentNames);
     }
 
+    @Override
+    public void close() throws Exception {
+        pinotControllerClient.close();
+        tempDirectory.delete();
+        pool.shutdown();
+    }
+
     /**
      * Wrapper for existing and missing segments in the Pinot cluster.
      */
@@ -315,7 +301,7 @@ public class PinotSinkGlobalCommitter implements GlobalCommitter<PinotSinkCommit
      * Helper class for committing a single segment. Downloads a data file from the shared filesystem,
      * generates a segment from the data file and uploads segment to the Pinot controller.
      */
-    private static class SegmentCommitter implements Callable<Boolean> {
+    public static class SegmentCommitter implements Callable<Boolean> {
 
         private static final Logger LOG = LoggerFactory.getLogger(SegmentCommitter.class);
 
@@ -342,11 +328,11 @@ public class PinotSinkGlobalCommitter implements GlobalCommitter<PinotSinkCommit
          * @param timeColumnName      Name of the column containing the timestamp
          * @param segmentTimeUnit     Unit of the time column
          */
-        SegmentCommitter(String pinotControllerHost, String pinotControllerPort,
-                         File tempDirectory, FileSystemAdapter fsAdapter,
-                         String dataFilePath, String segmentName, Schema tableSchema,
-                         TableConfig tableConfig, String timeColumnName,
-                         TimeUnit segmentTimeUnit) {
+        public SegmentCommitter(String pinotControllerHost, String pinotControllerPort,
+                                File tempDirectory, FileSystemAdapter fsAdapter,
+                                String dataFilePath, String segmentName, Schema tableSchema,
+                                TableConfig tableConfig, String timeColumnName,
+                                TimeUnit segmentTimeUnit) {
             this.pinotControllerHost = pinotControllerHost;
             this.pinotControllerPort = pinotControllerPort;
             this.tempDirectory = tempDirectory;

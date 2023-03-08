@@ -17,10 +17,10 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.source;
 
+import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import org.junit.jupiter.api.Test;
 
 class InfluxDBSourceBuilderTest {
     @Test

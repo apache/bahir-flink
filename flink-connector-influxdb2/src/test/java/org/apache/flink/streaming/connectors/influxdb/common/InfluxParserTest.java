@@ -17,15 +17,13 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.common;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.text.ParseException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.text.ParseException;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class InfluxParserTest {
 

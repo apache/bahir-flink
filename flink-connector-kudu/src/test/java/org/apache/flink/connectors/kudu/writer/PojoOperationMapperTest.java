@@ -17,11 +17,10 @@
 
 package org.apache.flink.connectors.kudu.writer;
 
-import org.apache.flink.connectors.kudu.connector.KuduTestBase.BookInfo;
 import org.apache.flink.connectors.kudu.connector.KuduTestBase;
+import org.apache.flink.connectors.kudu.connector.KuduTestBase.BookInfo;
 import org.apache.flink.connectors.kudu.connector.writer.AbstractSingleOperationMapper;
 import org.apache.flink.connectors.kudu.connector.writer.PojoOperationMapper;
-
 import org.apache.kudu.client.Operation;
 import org.apache.kudu.client.PartialRow;
 import org.junit.jupiter.api.Test;

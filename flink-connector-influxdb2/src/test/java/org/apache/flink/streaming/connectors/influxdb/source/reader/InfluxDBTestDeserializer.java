@@ -15,20 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.streaming.connectors.influxdb.util;
+package org.apache.flink.streaming.connectors.influxdb.source.reader;
 
-import com.influxdb.client.write.Point;
-import org.apache.flink.api.connector.sink.SinkWriter.Context;
-import org.apache.flink.streaming.connectors.influxdb.sink.writer.InfluxDBSchemaSerializer;
-import org.jetbrains.annotations.Nullable;
+import org.apache.flink.streaming.connectors.influxdb.common.DataPoint;
+import org.apache.flink.streaming.connectors.influxdb.source.reader.deserializer.InfluxDBDataPointDeserializer;
 
-public class InfluxDBTestSerializer implements InfluxDBSchemaSerializer<Long> {
+public class InfluxDBTestDeserializer implements InfluxDBDataPointDeserializer<Long> {
 
     @Override
-    public Point serialize(final Long element, @Nullable final Context context) {
-        final Point dataPoint = new Point("test");
-        dataPoint.addTag("longValue", String.valueOf(element));
-        dataPoint.addField("fieldKey", "fieldValue");
-        return dataPoint;
+    public Long deserialize(final DataPoint dataPoint) {
+        return dataPoint.getField("longValue");
     }
 }

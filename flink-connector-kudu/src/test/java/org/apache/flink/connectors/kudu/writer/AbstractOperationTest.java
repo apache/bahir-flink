@@ -17,14 +17,8 @@
 package org.apache.flink.connectors.kudu.writer;
 
 import org.apache.flink.connectors.kudu.connector.KuduTestBase;
-
 import org.apache.kudu.Schema;
-import org.apache.kudu.client.Delete;
-import org.apache.kudu.client.Insert;
-import org.apache.kudu.client.KuduTable;
-import org.apache.kudu.client.PartialRow;
-import org.apache.kudu.client.Update;
-import org.apache.kudu.client.Upsert;
+import org.apache.kudu.client.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;

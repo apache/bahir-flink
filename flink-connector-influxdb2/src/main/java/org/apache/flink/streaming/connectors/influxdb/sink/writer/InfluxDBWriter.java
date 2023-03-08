@@ -17,23 +17,22 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.sink.writer;
 
-import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.WRITE_BUFFER_SIZE;
-import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.WRITE_DATA_POINT_CHECKPOINT;
-import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.getInfluxDBClient;
-
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.WriteApi;
 import com.influxdb.client.write.Point;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.connector.sink.Sink.ProcessingTimeService;
 import org.apache.flink.api.connector.sink.SinkWriter;
 import org.apache.flink.configuration.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.apache.flink.streaming.connectors.influxdb.sink.InfluxDBSinkOptions.*;
 
 /**
  * This Class implements the {@link SinkWriter} and it is responsible to write incoming inputs to
@@ -78,7 +77,6 @@ public final class InfluxDBWriter<IN> implements SinkWriter<IN, Long, Point> {
      * @param context current Flink context
      * @see org.apache.flink.api.connector.sink.SinkWriter.Context
      */
-    @Override
     public void write(final IN in, final Context context) throws IOException {
         LOG.trace("Adding elements to buffer. Buffer size: {}", this.elements.size());
         this.elements.add(this.schemaSerializer.serialize(in, context));
@@ -87,6 +85,7 @@ public final class InfluxDBWriter<IN> implements SinkWriter<IN, Long, Point> {
             this.writeCurrentElements();
             this.elements.clear();
         }
+
         if (context.timestamp() != null) {
             this.lastTimestamp = Math.max(this.lastTimestamp, context.timestamp());
         }

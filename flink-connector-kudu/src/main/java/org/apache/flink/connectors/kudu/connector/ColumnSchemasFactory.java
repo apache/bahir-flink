@@ -18,7 +18,6 @@
 package org.apache.flink.connectors.kudu.connector;
 
 import org.apache.flink.annotation.PublicEvolving;
-
 import org.apache.kudu.ColumnSchema;
 
 import java.io.Serializable;

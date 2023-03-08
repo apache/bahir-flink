@@ -20,7 +20,6 @@ import org.apache.flink.api.java.tuple.Tuple5;
 import org.apache.flink.connectors.kudu.connector.KuduTestBase;
 import org.apache.flink.connectors.kudu.connector.writer.AbstractSingleOperationMapper;
 import org.apache.flink.connectors.kudu.connector.writer.TupleOperationMapper;
-
 import org.apache.kudu.client.Operation;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

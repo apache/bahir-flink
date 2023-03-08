@@ -18,9 +18,10 @@
 package org.apache.flink.streaming.connectors.influxdb.sink.writer;
 
 import com.influxdb.client.write.Point;
+import org.apache.flink.api.connector.sink.SinkWriter.Context;
+
 import java.io.IOException;
 import java.io.Serializable;
-import org.apache.flink.api.connector.sink.SinkWriter.Context;
 
 public interface InfluxDBSchemaSerializer<IN> extends Serializable {
 

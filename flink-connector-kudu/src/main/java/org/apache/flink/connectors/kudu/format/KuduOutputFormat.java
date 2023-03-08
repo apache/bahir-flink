@@ -28,7 +28,6 @@ import org.apache.flink.connectors.kudu.connector.writer.KuduWriterConfig;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

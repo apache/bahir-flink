@@ -18,9 +18,10 @@
 package org.apache.flink.streaming.connectors.influxdb.source.http;
 
 import com.sun.net.httpserver.HttpExchange;
+import org.apache.flink.annotation.Internal;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import org.apache.flink.annotation.Internal;
 
 /**
  * Handles incoming health check requests from /health path. If the server is running a response

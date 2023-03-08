@@ -20,10 +20,11 @@ package org.apache.flink.streaming.connectors.influxdb.common;
 import com.influxdb.Arguments;
 import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.client.write.Point;
+
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import javax.annotation.Nullable;
 
 /**
  * InfluxDB data point class.

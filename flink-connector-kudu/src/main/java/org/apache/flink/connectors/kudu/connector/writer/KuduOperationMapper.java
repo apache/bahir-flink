@@ -17,7 +17,6 @@
 package org.apache.flink.connectors.kudu.connector.writer;
 
 import org.apache.flink.annotation.PublicEvolving;
-
 import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.Operation;
 

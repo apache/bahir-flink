@@ -18,8 +18,6 @@
 package org.apache.flink.streaming.connectors.influxdb.sink;
 
 import com.influxdb.client.write.Point;
-import java.util.List;
-import java.util.Optional;
 import org.apache.flink.api.connector.sink.Committer;
 import org.apache.flink.api.connector.sink.GlobalCommitter;
 import org.apache.flink.api.connector.sink.Sink;
@@ -31,6 +29,9 @@ import org.apache.flink.streaming.connectors.influxdb.sink.commiter.InfluxDBComm
 import org.apache.flink.streaming.connectors.influxdb.sink.writer.InfluxDBPointSerializer;
 import org.apache.flink.streaming.connectors.influxdb.sink.writer.InfluxDBSchemaSerializer;
 import org.apache.flink.streaming.connectors.influxdb.sink.writer.InfluxDBWriter;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * This Sink implementation of InfluxDB/Line Protocol. Please use a {@link InfluxDBSinkBuilder} to

@@ -20,7 +20,6 @@ import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connectors.kudu.connector.writer.AbstractSingleOperationMapper;
 import org.apache.flink.types.Row;
-
 import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.Operation;
 

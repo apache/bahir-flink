@@ -17,14 +17,8 @@
  */
 package org.apache.flink.streaming.connectors.influxdb.source;
 
-import java.util.function.Supplier;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.connector.source.Boundedness;
-import org.apache.flink.api.connector.source.Source;
-import org.apache.flink.api.connector.source.SourceReader;
-import org.apache.flink.api.connector.source.SourceReaderContext;
-import org.apache.flink.api.connector.source.SplitEnumerator;
-import org.apache.flink.api.connector.source.SplitEnumeratorContext;
+import org.apache.flink.api.connector.source.*;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.io.SimpleVersionedSerializer;
@@ -37,6 +31,8 @@ import org.apache.flink.streaming.connectors.influxdb.source.reader.InfluxDBSpli
 import org.apache.flink.streaming.connectors.influxdb.source.reader.deserializer.InfluxDBDataPointDeserializer;
 import org.apache.flink.streaming.connectors.influxdb.source.split.InfluxDBSplit;
 import org.apache.flink.streaming.connectors.influxdb.source.split.InfluxDBSplitSerializer;
+
+import java.util.function.Supplier;
 
 /**
  * The Source implementation of InfluxDB. Please use a {@link InfluxDBSourceBuilder} to construct a

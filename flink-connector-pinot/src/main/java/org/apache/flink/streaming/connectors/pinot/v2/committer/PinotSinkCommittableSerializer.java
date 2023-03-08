@@ -16,21 +16,18 @@
  * limitations under the License.
  */
 
-package org.apache.flink.streaming.connectors.pinot.serializer;
+package org.apache.flink.streaming.connectors.pinot.v2.committer;
 
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.core.io.SimpleVersionedSerializer;
-import org.apache.flink.streaming.connectors.pinot.writer.PinotSinkWriterState;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Serializer for {@link PinotSinkWriterState}
+ * Serializer for {@link PinotSinkCommittable}
  */
 @Internal
-public class PinotSinkWriterStateSerializer implements SimpleVersionedSerializer<PinotSinkWriterState> {
+public class PinotSinkCommittableSerializer implements SimpleVersionedSerializer<PinotSinkCommittable> {
 
     private static final int CURRENT_VERSION = 1;
 
@@ -40,24 +37,19 @@ public class PinotSinkWriterStateSerializer implements SimpleVersionedSerializer
     }
 
     @Override
-    public byte[] serialize(PinotSinkWriterState writerState) throws IOException {
+    public byte[] serialize(PinotSinkCommittable pinotSinkCommittable) throws IOException {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              DataOutputStream out = new DataOutputStream(baos)) {
-            out.writeLong(writerState.getMinTimestamp());
-            out.writeLong(writerState.getMaxTimestamp());
-
-            out.writeInt(writerState.getSerializedElements().size());
-            for (String serialized : writerState.getSerializedElements()) {
-                out.writeUTF(serialized);
-            }
-
+            out.writeLong(pinotSinkCommittable.getMinTimestamp());
+            out.writeLong(pinotSinkCommittable.getMaxTimestamp());
+            out.writeUTF(pinotSinkCommittable.getDataFilePath());
             out.flush();
             return baos.toByteArray();
         }
     }
 
     @Override
-    public PinotSinkWriterState deserialize(int version, byte[] serialized) throws IllegalStateException, IOException {
+    public PinotSinkCommittable deserialize(int version, byte[] serialized) throws IllegalStateException, IOException {
         switch (version) {
             case 1:
                 return deserializeV1(serialized);
@@ -66,18 +58,13 @@ public class PinotSinkWriterStateSerializer implements SimpleVersionedSerializer
         }
     }
 
-    private PinotSinkWriterState deserializeV1(byte[] serialized) throws IOException {
+    private PinotSinkCommittable deserializeV1(byte[] serialized) throws IOException {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(serialized);
              DataInputStream in = new DataInputStream(bais)) {
             long minTimestamp = in.readLong();
             long maxTimestamp = in.readLong();
-
-            long size = in.readInt();
-            List<String> serializedElements = new ArrayList<>();
-            for (int i = 0; i < size; i++) {
-                serializedElements.add(in.readUTF());
-            }
-            return new PinotSinkWriterState(serializedElements, minTimestamp, maxTimestamp);
+            String dataFilePath = in.readUTF();
+            return new PinotSinkCommittable(dataFilePath, minTimestamp, maxTimestamp);
         }
     }
 }

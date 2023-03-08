@@ -17,7 +17,6 @@
 package org.apache.flink.connectors.kudu.connector.failure;
 
 import org.apache.flink.annotation.PublicEvolving;
-
 import org.apache.kudu.client.RowError;
 
 import java.io.IOException;
