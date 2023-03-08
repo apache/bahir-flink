@@ -22,9 +22,7 @@ import org.apache.flume.Event;
 import org.apache.flume.event.EventBuilder;
 import org.junit.jupiter.api.Test;
 
-import java.nio.charset.Charset;
-
-import static org.apache.flink.test.util.TestUtils.tryExecute;
+import java.nio.charset.StandardCharsets;
 
 public class FlumeSinkTest extends FlumeServerTest {
 
@@ -35,7 +33,7 @@ public class FlumeSinkTest extends FlumeServerTest {
         FlumeEventBuilder<String> flumeEventBuilder = new FlumeEventBuilder<String>() {
             @Override
             public Event createFlumeEvent(String value, RuntimeContext ctx) {
-                return EventBuilder.withBody(value, Charset.forName("UTF-8"));
+                return EventBuilder.withBody(value, StandardCharsets.UTF_8);
             }
         };
 
@@ -43,7 +41,7 @@ public class FlumeSinkTest extends FlumeServerTest {
 
         environment.fromElements("string1", "string2").addSink(flumeSink);
 
-        tryExecute(environment, "FlumeTest");
+        environment.executeAsync( "FlumeTest");
     }
 
 }

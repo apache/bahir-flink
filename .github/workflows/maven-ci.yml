@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       matrix:
        java: ['8', '11']
-       flink-version: ['1.15.3']
+       flink-version: ['1.16.1']
        connector: [
          'flink-connector-activemq',
          'flink-connector-akka',

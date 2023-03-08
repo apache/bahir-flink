@@ -47,8 +47,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.flink.test.util.TestBaseUtils.compareResultsByLinesInMemory;
+import static org.apache.flink.test.util.TestBaseUtils.readAllResultLines;
 import static org.junit.Assert.assertEquals;
-
 /**
  * Flink-siddhi library integration test cases
  */
@@ -402,4 +403,5 @@ public class SiddhiCEPITCase extends AbstractTestBase implements Serializable {
         output.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
         env.execute();
     }
+
 }
