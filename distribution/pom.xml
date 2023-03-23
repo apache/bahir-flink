@@ -20,13 +20,13 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.bahir</groupId>
-        <artifactId>bahir-flink-parent_2.12</artifactId>
+        <artifactId>bahir-flink-parent</artifactId>
         <version>1.2-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
     <groupId>org.apache.bahir</groupId>
-    <artifactId>bahir-flink-assembly_2.12</artifactId>
+    <artifactId>bahir-flink-assembly</artifactId>
     <packaging>pom</packaging>
     <name>Apache Bahir - Flink Extensions Distribution</name>
     <url>http://bahir.apache.org/</url>
@@ -34,7 +34,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.bahir</groupId>
-            <artifactId>flink-connector-activemq_${scala.binary.version}</artifactId>
+            <artifactId>flink-connector-activemq</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -44,37 +44,37 @@
         </dependency>
         <dependency>
             <groupId>org.apache.bahir</groupId>
-            <artifactId>flink-connector-flume_${scala.binary.version}</artifactId>
+            <artifactId>flink-connector-flume</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.bahir</groupId>
-            <artifactId>flink-connector-influxdb2_${scala.binary.version}</artifactId>
+            <artifactId>flink-connector-influxdb2</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.bahir</groupId>
-            <artifactId>flink-connector-influxdb_${scala.binary.version}</artifactId>
+            <artifactId>flink-connector-influxdb</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.bahir</groupId>
-            <artifactId>flink-connector-kudu_${scala.binary.version}</artifactId>
+            <artifactId>flink-connector-kudu</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.bahir</groupId>
-            <artifactId>flink-connector-netty_${scala.binary.version}</artifactId>
+            <artifactId>flink-connector-netty</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.bahir</groupId>
-            <artifactId>flink-connector-pinot_${scala.binary.version}</artifactId>
+            <artifactId>flink-connector-pinot</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.bahir</groupId>
-            <artifactId>flink-connector-redis_${scala.binary.version}</artifactId>
+            <artifactId>flink-connector-redis</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

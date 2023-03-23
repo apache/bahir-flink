@@ -21,12 +21,12 @@
 
     <parent>
         <groupId>org.apache.bahir</groupId>
-        <artifactId>bahir-flink-parent_2.12</artifactId>
+        <artifactId>bahir-flink-parent</artifactId>
         <version>1.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>flink-library-siddhi_2.12</artifactId>
+    <artifactId>flink-library-siddhi_${scala.binary.version}</artifactId>
     <packaging>jar</packaging>
 
     <name>flink-library-siddhi</name>
@@ -67,6 +67,12 @@
                         <artifactId>apacheds-jdbm1</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-scala_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
