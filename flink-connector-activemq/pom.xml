@@ -23,12 +23,12 @@ under the License.
 
     <parent>
         <groupId>org.apache.bahir</groupId>
-        <artifactId>bahir-flink-parent_2.12</artifactId>
+        <artifactId>bahir-flink-parent</artifactId>
         <version>1.2-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>flink-connector-activemq_2.12</artifactId>
+    <artifactId>flink-connector-activemq</artifactId>
     <packaging>jar</packaging>
 
     <name>flink-connector-activemq</name>

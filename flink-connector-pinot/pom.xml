@@ -23,12 +23,12 @@ under the License.
 
     <parent>
         <groupId>org.apache.bahir</groupId>
-        <artifactId>bahir-flink-parent_2.12</artifactId>
+        <artifactId>bahir-flink-parent</artifactId>
         <version>1.2-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>flink-connector-pinot_2.12</artifactId>
+    <artifactId>flink-connector-pinot</artifactId>
     <packaging>jar</packaging>
 
     <name>flink-connector-pinot</name>
@@ -111,6 +111,10 @@ under the License.
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
+            <artifactId>flink-test-utils</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
             <artifactId>flink-tests</artifactId>
             <type>test-jar</type>
         </dependency>
@@ -123,18 +127,8 @@ under the License.
             <artifactId>pinot-java-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-runtime-web</artifactId>
-            <version>${flink.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.pinot</groupId>
             <artifactId>pinot-tools</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-test-utils</artifactId>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -165,11 +159,8 @@ under the License.
                                 <goal>enforce</goal>
                             </goals>
                             <configuration>
-                                <rules>
-                                    <requireJavaVersion>
-                                        <version>${java.version}</version>
-                                    </requireJavaVersion>
-                                    <bannedDependencies>
+                                <rules combine.children="append">
+                                    <bannedDependencies combine.children="append">
                                         <excludes combine.self="override">
                                             <!-- The org.codehaus.groovy dependency is required by org.apache.pinot:pinot-tools -->
                                         </excludes>
@@ -199,17 +190,6 @@ under the License.
                             </configuration>
                         </execution>
                     </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <configuration combine.children="append">
-                        <rules combine.children="append">
-                            <compound implementation="com.github.ferstl.maven.pomenforcers.CompoundPedanticEnforcer" combine.children="append">
-                                <enforcers combine.children="override">POM_SECTION_ORDER,MODULE_ORDER,DEPENDENCY_MANAGEMENT_ORDER,DEPENDENCY_CONFIGURATION,DEPENDENCY_ELEMENT,DEPENDENCY_SCOPE,DEPENDENCY_MANAGEMENT_LOCATION,PLUGIN_MANAGEMENT_ORDER,PLUGIN_CONFIGURATION,PLUGIN_ELEMENT,PLUGIN_MANAGEMENT_LOCATION</enforcers>
-                            </compound>
-                        </rules>
-                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

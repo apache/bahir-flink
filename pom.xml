@@ -24,7 +24,7 @@
         <version>24</version>
     </parent>
     <groupId>org.apache.bahir</groupId>
-    <artifactId>bahir-flink-parent_2.12</artifactId>
+    <artifactId>bahir-flink-parent</artifactId>
     <version>1.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Apache Bahir for Apache Flink - Parent POM</name>
@@ -172,11 +172,6 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
-                <artifactId>flink-scala_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
                 <artifactId>flink-streaming-java</artifactId>
                 <version>${flink.version}</version>
             </dependency>
@@ -186,11 +181,6 @@
                 <version>${flink.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.flink</groupId>
-                <artifactId>flink-streaming-scala_${scala.binary.version}</artifactId>
-                <version>${flink.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
@@ -210,7 +200,13 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
-                <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+                <artifactId>flink-table-planner-loader</artifactId>
+                <version>${flink.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-table-runtime</artifactId>
                 <version>${flink.version}</version>
                 <scope>provided</scope>
             </dependency>
@@ -520,27 +516,54 @@
                             <version>2.1.0</version>
                         </dependency>
                     </dependencies>
-                    <configuration>
-                        <rules>
-                            <compound implementation="com.github.ferstl.maven.pomenforcers.CompoundPedanticEnforcer" combine.children="append">
-                                <enforcers>POM_SECTION_ORDER,MODULE_ORDER,DEPENDENCY_MANAGEMENT_ORDER,DEPENDENCY_ORDER,DEPENDENCY_CONFIGURATION,DEPENDENCY_ELEMENT,DEPENDENCY_SCOPE,DEPENDENCY_MANAGEMENT_LOCATION,PLUGIN_MANAGEMENT_ORDER,PLUGIN_CONFIGURATION,PLUGIN_ELEMENT,PLUGIN_MANAGEMENT_LOCATION</enforcers>
-                                <!-- DEPENDENCY_ORDER configuration -->
-                                <dependenciesGroupIdPriorities>org.apache.bahir</dependenciesGroupIdPriorities>
-                                <dependenciesOrderBy>groupId,artifactId,scope</dependenciesOrderBy>
-                                <dependenciesScopePriorities>compile,runtime,provided,test</dependenciesScopePriorities>
-                                <!-- DEPENDENCY_MANAGEMENT_ORDER configuration -->
-                                <dependencyManagementGroupIdPriorities>org.apache.bahir</dependencyManagementGroupIdPriorities>
-                                <dependencyManagementOrderBy>groupId,artifactId,scope</dependencyManagementOrderBy>
-                                <dependencyManagementScopePriorities>compile,runtime,provided,test</dependencyManagementScopePriorities>
-                                <!-- PLUGIN_MANAGEMENT_ORDER configuration -->
-                                <pluginManagementOrderBy>groupId,artifactId</pluginManagementOrderBy>
-                                <providedDependencies />
-                                <testDependencies />
-                            </compound>
-                            <!--                            <requireUpperBoundDeps combine.children="append"/>-->
-                        </rules>
-                    </configuration>
                     <executions>
+                        <execution>
+                            <id>pom-enforcer</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <compound implementation="com.github.ferstl.maven.pomenforcers.CompoundPedanticEnforcer" combine.children="append">
+                                        <enforcers>POM_SECTION_ORDER,MODULE_ORDER,DEPENDENCY_MANAGEMENT_ORDER,DEPENDENCY_ORDER,DEPENDENCY_CONFIGURATION,DEPENDENCY_ELEMENT,DEPENDENCY_SCOPE,DEPENDENCY_MANAGEMENT_LOCATION,PLUGIN_MANAGEMENT_ORDER,PLUGIN_CONFIGURATION,PLUGIN_ELEMENT,PLUGIN_MANAGEMENT_LOCATION</enforcers>
+                                        <!-- DEPENDENCY_ORDER configuration -->
+                                        <dependenciesGroupIdPriorities>org.apache.bahir</dependenciesGroupIdPriorities>
+                                        <dependenciesOrderBy>groupId,artifactId,scope</dependenciesOrderBy>
+                                        <dependenciesScopePriorities>compile,runtime,provided,test</dependenciesScopePriorities>
+                                        <!-- DEPENDENCY_MANAGEMENT_ORDER configuration -->
+                                        <dependencyManagementGroupIdPriorities>org.apache.bahir</dependencyManagementGroupIdPriorities>
+                                        <dependencyManagementOrderBy>groupId,artifactId,scope</dependencyManagementOrderBy>
+                                        <dependencyManagementScopePriorities>compile,runtime,provided,test</dependencyManagementScopePriorities>
+                                        <!-- PLUGIN_MANAGEMENT_ORDER configuration -->
+                                        <pluginManagementOrderBy>groupId,artifactId</pluginManagementOrderBy>
+                                        <providedDependencies />
+                                        <testDependencies />
+                                    </compound>
+                                </rules>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>forbid-direct-table-planner-dependencies</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <bannedDependencies>
+                                        <excludes>
+                                            <exclude>org.apache.flink:flink-table-planner_*</exclude>
+                                        </excludes>
+                                        <includes>
+                                            <include>org.apache.flink:flink-table-planner_*:*:*:test</include>
+                                        </includes>
+                                        <message>
+                                            Direct dependencies on flink-table-planner are not allowed.
+                                            You should depend on either Table API modules or flink-table-planner-loader.
+                                        </message>
+                                    </bannedDependencies>
+                                </rules>
+                            </configuration>
+                        </execution>
                         <execution>
                             <id>enforce-versions</id>
                             <goals>
@@ -548,6 +571,10 @@
                             </goals>
                             <configuration>
                                 <rules>
+                                    <requireMavenVersion>
+                                        <!-- enforce at least mvn version 3.1.1 (see FLINK-12447) -->
+                                        <version>[3.1.1,)</version>
+                                    </requireMavenVersion>
                                     <requireJavaVersion>
                                         <version>${java.version}</version>
                                     </requireJavaVersion>

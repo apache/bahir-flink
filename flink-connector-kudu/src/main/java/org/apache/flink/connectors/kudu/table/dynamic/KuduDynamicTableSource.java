@@ -43,7 +43,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import static org.apache.flink.calcite.shaded.com.google.common.base.Preconditions.checkArgument;
 import static org.apache.flink.table.utils.TableSchemaUtils.containsPhysicalColumnsOnly;
 
 /**
@@ -143,7 +142,7 @@ public class KuduDynamicTableSource implements ScanTableSource, SupportsProjecti
     }
 
     private TableSchema projectSchema(TableSchema tableSchema, int[][] projectedFields) {
-        checkArgument(
+        Preconditions.checkArgument(
                 containsPhysicalColumnsOnly(tableSchema),
                 "Projection is only supported for physical columns.");
         TableSchema.Builder builder = TableSchema.builder();
