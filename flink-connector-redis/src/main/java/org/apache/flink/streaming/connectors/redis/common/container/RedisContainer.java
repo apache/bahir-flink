@@ -126,6 +126,23 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
     }
 
     @Override
+    public void hdel(String key, String hashField) {
+        Jedis jedis = null;
+        try {
+            jedis = getInstance();
+            jedis.hdel(key, hashField);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command HDEL to key {} and hashField {} error message {}",
+                    key, hashField, e.getMessage());
+            }
+            throw e;
+        } finally {
+            releaseInstance(jedis);
+        }
+    }
+
+    @Override
     public void rpush(final String listName, final String value) {
         Jedis jedis = null;
         try {

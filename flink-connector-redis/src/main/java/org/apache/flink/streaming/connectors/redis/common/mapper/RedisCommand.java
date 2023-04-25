@@ -79,6 +79,12 @@ public enum RedisCommand {
      */
     HSET(RedisDataType.HASH),
 
+    /**
+     * Removes the specified field from the hash stored at key.
+     * Specified fields that do not exist within this hash are ignored.
+     */
+    HDEL(RedisDataType.HASH),
+
     HINCRBY(RedisDataType.HINCRBY),
 
     /**

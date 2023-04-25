@@ -180,6 +180,9 @@ public class RedisSink<IN> extends RichSinkFunction<IN> {
             case HINCRBY:
                 this.redisCommandsContainer.hincrBy(optAdditionalKey.orElse(this.additionalKey), key, Long.valueOf(value), optAdditionalTTL.orElse(this.additionalTTL));
                 break;
+            case HDEL:
+                this.redisCommandsContainer.hdel(optAdditionalKey.orElse(this.additionalKey), key);
+                break;
             case INCRBY:
                 this.redisCommandsContainer.incrBy(key, Long.valueOf(value));
                 break;
