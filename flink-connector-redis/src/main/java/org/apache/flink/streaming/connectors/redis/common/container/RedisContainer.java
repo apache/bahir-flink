@@ -150,7 +150,7 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
             jedis.lpush(listName, value);
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
-                LOG.error("Cannot send Redis message with command LUSH to list {} error message {}",
+                LOG.error("Cannot send Redis message with command LPUSH to list {} error message {}",
                     listName, e.getMessage());
             }
             throw e;
@@ -167,7 +167,7 @@ public class RedisContainer implements RedisCommandsContainer, Closeable {
             jedis.sadd(setName, value);
         } catch (Exception e) {
             if (LOG.isErrorEnabled()) {
-                LOG.error("Cannot send Redis message with command RPUSH to set {} error message {}",
+                LOG.error("Cannot send Redis message with command SADD to set {} error message {}",
                     setName, e.getMessage());
             }
             throw e;
