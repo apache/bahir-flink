@@ -107,7 +107,7 @@ public class KuduRowDataLookupFunction extends TableFunction<RowData> {
                 ArrayList<RowData> rows = new ArrayList<>();
                 for (KuduInputSplit inputSplit : inputSplits) {
                     KuduReaderIterator<RowData> scanner = kuduReader.scanner(inputSplit.getScanToken());
-                    // 没有启用cache
+                    // not use cache
                     if (cache == null) {
                         while (scanner.hasNext()) {
                             collect(scanner.next());
