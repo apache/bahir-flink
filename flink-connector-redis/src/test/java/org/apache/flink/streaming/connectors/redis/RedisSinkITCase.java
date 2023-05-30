@@ -142,14 +142,22 @@ public class RedisSinkITCase extends RedisITCaseBase {
     @Test
     public void testRedisHashDataType() throws Exception {
         DataStreamSource<Tuple2<String, String>> source = env.addSource(new TestSourceFunctionHash());
-        RedisSink<Tuple2<String, String>> redisSink = new RedisSink<>(jedisPoolConfig,
+        RedisSink<Tuple2<String, String>> redisHsetSink = new RedisSink<>(jedisPoolConfig,
             new RedisAdditionalDataMapper(RedisCommand.HSET));
 
-        source.addSink(redisSink);
+        source.addSink(redisHsetSink);
         env.execute("Test Redis Hash Data Type");
 
         assertEquals(NUM_ELEMENTS.longValue(), jedis.hlen(REDIS_ADDITIONAL_KEY));
         assertEquals(REDIS_NOT_ASSOCIATED_EXPIRE_FLAG.longValue(), jedis.ttl(REDIS_ADDITIONAL_KEY));
+
+        RedisSink<Tuple2<String, String>> redisHdelSink = new RedisSink<>(jedisPoolConfig,
+            new RedisAdditionalDataMapper(RedisCommand.HDEL));
+
+        source.addSink(redisHdelSink);
+        env.execute("Test Redis Hash Data Type");
+
+        assertEquals(ZERO.longValue(), jedis.hlen(REDIS_ADDITIONAL_KEY));
 
         jedis.del(REDIS_ADDITIONAL_KEY);
     }

@@ -47,6 +47,14 @@ public interface RedisCommandsContainer extends Serializable {
     void hincrBy(String key, String hashField, Long value, Integer ttl);
 
     /**
+     * Removes the specified field from the hash stored at key.
+     * Specified fields that do not exist within this hash are ignored.
+     * @param key
+     * @param hashField
+     */
+    void hdel(String key, String hashField);
+
+    /**
      * Insert the specified value at the tail of the list stored at key.
      * If key does not exist, it is created as empty list before performing the push operation.
      *
