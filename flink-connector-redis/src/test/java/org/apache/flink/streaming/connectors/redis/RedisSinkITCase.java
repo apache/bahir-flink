@@ -77,13 +77,20 @@ public class RedisSinkITCase extends RedisITCaseBase {
     @Test
     public void testRedisSetDataType() throws Exception {
         DataStreamSource<Tuple2<String, String>> source = env.addSource(new TestSourceFunction());
-        RedisSink<Tuple2<String, String>> redisSink = new RedisSink<>(jedisPoolConfig,
+        RedisSink<Tuple2<String, String>> redisSaddSink = new RedisSink<>(jedisPoolConfig,
             new RedisCommandMapper(RedisCommand.SADD));
 
-        source.addSink(redisSink);
-        env.execute("Test Redis Set Data Type");
+        source.addSink(redisSaddSink);
+        env.execute("Test SADD");
 
         assertEquals(NUM_ELEMENTS.longValue(), jedis.scard(REDIS_KEY));
+
+        RedisSink<Tuple2<String, String>> redisSremSink = new RedisSink<>(jedisPoolConfig,
+                new RedisCommandMapper(RedisCommand.SREM));
+        source.addSink(redisSremSink);
+        env.execute("Test SREM");
+
+        assertEquals(ZERO.longValue(), jedis.scard(REDIS_KEY));
 
         jedis.del(REDIS_KEY);
     }

@@ -134,6 +134,19 @@ public class RedisClusterContainer implements RedisCommandsContainer, Closeable 
     }
 
     @Override
+    public void srem(final String setName, final String value) {
+        try {
+            jedisCluster.srem(setName, value);
+        } catch (Exception e) {
+            if (LOG.isErrorEnabled()) {
+                LOG.error("Cannot send Redis message with command SREM to set {} error message {}",
+                    setName, e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    @Override
     public void publish(final String channelName, final String message) {
         try {
             jedisCluster.publish(channelName, message);
