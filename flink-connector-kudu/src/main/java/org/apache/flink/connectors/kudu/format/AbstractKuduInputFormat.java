@@ -117,7 +117,7 @@ public abstract class AbstractKuduInputFormat<T> extends RichInputFormat<T, Kudu
             try {
                 resultIterator.close();
             } catch (KuduException e) {
-                e.printStackTrace();
+                log.error("Error while closing reader iterator.", e);
             }
         }
         closeKuduReader();
