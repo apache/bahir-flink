@@ -104,6 +104,13 @@ public abstract class AbstractKuduInputFormat<T> extends RichInputFormat<T, Kudu
         }
     }
 
+    private void closeKuduReader() throws IOException {
+        if (kuduReader != null) {
+            kuduReader.close();
+            kuduReader = null;
+        }
+    }
+
     @Override
     public void close() throws IOException {
         if (resultIterator != null) {
@@ -113,10 +120,7 @@ public abstract class AbstractKuduInputFormat<T> extends RichInputFormat<T, Kudu
                 e.printStackTrace();
             }
         }
-        if (kuduReader != null) {
-            kuduReader.close();
-            kuduReader = null;
-        }
+        closeKuduReader();
     }
 
     @Override
@@ -131,8 +135,12 @@ public abstract class AbstractKuduInputFormat<T> extends RichInputFormat<T, Kudu
 
     @Override
     public KuduInputSplit[] createInputSplits(int minNumSplits) throws IOException {
-        startKuduReader();
-        return kuduReader.createInputSplits(minNumSplits);
+        try {
+            startKuduReader();
+            return kuduReader.createInputSplits(minNumSplits);
+        } finally {
+            closeKuduReader();
+        }
     }
 
     @Override
