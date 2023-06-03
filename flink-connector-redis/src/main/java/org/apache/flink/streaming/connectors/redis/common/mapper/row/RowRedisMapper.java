@@ -41,6 +41,8 @@ public abstract class RowRedisMapper implements RedisMapper<Tuple2<Boolean, Row>
 
     private Integer ttl;
 
+    private String additionalKey;
+
     private RedisCommand redisCommand;
 
     public Integer getTtl() {
@@ -67,6 +69,11 @@ public abstract class RowRedisMapper implements RedisMapper<Tuple2<Boolean, Row>
         this.redisCommand = redisCommand;
     }
 
+    public RowRedisMapper(String additionalKey, RedisCommand redisCommand) {
+        this.additionalKey = additionalKey;
+        this.redisCommand = redisCommand;
+    }
+
     public RowRedisMapper(RedisCommand redisCommand) {
         this.redisCommand = redisCommand;
     }
@@ -75,6 +82,9 @@ public abstract class RowRedisMapper implements RedisMapper<Tuple2<Boolean, Row>
     public RedisCommandDescription getCommandDescription() {
         if (ttl != null) {
             return new RedisCommandDescription(redisCommand, ttl);
+        }
+        if (additionalKey != null) {
+            return new RedisCommandDescription(redisCommand, additionalKey);
         }
         return new RedisCommandDescription(redisCommand);
     }
