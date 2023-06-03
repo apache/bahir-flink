@@ -56,9 +56,12 @@ public enum RedisCommand {
      */
     SETEX(RedisDataType.STRING),
 
+    SETNX(RedisDataType.STRING),
+
     /**
      * Adds the element to the HyperLogLog data structure stored at the variable name specified as first argument.
      */
+
     PFADD(RedisDataType.HYPER_LOG_LOG),
 
     /**

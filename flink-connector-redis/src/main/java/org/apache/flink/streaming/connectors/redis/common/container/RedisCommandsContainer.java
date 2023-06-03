@@ -121,6 +121,8 @@ public interface RedisCommandsContainer extends Serializable {
      */
     void setex(String key, String value, Integer ttl);
 
+    void setnx(String key, String value);
+
     /**
      * Adds all the element arguments to the HyperLogLog data structure
      * stored at the variable name specified as first argument.
