@@ -162,7 +162,9 @@ public class KuduStreamingSourceTest extends KuduTestBase {
         CompletableFuture<Void> completableFuture = CompletableFuture.runAsync(() -> {
            try {
                env.execute();
-           } catch (Exception e) {}
+           } catch (Exception e) {
+               Assertions.fail("Executing job failed.");
+           }
         });
 
         try {
@@ -301,7 +303,9 @@ public class KuduStreamingSourceTest extends KuduTestBase {
         CompletableFuture<Void> completableFuture = CompletableFuture.runAsync(() -> {
             try {
                 env.execute();
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                Assertions.fail("Executing job failed");
+            }
         });
 
         try {
