@@ -99,10 +99,10 @@ public class KuduStreamingSource<T> extends RichParallelSourceFunction<T>
             return Short.valueOf(value);
         } else if (clz == Byte.class) {
             return Byte.valueOf(value);
-        } else if (clz == Timestamp.class) {
-            return new Timestamp(Long.valueOf(value));
-        } else {
+        } else if (clz == String.class){
             return value;
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + clz + " for streaming key.");
         }
     }
 
@@ -205,7 +205,7 @@ public class KuduStreamingSource<T> extends RichParallelSourceFunction<T>
                     while (resultIterator.hasNext()) {
                         T row = resultIterator.next();
                         if (row != null) {
-                            /** For the running mode == KuduStreamingRunningMode.INCREMENTAL, we need to manage the offsets of the table.
+                            /** For the running mode == KuduStreamingRunningMode#INCREMENTAL, we need to manage the offsets of the table.
                              * The data will be in the local buffer and sorted before emitting.
                              */
                             if (kuduStreamingSourceConfiguration.getRunningMode() == KuduStreamingRunningMode.INCREMENTAL) {

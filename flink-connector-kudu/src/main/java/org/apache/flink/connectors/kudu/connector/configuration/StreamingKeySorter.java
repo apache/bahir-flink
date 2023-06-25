@@ -27,7 +27,10 @@ public class StreamingKeySorter {
         for (int i = 0; i < one.length; i++) {
             StreamingColumn columnDetail = streamingColumns.get(i);
             int r;
-            if (columnDetail.getFieldType() == Long.class || columnDetail.getFieldType() == Integer.class) {
+            if (columnDetail.getFieldType() == Long.class ||
+                    columnDetail.getFieldType() == Integer.class ||
+                    columnDetail.getFieldType() == Short.class ||
+                    columnDetail.getFieldType() == Byte.class) {
                 Long a = Long.valueOf(one[i]);
                 Long b = Long.valueOf(two[i]);
                 r = a.compareTo(b);

@@ -19,8 +19,8 @@ package org.apache.flink.connectors.kudu.connector;
 import org.apache.flink.connectors.kudu.connector.configuration.UserTableDataTypeDetail;
 import org.apache.flink.connectors.kudu.connector.convertor.builder.UserTableDataTypeBuilder;
 import org.apache.flink.connectors.kudu.connector.convertor.parser.UserTableDataTypeParser;
-import org.junit.Assert;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 public class UserTableDataTypeBuilderTest {
     @Test
@@ -34,8 +34,8 @@ public class UserTableDataTypeBuilderTest {
         builder.build(userType, "name_col", new String[]{"hello_world"});
         builder.build(userType, "age_col", new Integer[]{100});
 
-        Assert.assertEquals(Long.valueOf(123L), userType.getId());
-        Assert.assertEquals("hello_world", userType.getName());
-        Assert.assertEquals(Integer.valueOf(100), userType.getAge());
+        Assertions.assertEquals(Long.valueOf(123L), userType.getId());
+        Assertions.assertEquals("hello_world", userType.getName());
+        Assertions.assertEquals(Integer.valueOf(100), userType.getAge());
     }
 }

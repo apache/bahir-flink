@@ -19,8 +19,8 @@ package org.apache.flink.connectors.kudu.connector;
 import org.apache.flink.connectors.kudu.connector.configuration.ReflectionTypeDetail;
 import org.apache.flink.connectors.kudu.connector.configuration.UserTableDataTypeDetail;
 import org.apache.flink.connectors.kudu.connector.convertor.parser.UserTableDataTypeParser;
-import org.junit.Assert;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.Map;
 
@@ -29,21 +29,21 @@ public class UserTableDataTypeParserTest {
     public void testParse() throws Exception {
         UserTableDataTypeDetail detail = UserTableDataTypeParser.getInstance().parse(UserType.class);
 
-        Assert.assertEquals(2, detail.getStreamingCols().size());
-        Assert.assertEquals("name_col", detail.getStreamingCols().get(0).getColName());
-        Assert.assertEquals("id_col", detail.getStreamingCols().get(1).getColName());
+        Assertions.assertEquals(2, detail.getStreamingCols().size());
+        Assertions.assertEquals("name_col", detail.getStreamingCols().get(0).getColName());
+        Assertions.assertEquals("id_col", detail.getStreamingCols().get(1).getColName());
 
         Map<String, ReflectionTypeDetail> reflectionTypeDetailMap = detail.getReflectionTypeDetailByColNames();
 
-        Assert.assertEquals("id", reflectionTypeDetailMap.get("id_col").getField().getName());
-        Assert.assertEquals("name", reflectionTypeDetailMap.get("name_col").getField().getName());
-        Assert.assertEquals("age", reflectionTypeDetailMap.get("age_col").getField().getName());
+        Assertions.assertEquals("id", reflectionTypeDetailMap.get("id_col").getField().getName());
+        Assertions.assertEquals("name", reflectionTypeDetailMap.get("name_col").getField().getName());
+        Assertions.assertEquals("age", reflectionTypeDetailMap.get("age_col").getField().getName());
 
-        Assert.assertEquals("setId", reflectionTypeDetailMap.get("id_col").getMethod().getName());
-        Assert.assertEquals("setName", reflectionTypeDetailMap.get("name_col").getMethod().getName());
-        Assert.assertEquals("setAge", reflectionTypeDetailMap.get("age_col").getMethod().getName());
+        Assertions.assertEquals("setId", reflectionTypeDetailMap.get("id_col").getMethod().getName());
+        Assertions.assertEquals("setName", reflectionTypeDetailMap.get("name_col").getMethod().getName());
+        Assertions.assertEquals("setAge", reflectionTypeDetailMap.get("age_col").getMethod().getName());
 
-        Assert.assertEquals("org.apache.flink.connectors.kudu.connector.UserType",
+        Assertions.assertEquals("org.apache.flink.connectors.kudu.connector.UserType",
                 detail.getUserTableDataTypeConstructor().getName());
     }
 }

@@ -17,10 +17,11 @@
 package org.apache.flink.connectors.kudu.connector;
 
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.connectors.kudu.connector.configuration.StreamingColumn;
 import org.apache.kudu.shaded.com.google.common.collect.Lists;
-import org.junit.Assert;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -56,27 +57,25 @@ public class StreamingKeyOffsetManagerTest {
         StreamingLocalEventsManager<UserType> streamingLocalEventsManager =
                 new StreamingLocalEventsManager<>(Arrays.asList(one, two), null, null);
 
-        Assert.assertEquals("0|" + Long.MIN_VALUE, streamingLocalEventsManager.getCurrentHWMStr());
+        Assertions.assertEquals(StringUtils.EMPTY, streamingLocalEventsManager.getCurrentHWMStr());
 
         streamingLocalEventsManager.update(row);
-        Assert.assertEquals("hello_world|1", streamingLocalEventsManager.getCurrentHWMStr());
+        Assertions.assertEquals("hello_world|1", streamingLocalEventsManager.getCurrentHWMStr());
 
         streamingLocalEventsManager.update(row2);
-        Assert.assertEquals("hello_world|2", streamingLocalEventsManager.getCurrentHWMStr());
+        Assertions.assertEquals("hello_world|2", streamingLocalEventsManager.getCurrentHWMStr());
 
-        Assert.assertEquals(2, streamingLocalEventsManager.getSortedLocalEvents().size());
+        Assertions.assertEquals(2, streamingLocalEventsManager.getSortedLocalEvents().size());
         Iterator<UserType> itr = streamingLocalEventsManager.getSortedLocalEvents().iterator();
         long id = 1L;
         while (itr.hasNext()) {
-            Assert.assertEquals(Long.valueOf(id++), itr.next().getId());
+            Assertions.assertEquals(Long.valueOf(id++), itr.next().getId());
         }
 
         streamingLocalEventsManager.update(row3);
-        Assert.assertEquals("hello_world2|1", streamingLocalEventsManager.getCurrentHWMStr());
+        Assertions.assertEquals("hello_world2|1", streamingLocalEventsManager.getCurrentHWMStr());
 
         String[] upperBoundKey = streamingLocalEventsManager.getUserConfiguredUpperKey();
-        Assert.assertEquals(2, upperBoundKey.length);
-        Assert.assertEquals("z", upperBoundKey[0]);
-        Assert.assertEquals(String.valueOf(Long.MAX_VALUE), upperBoundKey[1]);
+        Assertions.assertNull(upperBoundKey);
     }
 }

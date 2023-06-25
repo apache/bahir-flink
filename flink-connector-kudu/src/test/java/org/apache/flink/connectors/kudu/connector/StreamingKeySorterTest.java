@@ -19,8 +19,8 @@ package org.apache.flink.connectors.kudu.connector;
 import org.apache.flink.connectors.kudu.connector.configuration.StreamingColumn;
 import org.apache.flink.connectors.kudu.connector.configuration.StreamingKeySorter;
 import org.apache.kudu.shaded.com.google.common.collect.Lists;
-import org.junit.Assert;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.List;
 import java.util.Locale;
@@ -38,19 +38,19 @@ public class StreamingKeySorterTest {
 
         String[] key1 = {"-1", "b"};
         String[] key2 = {"1", "a"};
-        Assert.assertTrue(StreamingKeySorter.compareOffsets(key1, key2, streamingColumns) < 0);
+        Assertions.assertTrue(StreamingKeySorter.compareOffsets(key1, key2, streamingColumns) < 0);
 
         String[] key3 = {"1", "b"};
         String[] key4 = {"0", "a"};
-        Assert.assertTrue(StreamingKeySorter.compareOffsets(key3, key4, streamingColumns) > 0);
+        Assertions.assertTrue(StreamingKeySorter.compareOffsets(key3, key4, streamingColumns) > 0);
 
         String[] key5 = {"1", "b"};
         String[] key6 = {"1", "a"};
-        Assert.assertTrue(StreamingKeySorter.compareOffsets(key5, key6, streamingColumns) > 0);
+        Assertions.assertTrue(StreamingKeySorter.compareOffsets(key5, key6, streamingColumns) > 0);
 
         String[] key7 = {"1", "a"};
         String[] key8 = {"1", "a"};
-        Assert.assertTrue(StreamingKeySorter.compareOffsets(key7, key8, streamingColumns) == 0);
+        Assertions.assertTrue(StreamingKeySorter.compareOffsets(key7, key8, streamingColumns) == 0);
     }
 
     @Test(expected = IllegalArgumentException.class)
