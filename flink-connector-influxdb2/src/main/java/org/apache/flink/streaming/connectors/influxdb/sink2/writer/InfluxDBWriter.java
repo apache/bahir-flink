@@ -89,6 +89,7 @@ public class InfluxDBWriter<IN> implements SinkWriter<IN> {
     public void flush(boolean flush) throws IOException, InterruptedException {
         if (this.lastTimestamp == 0) return;
 
+        this.writeCurrentElements();
         commit(Collections.singletonList(this.lastTimestamp));
     }
 
