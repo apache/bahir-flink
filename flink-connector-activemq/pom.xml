@@ -35,7 +35,7 @@ under the License.
 
     <!-- Allow users to pass custom connector versions -->
     <properties>
-        <activemq.version>5.15.10</activemq.version>
+        <activemq.version>5.15.16</activemq.version>
     </properties>
 
     <dependencyManagement>
